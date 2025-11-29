@@ -1,12 +1,10 @@
-import { PrismaClient } from 'src/generated/prisma/client';
+import 'dotenv/config';
+import { PrismaClient } from '../../src/generated/prisma/client';
+import { permisos as permisosSeed } from '../../src/modules/admin/security/permisos/permisos.data';
 import { PrismaPg } from '@prisma/adapter-pg';
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!,
-});
-
 import * as bcrypt from 'bcrypt';
 
-import { permisos as permisosSeed } from '../../src/modules/admin/security/permisos/permisos.data';
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 export const prisma = new PrismaClient({ adapter });
 
 async function main() {
@@ -65,6 +63,10 @@ async function main() {
 
   // Crear información de tienda
   await createInformacionTienda();
+
+  // Crear productos ficticios
+  const categorias = await prisma.categoria.findMany();
+  const tiposProducto = await prisma.tipoProducto.findMany();
 
   console.info('Seeding finished');
 }
@@ -138,17 +140,24 @@ async function createPermisos() {
 async function assignPermisosToRoles(roleIds: number[]) {
   const permisos = await prisma.permiso.findMany();
 
-  // Asignar permisos a los roles especificados
+  // Asignar permisos a los roles especificados usando createMany para mejor rendimiento
+  const rolPermisosData = [];
   for (const roleId of roleIds) {
     for (const permiso of permisos) {
-      await prisma.rolPermiso.create({
-        data: {
-          rolId: roleId,
-          permisoId: permiso.id,
-        },
+      rolPermisosData.push({
+        rolId: roleId,
+        permisoId: permiso.id,
       });
     }
   }
+
+  // Insertar todos los registros de una vez
+  await prisma.rolPermiso.createMany({
+    data: rolPermisosData,
+    skipDuplicates: true,
+  });
+
+  console.info(`Assigned ${rolPermisosData.length} permissions to ${roleIds.length} roles`);
 }
 
 async function createUsuarios() {
@@ -365,7 +374,7 @@ async function createInformacionTienda() {
   // Crear información de tienda con datos completos de ejemplo
   await prisma.informacionTienda.create({
     data: {
-      nombre: 'Crunchis - Tu Tienda de Mascotas de Confianza',
+      nombre: 'Tu Notaria',
       descripcion:
         'Somos una empresa dedicada al cuidado y bienestar de las mascotas, ofreciendo productos de alta calidad y servicios especializados para brindar a tu mascota todo lo que necesita.',
       email: 'contacto@crunchis.com',

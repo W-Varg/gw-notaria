@@ -62,8 +62,8 @@ export class NotificationService {
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
   ) {
-    this.fromEmail = this.configService.get<string>('EMAIL_FROM') || 'noreply@crunchis.com';
-    this.fromName = this.configService.get<string>('ENV_FROM_NAME') || 'Crunchis';
+    this.fromEmail = this.configService.get<string>('EMAIL_FROM') || 'notaria@gmail.com';
+    this.fromName = this.configService.get<string>('ENV_FROM_NAME') || 'notaria-app';
   }
 
   async sendNotification(event: NotificationEvent): Promise<void> {

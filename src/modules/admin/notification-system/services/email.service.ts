@@ -31,7 +31,7 @@ export class EmailService {
   async sendEmail(to: string, template: EmailTemplate): Promise<boolean> {
     try {
       const mailOptions = {
-        from: this.configService.get('EMAIL_FROM') || 'noreply@crunchis.com',
+        from: this.configService.get('EMAIL_FROM') || 'notaria@gmail.com',
         to,
         subject: template.subject,
         text: template.text,

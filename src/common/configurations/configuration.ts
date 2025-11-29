@@ -15,7 +15,7 @@ export default () => {
     defaultRolRegister: process.env.ENV_DEFAUL_ROL_REGISTER || 'CLIENTE',
 
     // ## MS MYSQL
-    msMysql: process.env.ENV_MYSQL_DATABASE_URL,
+    msMysql: process.env.DATABASE_URL,
     cors: process.env.ENV_CORS?.split(',') || ['*'],
 
     // ## NOTIFICATIONS
