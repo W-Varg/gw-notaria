@@ -142,13 +142,6 @@ export class UserProfile {
     example: true,
   })
   emailVerificado?: boolean;
-
-  @ApiProperty({
-    type: Boolean,
-    description: 'Indica si el usuario es empleado',
-    example: false,
-  })
-  esEmpleado: boolean;
 }
 
 export class AuthResponse {

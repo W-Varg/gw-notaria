@@ -250,7 +250,6 @@ export class UsuariosService {
         skip,
         take,
         orderBy,
-        include: { empleado: { select: { id: true }, where: { estaActivo: true } } },
       }),
       this.prismaService.usuario.count({ where: whereInput }),
     ]);
@@ -266,7 +265,7 @@ export class UsuariosService {
   async findOne(id: string) {
     const usuario = await this.prismaService.usuario.findUnique({
       where: { id },
-      include: { roles: { include: { rol: true } }, empleado: true },
+      include: { roles: { include: { rol: true } } },
     });
     if (!usuario) return dataResponseError('Usuario no encontrado');
 
@@ -380,32 +379,12 @@ export class UsuariosService {
 
   async remove(id: string) {
     // Verificar si el usuario tiene relaciones que impiden su eliminación
-    const hasCartItems = await this.prismaService.itemCarrito.count({ where: { usuarioId: id } });
-    const hasOrders = await this.prismaService.pedido.count({ where: { usuarioId: id } });
-    const hasReservations = await this.prismaService.reserva.count({ where: { usuarioId: id } });
     const hasMessages = await this.prismaService.mensajeContacto.count({
       where: { usuarioId: id },
     });
-    const hasEmployee = await this.prismaService.empleado.count({ where: { usuarioId: id } });
-    const hasAddresses = await this.prismaService.direccionEntrega.count({
-      where: { usuarioId: id },
-    });
 
-    if (hasEmployee > 0) {
-      return dataResponseError('El usuario es empleado y no puede ser eliminado');
-    }
-    if (hasReservations > 0) {
-      return dataResponseError('El usuario tiene reservas y no puede ser eliminado');
-    }
-
-    if (
-      hasCartItems > 0 ||
-      hasOrders > 0 ||
-      hasReservations > 0 ||
-      hasMessages > 0 ||
-      hasAddresses > 0
-    ) {
-      return dataResponseError('El usuario tiene registros asociados y no puede ser eliminado');
+    if (hasMessages > 0) {
+      return dataResponseError('El usuario tiene mensajes de contacto y no puede ser eliminado');
     }
 
     const existingUsuario = await this.prismaService.usuario.findUnique({

@@ -66,7 +66,6 @@ export class AuthService {
       telefono: user.telefono || null,
       direccion: user.direccion || null,
       avatar: user.avatar || null,
-      esEmpleado: false,
     };
 
     // Construir respuesta de autenticación
@@ -132,7 +131,6 @@ export class AuthService {
             },
           },
         },
-        empleado: { select: { id: true } },
       },
     });
 
@@ -165,7 +163,6 @@ export class AuthService {
       telefono: user.telefono || null,
       direccion: user.direccion || null,
       avatar: user.avatar || null,
-      esEmpleado: !!user.empleado,
     };
 
     // Extraer permisos únicos
@@ -229,7 +226,6 @@ export class AuthService {
               },
             },
           },
-          empleado: { select: { id: true } },
         },
       });
 
@@ -251,7 +247,6 @@ export class AuthService {
         telefono: user.telefono || null,
         direccion: user.direccion || null,
         avatar: user.avatar || null,
-        esEmpleado: !!user.empleado,
       };
 
       // Extraer permisos únicos

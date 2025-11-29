@@ -5,9 +5,7 @@ import { InfoService } from '../info/info.service';
 
 @Injectable()
 export class ContactoService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async enviarMensaje(dto: ContactoMensajeDto) {
     const mensaje = await this.prisma.mensajeContacto.create({
@@ -69,35 +67,27 @@ export class ContactoService {
   }
 
   async obtenerParaPublico() {
-    const informacion = await this.prisma.informacionTienda.findFirst({
-      where: { estaActivo: true },
-    });
+    // Retornar datos por defecto
+    const datosDefault = {
+      nombre: 'PetStore - Tu Tienda de Mascotas',
+      email: 'contacto@petstore.com',
+      telefono1: '+591 2 2345678',
+      telefono2: '+591 76543210',
+      whatsapp: '+59176543210',
+      direccionCompleta: 'Av. 6 de Agosto #1234',
+      ciudad: 'La Paz, Bolivia',
+      horarioLunesViernes: '8:00-19:00',
+      horarioSabado: '8:00-17:00',
+      horarioDomingo: '9:00-15:00',
+      facebook: '@PetStoreLaPaz',
+      instagram: '@petstore_oficial',
+      tiktok: '@petstore_pets',
+      youtube: '@PetStoreOficial',
+      website: 'https://petstore.com',
+      informacionAdicional:
+        'Contamos con servicio de entrega a domicilio gratuita para compras mayores a 100 Bs. También ofrecemos servicios veterinarios y de peluquería canina.',
+    };
 
-    if (!informacion) {
-      // Si no existe información, retornar datos por defecto completos
-      const datosDefault = {
-        nombre: 'PetStore - Tu Tienda de Mascotas',
-        email: 'contacto@petstore.com',
-        telefono1: '+591 2 2345678',
-        telefono2: '+591 76543210',
-        whatsapp: '+59176543210',
-        direccionCompleta: 'Av. 6 de Agosto #1234',
-        ciudad: 'La Paz, Bolivia',
-        horarioLunesViernes: '8:00-19:00',
-        horarioSabado: '8:00-17:00',
-        horarioDomingo: '9:00-15:00',
-        facebook: '@PetStoreLaPaz',
-        instagram: '@petstore_oficial',
-        tiktok: '@petstore_pets',
-        youtube: '@PetStoreOficial',
-        website: 'https://petstore.com',
-        informacionAdicional:
-          'Contamos con servicio de entrega a domicilio gratuita para compras mayores a 100 Bs. También ofrecemos servicios veterinarios y de peluquería canina.',
-      };
-
-      return datosDefault;
-    }
-
-    return informacion;
+    return datosDefault;
   }
 }

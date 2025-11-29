@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Producto } from '../../store-manager/productos/producto.entity';
+import { Producto } from '../productos/producto.entity';
 
 export class Categoria {
   @ApiProperty({ type: String })

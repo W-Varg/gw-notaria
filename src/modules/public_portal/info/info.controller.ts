@@ -16,25 +16,11 @@ import {
 export class InfoController {
   constructor(private readonly infoService: InfoService) {}
 
-  @Get('sucursales/:id/horarios')
-  @ApiDescription('Obtener horarios de atención por sucursal', [])
-  @ApiResponse({ status: 200, type: () => ResponseHorariosType })
-  getHorariosSucursal(@Param('id') id: string) {
-    return this.infoService.getHorariosSucursal(id);
-  }
-
   @Get('politicas')
   @ApiDescription('Obtener políticas de la tienda (términos, privacidad, devoluciones)', [])
   @ApiResponse({ status: 200, type: () => ResponsePoliticasType })
   getPoliticas() {
     return this.infoService.getPoliticas();
-  }
-
-  @Get('promociones-activas')
-  @ApiDescription('Obtener promociones y ofertas activas', [])
-  @ApiResponse({ status: 200, type: () => ResponsePromocionesType })
-  getPromocionesActivas(@Query() query: PromocionesActivasDto) {
-    return this.infoService.getPromocionesActivas(query);
   }
 
   @Get('faqs')

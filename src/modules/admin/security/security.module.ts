@@ -3,16 +3,8 @@ import { RouterModule } from '@nestjs/core';
 import { RolesModule } from './roles/roles.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { PermisosModule } from './permisos/permisos.module';
-import { EmpleadosModule } from './empleados/empleados.module';
-import { InformacionTiendaModule } from './tienda/info-tienda.module';
 
-const modules = [
-  EmpleadosModule,
-  InformacionTiendaModule,
-  PermisosModule,
-  RolesModule,
-  UsuariosModule,
-];
+const modules = [PermisosModule, RolesModule, UsuariosModule];
 @Module({
   imports: [
     ...modules,

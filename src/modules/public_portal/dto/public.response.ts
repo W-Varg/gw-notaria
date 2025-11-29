@@ -1,7 +1,6 @@
 import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
 import { ApiOkResponseDto } from 'src/common/dtos/response.dto';
 import { Categoria } from 'src/modules/admin/catalogos/categorias/categoria.entity';
-import { SucursalEntity } from 'src/modules/admin/catalogos/sucursales/sucursal.entity';
 import { ResponseTipoProductoType } from 'src/modules/admin/catalogos/tipos-producto/dto/tipos-producto.response';
 
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -21,29 +20,6 @@ export class CategoriaDataPublic {
 export class CategoriasTypePublic extends OmitType(ApiOkResponseDto, ['cache']) {
   @ApiProperty({ type: CategoriaDataPublic })
   response: CategoriaDataPublic;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-/*                                                   sucursal types                                                   */
-/* ------------------------------------------------------------------------------------------------------------------ */
-export class SucursalPublica extends PickType(SucursalEntity, [
-  'id',
-  'nombre',
-  'ciudad',
-  'direccion',
-  'telefono',
-  'latitud',
-  'longitud',
-]) {}
-
-export class SucursalDataPublic {
-  @ApiProperty({ type: [SucursalPublica] })
-  data: SucursalPublica[];
-}
-
-export class SucursalTypePublic extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: SucursalDataPublic })
-  response: SucursalDataPublic;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
