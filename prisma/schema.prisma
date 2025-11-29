@@ -97,6 +97,24 @@ enum DiaSemana {
   Domingo
 }
 
+enum TipoClienteEnum {
+  NATURAL
+  JURIDICA
+}
+
+enum MetodoPagoEnum {
+  EFECTIVO
+  QR
+  TRANSFERENCIA
+  CHEQUE
+  DEPOSITO
+}
+
+enum ConstanciaEnum {
+  RECIBO
+  FACTURA
+}
+
 // ============================================
 // MÓDULO DE SEGURIDAD Y USUARIOS
 // ============================================
@@ -142,23 +160,28 @@ model RolPermiso {
 }
 
 model Usuario {
-  id                 String            @id @default(cuid())
-  email              String            @unique @db.VarChar(150)
-  password           String            @db.VarChar(150)
-  nombre             String            @db.VarChar(30)
-  apellidos          String            @db.VarChar(30)
-  telefono           String?           @db.VarChar(10)
-  direccion          String?
-  avatar             String?
-  estaActivo         Boolean           @default(true)
-  emailVerificado    Boolean           @default(false)
-  fechaCreacion      DateTime          @default(now())
-  fechaActualizacion DateTime          @updatedAt
+  id                        String                     @id @default(cuid())
+  email                     String                     @unique @db.VarChar(150)
+  password                  String                     @db.VarChar(150)
+  nombre                    String                     @db.VarChar(30)
+  apellidos                 String                     @db.VarChar(30)
+  telefono                  String?                    @db.VarChar(10)
+  direccion                 String?
+  avatar                    String?
+  estaActivo                Boolean                    @default(true)
+  emailVerificado           Boolean                    @default(false)
+  fechaCreacion             DateTime                   @default(now())
+  fechaActualizacion        DateTime                   @updatedAt
   // Relaciones de seguridad
-  roles              UsuarioRol[]
+  roles                     UsuarioRol[]
   // Relaciones de negocio
-  mensajesContacto   MensajeContacto[]
+  mensajesContacto          MensajeContacto[]
   // Relación con empleado
+  historialEstadosServicios HistorialEstadosServicio[]
+  responsableServicios      ResponsableServicio[]
+  pagosIngresos             PagosIngresos[]
+  gastos                    Gastos[]
+  arqueosDiarios            ArqueosDiarios[]
 
   @@map("auth_usuarios")
 }
@@ -260,4 +283,249 @@ model ConfiguracionSistema {
   fechaActualizacion DateTime @updatedAt
 
   @@map("_configuracion_sistema")
+}
+
+// ============================================
+// MÓDULO DEL MODELO DEL NEGOCIO
+// ============================================
+// ============================================================================
+// BANKING
+// ============================================================================
+
+model Banco {
+  id     Int    @id @default(autoincrement())
+  nombre String @db.VarChar(100)
+
+  cuentasBancarias CuentaBancaria[] @relation(name: "BancoCuenta")
+
+  @@map("bancos")
+}
+
+model CuentaBancaria {
+  id           Int     @id @default(autoincrement())
+  bancoId      Int
+  numeroCuenta String  @db.VarChar(50)
+  tipoCuenta   String? @db.VarChar(50)
+  saldoActual  Decimal @default(0.00) @db.Decimal(12, 2)
+
+  banco                Banco                  @relation(name: "BancoCuenta", fields: [bancoId], references: [id])
+  pagosIngresos        PagosIngresos[]
+  transaccionesEgresos TransaccionesEgresos[]
+
+  @@map("cuentas_bancarias")
+}
+
+// ============================================================================
+// DOCUMENTS
+// ============================================================================
+
+model TipoDocumento {
+  id         Int     @id @default(autoincrement())
+  nombre     String  @db.VarChar(100)
+  precioBase Decimal @default(0.00) @db.Decimal(10, 2)
+
+  plantillasDocumento PlantillaDocumento[]
+  servicios           Servicio[]
+
+  @@map("tipos_documento")
+}
+
+model PlantillaDocumento {
+  id              Int     @id @default(autoincrement())
+  tipoDocumentoId Int
+  nombrePlantilla String? @db.VarChar(100)
+  contenidoHtml   String? @db.Text
+
+  tipoDocumento TipoDocumento @relation(fields: [tipoDocumentoId], references: [id])
+
+  @@map("plantillas_documento")
+}
+
+model EstadoTramite {
+  id       Int     @id @default(autoincrement())
+  nombre   String  @db.VarChar(50)
+  colorHex String? @db.VarChar(10)
+
+  historialEstadosServicio HistorialEstadosServicio[]
+
+  @@map("estados_tramite")
+}
+
+// ============================================================================
+// CLIENTS
+// ============================================================================
+
+model Cliente {
+  id            Int             @id @default(autoincrement())
+  tipo          TipoClienteEnum
+  direccion     String?         @db.VarChar(255)
+  telefono      String?         @db.VarChar(20)
+  email         String?         @db.VarChar(100)
+  fechaRegistro DateTime        @default(now()) @db.Timestamptz()
+
+  personaNatural  PersonaNatural?
+  personaJuridica PersonaJuridica?
+  servicios       Servicio[]
+
+  @@map("clientes")
+}
+
+model PersonaNatural {
+  clienteId       Int       @id
+  ci              String?   @unique @db.VarChar(20)
+  expedido        String?   @db.VarChar(10)
+  nombres         String    @db.VarChar(100)
+  apellidos       String    @db.VarChar(100)
+  fechaNacimiento DateTime? @db.Date
+
+  cliente Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  @@map("personas_naturales")
+}
+
+model PersonaJuridica {
+  clienteId          Int     @id
+  nit                String? @unique @db.VarChar(20)
+  razonSocial        String  @db.VarChar(150)
+  representanteLegal String? @db.VarChar(150)
+
+  cliente Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  @@map("personas_juridicas")
+}
+
+// ============================================================================
+// SERVICES & WORKFLOW
+// ============================================================================
+
+model Servicio {
+  id              Int      @id @default(autoincrement())
+  codigoTicket    String   @unique @db.VarChar(20)
+  clienteId       Int
+  tipoDocumentoId Int
+  claseTramite    String?  @db.VarChar(50)
+  tipoTramite     String?  @db.VarChar(50)
+  negocio         String?  @db.VarChar(50)
+  fechaInicio     DateTime @default(now()) @db.Timestamptz()
+  observaciones   String?  @db.Text
+  contenidoFinal  String?  @db.Text
+  montoTotal      Decimal  @db.Decimal(10, 2)
+  saldoPendiente  Decimal  @db.Decimal(10, 2)
+
+  cliente                  Cliente                    @relation(fields: [clienteId], references: [id])
+  tipoDocumento            TipoDocumento              @relation(fields: [tipoDocumentoId], references: [id])
+  historialEstadosServicio HistorialEstadosServicio[]
+  responsablesServicio     ResponsableServicio[]
+  pagosIngresos            PagosIngresos[]
+
+  @@map("servicios")
+}
+
+model HistorialEstadosServicio {
+  id          Int      @id @default(autoincrement())
+  usuarioId   String?
+  servicioId  Int
+  estadoId    Int
+  fechaCambio DateTime @default(now()) @db.Timestamptz()
+  comentario  String?  @db.VarChar(255)
+
+  usuario  Usuario?      @relation(fields: [usuarioId], references: [id])
+  servicio Servicio      @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+  estado   EstadoTramite @relation(fields: [estadoId], references: [id])
+
+  @@map("historial_estados_servicio")
+}
+
+model ResponsableServicio {
+  id              Int       @id @default(autoincrement())
+  usuarioId       String
+  servicioId      Int
+  fechaAsignacion DateTime  @default(now()) @db.Timestamptz()
+  fechaBaja       DateTime?
+  activo          Boolean   @default(true)
+
+  usuario  Usuario  @relation(fields: [usuarioId], references: [id])
+  servicio Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+
+  @@map("responsables_servicio")
+}
+
+// ============================================================================
+// PAYMENTS & INCOME
+// ============================================================================
+
+model PagosIngresos {
+  id                Int             @id @default(autoincrement())
+  servicioId        Int?
+  fecha             DateTime        @default(now()) @db.Timestamptz()
+  monto             Decimal         @db.Decimal(10, 2)
+  tipoPago          MetodoPagoEnum
+  cuentaBancariaId  Int?
+  constanciaTipo    ConstanciaEnum?
+  numeroConstancia  String?         @db.VarChar(50)
+  concepto          String?         @db.VarChar(255)
+  usuarioRegistroId String?
+
+  servicio        Servicio?       @relation(fields: [servicioId], references: [id])
+  cuentaBancaria  CuentaBancaria? @relation(fields: [cuentaBancariaId], references: [id])
+  usuarioRegistro Usuario?        @relation(fields: [usuarioRegistroId], references: [id])
+
+  @@map("pagos_ingresos")
+}
+
+// ============================================================================
+// EXPENSES & DISBURSEMENTS
+// ============================================================================
+
+model Gastos {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @db.VarChar(100)
+  descripcion String?  @db.Text
+  proveedor   String?  @db.VarChar(100)
+  montoTotal  Decimal  @db.Decimal(10, 2)
+  montoPagado Decimal  @default(0) @db.Decimal(10, 2)
+  saldo       Decimal? @db.Decimal(10, 2)
+  fechaGasto  DateTime @default(now()) @db.Date
+  categoria   String?  @db.VarChar(50)
+  usuarioId   String?
+
+  usuario              Usuario?               @relation(fields: [usuarioId], references: [id])
+  transaccionesEgresos TransaccionesEgresos[]
+
+  @@map("gastos")
+}
+
+model TransaccionesEgresos {
+  id               Int            @id @default(autoincrement())
+  gastoId          Int
+  monto            Decimal        @db.Decimal(10, 2)
+  fecha            DateTime       @default(now()) @db.Timestamptz()
+  cuentaBancariaId Int?
+  metodoPago       MetodoPagoEnum
+
+  gasto          Gastos          @relation(fields: [gastoId], references: [id])
+  cuentaBancaria CuentaBancaria? @relation(fields: [cuentaBancariaId], references: [id])
+
+  @@map("transacciones_egresos")
+}
+
+// ============================================================================
+// DAILY RECONCILIATION
+// ============================================================================
+
+model ArqueosDiarios {
+  id                    Int      @id @default(autoincrement())
+  fecha                 DateTime @unique @default(now()) @db.Date
+  usuarioCierreId       String?
+  totalIngresosEfectivo Decimal  @default(0) @db.Decimal(10, 2)
+  totalIngresosBancos   Decimal  @default(0) @db.Decimal(10, 2)
+  totalEgresosEfectivo  Decimal  @default(0) @db.Decimal(10, 2)
+  totalEgresosBancos    Decimal  @default(0) @db.Decimal(10, 2)
+  saldoFinalDia         Decimal  @default(0) @db.Decimal(10, 2)
+  observaciones         String?  @db.Text
+  fechaCierre           DateTime @default(now()) @db.Timestamptz()
+
+  usuarioCierre Usuario? @relation(fields: [usuarioCierreId], references: [id])
+
+  @@map("arqueos_diarios")
 }
