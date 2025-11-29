@@ -4,6 +4,8 @@ import { PrismaService } from 'src/database/prisma.service';
 import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { authenticator } from 'otplib';
+import * as QRCode from 'qrcode';
 import {
   RegistrarUserInput,
   LoginUserInput,
@@ -12,8 +14,11 @@ import {
   ResetPasswordInput,
   VerifyEmailInput,
   RefreshTokenInput,
+  Enable2FAInput,
+  Verify2FAInput,
+  Disable2FAInput,
 } from './dto/auth.input';
-import { AuthResponse, UserProfile } from './auth.entity';
+import { AuthResponse, UserProfile, TwoFactorSetup } from './auth.entity';
 import { SecurityService } from './security.service';
 import { ConfigService } from '@nestjs/config';
 
@@ -24,7 +29,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly securityService: SecurityService,
-  ) {}
+  ) { }
 
   async registerUser(inputDto: RegistrarUserInput) {
     const { email, password, ...userData } = inputDto;
@@ -118,6 +123,8 @@ export class AuthService {
         direccion: true,
         avatar: true,
         emailVerificado: true,
+        twoFactorEnabled: true,
+        twoFactorSecret: true,
         roles: {
           include: {
             rol: {
@@ -149,6 +156,28 @@ export class AuthService {
       return dataResponseError('Usuario inactivo');
     }
 
+    // Si el usuario tiene 2FA habilitado, retornar respuesta parcial
+    if (user.twoFactorEnabled) {
+      const partialResponse: AuthResponse = {
+        accessToken: '',
+        refreshToken: '',
+        user: {
+          usuarioId: user.id,
+          email: user.email,
+          nombre: user.nombre,
+          apellidos: user.apellidos,
+          estaActivo: user.estaActivo,
+          emailVerificado: user.emailVerificado,
+          telefono: user.telefono || null,
+          direccion: user.direccion || null,
+          avatar: user.avatar || null,
+          twoFactorEnabled: true,
+        },
+        requiresTwoFactor: true,
+      };
+      return dataResponseSuccess<AuthResponse>({ data: partialResponse });
+    }
+
     // Generar tokens usando SecurityService
     const tokens = await this.securityService.generateTokens(user.id);
 
@@ -163,6 +192,7 @@ export class AuthService {
       telefono: user.telefono || null,
       direccion: user.direccion || null,
       avatar: user.avatar || null,
+      twoFactorEnabled: user.twoFactorEnabled,
     };
 
     // Extraer permisos únicos
@@ -588,5 +618,262 @@ export class AuthService {
 
   async sendForgotPasswordEmail(email: string, token: string) {
     return this.sendResetPasswordEmail(email, token);
+  }
+
+  // ============================================
+  // Métodos para Two-Factor Authentication (2FA)
+  // ============================================
+
+  /**
+   * Genera el secreto y código QR para configurar 2FA
+   */
+  async setup2FA(userId: string) {
+    const user = await this.prismaService.usuario.findUnique({
+      where: { id: userId },
+      select: { email: true, nombre: true, apellidos: true, twoFactorEnabled: true },
+    });
+
+    if (!user) {
+      return dataResponseError('Usuario no encontrado');
+    }
+
+    if (user.twoFactorEnabled) {
+      return dataResponseError('2FA ya está habilitado. Desactívalo primero si deseas reconfigurarlo.');
+    }
+
+    // Generar secreto TOTP
+    const secret = authenticator.generateSecret();
+
+    // Guardar temporalmente el secreto (sin habilitar 2FA aún)
+    await this.prismaService.usuario.update({
+      where: { id: userId },
+      data: { twoFactorSecret: secret },
+    });
+
+    // Crear el nombre de la aplicación para Google Authenticator
+    const appName = `TU-NOTARIA (${user.email})`;
+
+    // Generar la URL otpauth para el QR
+    const otpauthUrl = authenticator.keyuri(user.email, 'TU-NOTARIA', secret);
+
+    // Generar código QR como data URL
+    const qrCodeUrl = await QRCode.toDataURL(otpauthUrl);
+
+    const setupData: TwoFactorSetup = {
+      qrCodeUrl,
+      secret,
+      appName,
+    };
+
+    return dataResponseSuccess<TwoFactorSetup>({ data: setupData });
+  }
+
+  /**
+   * Habilita 2FA después de verificar el código
+   */
+  async enable2FA(userId: string, inputDto: Enable2FAInput) {
+    const user = await this.prismaService.usuario.findUnique({
+      where: { id: userId },
+      select: { twoFactorSecret: true, twoFactorEnabled: true },
+    });
+
+    if (!user) {
+      return dataResponseError('Usuario no encontrado');
+    }
+
+    if (user.twoFactorEnabled) {
+      return dataResponseError('2FA ya está habilitado');
+    }
+
+    if (!user.twoFactorSecret) {
+      return dataResponseError('Primero debes configurar 2FA usando /auth/2fa/setup');
+    }
+
+    // Verificar el código TOTP
+    const isValid = authenticator.verify({
+      token: inputDto.code,
+      secret: user.twoFactorSecret,
+    });
+
+    if (!isValid) {
+      return dataResponseError('Código de verificación inválido');
+    }
+
+    // Habilitar 2FA
+    await this.prismaService.usuario.update({
+      where: { id: userId },
+      data: { twoFactorEnabled: true },
+    });
+
+    return dataResponseSuccess<string>({ data: '2FA habilitado exitosamente' });
+  }
+
+  /**
+   * Verifica el código 2FA durante el login
+   */
+  async verify2FA(inputDto: Verify2FAInput) {
+    const { userId, code } = inputDto;
+
+    const user = await this.prismaService.usuario.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        nombre: true,
+        apellidos: true,
+        telefono: true,
+        direccion: true,
+        avatar: true,
+        estaActivo: true,
+        emailVerificado: true,
+        twoFactorSecret: true,
+        twoFactorEnabled: true,
+        roles: {
+          include: {
+            rol: {
+              include: {
+                rolPermisos: {
+                  include: {
+                    permiso: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return dataResponseError('Usuario no encontrado');
+    }
+
+    if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+      return dataResponseError('2FA no está habilitado para este usuario');
+    }
+
+    // Verificar el código TOTP
+    const isValid = authenticator.verify({
+      token: code,
+      secret: user.twoFactorSecret,
+    });
+
+    if (!isValid) {
+      return dataResponseError('Código de verificación inválido');
+    }
+
+    // Generar tokens usando SecurityService
+    const tokens = await this.securityService.generateTokens(user.id);
+
+    // Construir perfil de usuario
+    const userProfile: UserProfile = {
+      usuarioId: user.id,
+      email: user.email,
+      nombre: user.nombre,
+      apellidos: user.apellidos,
+      estaActivo: user.estaActivo,
+      emailVerificado: user.emailVerificado,
+      telefono: user.telefono || null,
+      direccion: user.direccion || null,
+      avatar: user.avatar || null,
+      twoFactorEnabled: user.twoFactorEnabled,
+    };
+
+    // Extraer permisos únicos
+    const permissions = new Set<string>();
+    user.roles.forEach((userRole) => {
+      userRole.rol.rolPermisos.forEach((rolPermiso) => {
+        permissions.add(rolPermiso.permiso.nombre);
+      });
+    });
+
+    // Construir respuesta de autenticación
+    const response: AuthResponse = {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user: userProfile,
+      permissions: Array.from(permissions),
+      roles: user.roles.map((userRole) => userRole.rol.nombre),
+    };
+
+    return dataResponseSuccess<AuthResponse>({ data: response });
+  }
+
+  /**
+   * Desactiva 2FA después de verificar la contraseña
+   */
+  async disable2FA(userId: string, inputDto: Disable2FAInput) {
+    const user = await this.prismaService.usuario.findUnique({
+      where: { id: userId },
+      select: { password: true, twoFactorEnabled: true },
+    });
+
+    if (!user) {
+      return dataResponseError('Usuario no encontrado');
+    }
+
+    if (!user.twoFactorEnabled) {
+      return dataResponseError('2FA no está habilitado');
+    }
+
+    // Verificar la contraseña
+    const isPasswordValid = await bcrypt.compare(inputDto.password, user.password);
+    if (!isPasswordValid) {
+      return dataResponseError('Contraseña incorrecta');
+    }
+
+    // Desactivar 2FA y eliminar el secreto
+    await this.prismaService.usuario.update({
+      where: { id: userId },
+      data: {
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+      },
+    });
+
+    return dataResponseSuccess<string>({ data: '2FA deshabilitado exitosamente' });
+  }
+
+  /**
+   * Obtiene el estado de 2FA del usuario
+   */
+  async get2FAStatus(userId: string) {
+    const user = await this.prismaService.usuario.findUnique({
+      where: { id: userId },
+      select: { twoFactorEnabled: true },
+    });
+
+    if (!user) {
+      return dataResponseError('Usuario no encontrado');
+    }
+
+    return dataResponseSuccess<boolean>({ data: user.twoFactorEnabled });
+  }
+
+  /**
+   * Callback de autenticación de Google
+   */
+  async googleCallback(code: string) {
+    // TODO: Implementar lógica de autenticación con Google
+    // 1. Intercambiar el código por un token de acceso
+    // 2. Obtener la información del usuario desde Google
+    // 3. Verificar si el usuario existe en la base de datos
+    // 4. Si no existe, crear el usuario
+    // 5. Generar tokens JWT
+    // 6. Retornar la respuesta de autenticación
+
+
+    const googleClientId = this.configService.get('googleClientId')
+    const googleClientSecret = this.configService.get('googleClientSecret')
+
+    return dataResponseSuccess<AuthResponse>({
+      data: {
+        accessToken: '',
+        refreshToken: '',
+        user: {} as UserProfile,
+        permissions: [],
+        roles: [],
+      }
+    });
   }
 }

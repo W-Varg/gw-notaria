@@ -12,7 +12,11 @@ export default () => {
     showSwagger: process.env.ENV_SWAGGER_SHOW || 'false',
     endEntorno: process.env.ENV_ENTORNO || 'dev',
 
+    googleClientId: process.env.GOOGLE_CLIENT_ID || null,
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || null,
+
     defaultRolRegister: process.env.ENV_DEFAUL_ROL_REGISTER || 'CLIENTE',
+
 
     // ## MS MYSQL
     msMysql: process.env.DATABASE_URL,

@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { AuthUser, AuthResponse, UserProfile } from '../auth.entity';
+import { AuthUser, AuthResponse, UserProfile, TwoFactorSetup } from '../auth.entity';
 import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
 
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -193,3 +193,43 @@ export class ResponseSendResetPasswordEmailType extends OmitType(ApiOkResponseDt
   @ApiProperty({ type: SendResetPasswordEmailData })
   declare response: SendResetPasswordEmailData;
 }
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+/*                                            class for gogle authenticator                                           */
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+
+class TwoFactorSetupData extends OmitType(ResponseStructDTO, ['pagination']) {
+  @ApiProperty({ type: TwoFactorSetup })
+  data: TwoFactorSetup;
+}
+
+export class Response2FASetupType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: TwoFactorSetupData })
+  declare response: TwoFactorSetupData;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+class TwoFactorStatusData extends OmitType(ResponseStructDTO, ['pagination']) {
+  @ApiProperty({ type: Boolean })
+  data: boolean;
+}
+
+export class Response2FAStatusType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: TwoFactorStatusData })
+  declare response: TwoFactorStatusData;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+class Message2FAData extends OmitType(ResponseStructDTO, ['pagination']) {
+  @ApiProperty({ type: String })
+  data: string;
+}
+
+export class ResponseMessage2FAType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: Message2FAData })
+  declare response: Message2FAData;
+}
+

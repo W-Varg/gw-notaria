@@ -170,6 +170,8 @@ model Usuario {
   avatar                    String?
   estaActivo                Boolean                    @default(true)
   emailVerificado           Boolean                    @default(false)
+  twoFactorSecret           String?                    @db.VarChar(255)
+  twoFactorEnabled          Boolean                    @default(false)
   fechaCreacion             DateTime                   @default(now())
   fechaActualizacion        DateTime                   @updatedAt
   // Relaciones de seguridad

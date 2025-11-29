@@ -142,6 +142,13 @@ export class UserProfile {
     example: true,
   })
   emailVerificado?: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    description: 'Estado de autenticación de dos factores',
+    example: false,
+  })
+  twoFactorEnabled?: boolean;
 }
 
 export class AuthResponse {
@@ -180,6 +187,36 @@ export class AuthResponse {
     description: 'Perfil del usuario autenticado',
   })
   user: UserProfile;
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    description: 'Indica si se requiere verificación de 2FA para completar el login',
+    example: false,
+  })
+  requiresTwoFactor?: boolean;
+}
+
+export class TwoFactorSetup {
+  @ApiProperty({
+    type: String,
+    description: 'URL del código QR para escanear con Google Authenticator',
+    example: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
+  })
+  qrCodeUrl: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Clave secreta de respaldo (en caso de que no se pueda escanear el QR)',
+    example: 'JBSWY3DPEHPK3PXP',
+  })
+  secret: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Nombre de la aplicación para mostrar en Google Authenticator',
+    example: 'TU-NOTARIA (usuario@example.com)',
+  })
+  appName: string;
 }
 
 export class TokenPayload {

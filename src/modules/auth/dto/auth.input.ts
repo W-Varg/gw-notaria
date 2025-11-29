@@ -291,3 +291,65 @@ export class SendResetPasswordEmailInput {
   })
   token: string;
 }
+
+// ============================================
+// DTOs para Two-Factor Authentication (2FA)
+// ============================================
+
+export class Enable2FAInput {
+  @Expose()
+  @IsDefined()
+  @IsString()
+  @MinLength(6)
+  @MaxLength(6)
+  @Matches(/^[0-9]{6}$/, {
+    message: 'El código debe ser de 6 dígitos numéricos',
+  })
+  @ApiProperty({
+    type: String,
+    description: 'Código de 6 dígitos de Google Authenticator para habilitar 2FA',
+    example: '123456',
+  })
+  code: string;
+}
+
+export class Verify2FAInput {
+  @Expose()
+  @IsDefined()
+  @IsString()
+  @ApiProperty({
+    type: String,
+    description: 'ID del usuario que está verificando 2FA',
+    example: 'clr1234567890abcdef',
+  })
+  userId: string;
+
+  @Expose()
+  @IsDefined()
+  @IsString()
+  @MinLength(6)
+  @MaxLength(6)
+  @Matches(/^[0-9]{6}$/, {
+    message: 'El código debe ser de 6 dígitos numéricos',
+  })
+  @ApiProperty({
+    type: String,
+    description: 'Código de 6 dígitos de Google Authenticator',
+    example: '123456',
+  })
+  code: string;
+}
+
+export class Disable2FAInput {
+  @Expose()
+  @IsDefined()
+  @IsString()
+  @MinLength(8)
+  @ApiProperty({
+    type: String,
+    description: 'Contraseña actual para confirmar la desactivación de 2FA',
+    example: 'Password123!',
+  })
+  password: string;
+}
+

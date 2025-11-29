@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Patch, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Request, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
   RegistrarUserInput,
@@ -12,6 +12,9 @@ import {
   SendWelcomeEmailInput,
   SendVerificationEmailInput,
   SendResetPasswordEmailInput,
+  Enable2FAInput,
+  Verify2FAInput,
+  Disable2FAInput,
 } from './dto/auth.input';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -30,6 +33,9 @@ import {
   ResponseSendVerificationEmailType,
   ResponseSendResetPasswordEmailType,
   ResponseSendVerificationLinkType,
+  Response2FASetupType,
+  Response2FAStatusType,
+  ResponseMessage2FAType,
 } from './dto/auth.resp';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 
@@ -174,5 +180,59 @@ export class AuthController {
   @ApiResponse({ status: 200, type: () => ResponseSendResetPasswordEmailType })
   async sendForgotPasswordEmail(@Body() body: SendResetPasswordEmailInput) {
     return this.authService.sendForgotPasswordEmail(body.email, body.token);
+  }
+
+  // ============================================
+  // Endpoints para Two-Factor Authentication (2FA)
+  // ============================================
+
+  @Get('2fa/setup')
+  @BearerAuthPermision()
+  @ApiDescription('Generar código QR para configurar 2FA', [])
+  @ApiResponse({ status: 200, type: () => Response2FASetupType })
+  async setup2FA(@Request() req: any) {
+    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
+    return this.authService.setup2FA(userId);
+  }
+
+  @Post('2fa/enable')
+  @BearerAuthPermision()
+  @ApiDescription('Habilitar 2FA después de verificar el código', [])
+  @ApiResponse({ status: 200, type: () => ResponseMessage2FAType })
+  async enable2FA(@Request() req: any, @Body() inputDto: Enable2FAInput) {
+    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
+    return this.authService.enable2FA(userId, inputDto);
+  }
+
+  @Post('2fa/verify')
+  @ApiDescription('Verificar código 2FA durante el login', [])
+  @ApiResponse({ status: 200, type: () => ResponseAuthType })
+  async verify2FA(@Body() inputDto: Verify2FAInput) {
+    return this.authService.verify2FA(inputDto);
+  }
+
+  @Post('2fa/disable')
+  @BearerAuthPermision()
+  @ApiDescription('Desactivar 2FA', [])
+  @ApiResponse({ status: 200, type: () => ResponseMessage2FAType })
+  async disable2FA(@Request() req: any, @Body() inputDto: Disable2FAInput) {
+    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
+    return this.authService.disable2FA(userId, inputDto);
+  }
+
+  @Get('2fa/status')
+  @BearerAuthPermision()
+  @ApiDescription('Obtener estado de 2FA del usuario', [])
+  @ApiResponse({ status: 200, type: () => Response2FAStatusType })
+  async get2FAStatus(@Request() req: any) {
+    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
+    return this.authService.get2FAStatus(userId);
+  }
+
+  @Get('google/callback')
+  @ApiDescription('Callback de autenticación de Google', [])
+  @ApiResponse({ status: 200, type: () => ResponseAuthType })
+  async googleCallback(@Query('code') code: string) {
+    return this.authService.googleCallback(code);
   }
 }
