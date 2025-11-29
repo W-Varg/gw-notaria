@@ -1,0 +1,61 @@
+import { NestFactory, Reflector } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { VersioningType } from '@nestjs/common';
+import { join } from 'path';
+import { ConfigService } from '@nestjs/config';
+import { json, urlencoded } from 'express';
+import * as express from 'express';
+import { configSwagger, IPackageJson, printServerInitLog } from './helpers/swagger.helper';
+import { getCors } from './helpers/cors.helpers';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { ResponseFormatInterceptor } from './common/interceptors/response-format.interceptor';
+
+async function bootstrap() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Servir archivos estáticos usando middleware directo de Express ANTES de cualquier cosa
+  // __dirname en producción apunta a dist/src, necesitamos subir 2 niveles
+  app.use('/storage', express.static(join(__dirname, '..', '..', 'storage')));
+  app.use('/uploads', express.static(join(__dirname, '..', '..', 'uploads')));
+  app.use(express.static(join(__dirname, '..', '..', 'public')));
+
+  app.enableVersioning({ type: VersioningType.URI });
+  app.enableShutdownHooks();
+
+  // load configuration from .env, packageJson
+  const configService = app.get(ConfigService);
+  const packageJson = configService.get<IPackageJson>('packageJson');
+
+  // Configurar CORS
+  app.enableCors({
+    origin: getCors({
+      env_mode: configService.get<string>('ENV_ENTORNO'),
+      env_cors: configService.get<string>('ENV_CORS'),
+    }),
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
+
+  // Configurar filtro global de excepciones
+  const { AllExceptionsFilter } = await import('./common/filters/http-exception.filter');
+  app.useGlobalFilters(new AllExceptionsFilter());
+
+  app.use(json({ limit: configService.get('appMaxSize') }));
+  app.use(urlencoded({ limit: configService.get('appMaxSize'), extended: true }));
+
+  // Interceptors globales
+  app.useGlobalInterceptors(new ResponseFormatInterceptor(app.get(Reflector)));
+
+  // Filters globales
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
+  if (configService.get('showSwagger') === 'true')
+    configSwagger(app, packageJson, { jsonDocumentUrl: '/api/swagger.yml' });
+
+  const port = configService.get<number>('port') || 3000;
+  await app.listen(port, '0.0.0.0').then(async () => {
+    printServerInitLog(app, packageJson);
+  });
+}
+bootstrap();

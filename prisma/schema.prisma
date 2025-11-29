@@ -1,0 +1,693 @@
+/// Este es tu archivo de esquema Prisma
+/// Aprende más sobre esto en la documentación: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// /// https://github.com/dbgso/prisma-generator-plantuml-erd/tree/main/packages/generator
+
+// generator erd_plantuml {
+//   provider                   = "prisma-generator-plantuml-erd"
+//   output                     = "erd.puml"
+//   exportPerTables            = true
+//   showUniqueKeyLabel         = true
+//   isShowForeignKeyOnRelation = true
+// }
+
+// /// https://github.com/kimjbstar/prisma-class-generator
+
+// generator prismaClassGenerator {
+//   provider   = "prisma-class-generator"
+//   output     = "../src/generated/class-generator"
+//   dryRun     = "false"
+//   useSwagger = "true"
+// }
+
+// /// https://github.com/unlight/prisma-nestjs-graphql
+
+// generator nestgraphql {
+//   provider = "node node_modules/prisma-nestjs-graphql"
+//   output   = "../src/generated/graphql-nestjs"
+// }
+
+// /// https://github.com/vegardit/prisma-generator-nestjs-dto
+
+// generator nestjsDto {
+//   provider                        = "prisma-generator-nestjs-dto"
+//   output                          = "../src/generated/nestjs-dto"
+//   outputToNestJsResourceStructure = "true"
+//   exportRelationModifierClasses   = "true"
+//   reExport                        = "false"
+//   createDtoPrefix                 = "Create"
+//   updateDtoPrefix                 = "Update"
+//   dtoSuffix                       = "Dto"
+//   entityPrefix                    = ""
+//   entitySuffix                    = ""
+//   fileNamingStyle                 = "camel"
+// }
+
+// /// https://github.com/omar-dulaimi/prisma-class-validator-generator
+
+// generator class_validator {
+//   provider = "prisma-class-validator-generator"
+//   output   = "../src/generated/validator-generator"
+// }
+
+/// Enums
+
+enum EstadoPedido {
+  PENDIENTE
+  CONFIRMADO
+  EN_PREPARACION
+  LISTO_PARA_ENTREGA
+  ENTREGADO
+  CANCELADO
+  REEMBOLSADO
+}
+
+enum EstadoEntrega {
+  PENDIENTE
+  PROGRAMADA
+  EN_CAMINO
+  ENTREGADA
+  CANCELADA
+}
+
+enum UnidadMedida {
+  Gramos
+  Klg
+  Unidad
+  Caja
+  Paquete
+}
+
+enum DiaSemana {
+  Lunes
+  Martes
+  Miercoles
+  Jueves
+  Viernes
+  Sabado
+  Domingo
+}
+
+// ============================================
+// MÓDULO DE SEGURIDAD Y USUARIOS
+// ============================================
+
+model Rol {
+  id                 Int          @id @default(autoincrement())
+  nombre             String       @unique
+  descripcion        String?
+  estaActivo         Boolean      @default(true)
+  fechaCreacion      DateTime     @default(now())
+  fechaActualizacion DateTime     @updatedAt
+  // Relaciones
+  usuarioRoles       UsuarioRol[]
+  rolPermisos        RolPermiso[]
+
+  @@map("auth_roles")
+}
+
+model Permiso {
+  id          Int          @id @default(autoincrement())
+  nombre      String       @unique
+  descripcion String?
+  modulo      String // ej: "productos", "pedidos", "usuarios", "reportes"
+  accion      String // ej: "crear", "leer", "actualizar", "eliminar"
+  estaActivo  Boolean      @default(true)
+  // Relaciones
+  rolPermisos RolPermiso[]
+
+  @@map("auth_permisos")
+}
+
+model RolPermiso {
+  id Int @id @default(autoincrement())
+
+  rolId     Int
+  permisoId Int
+  // Relaciones
+  rol       Rol     @relation(fields: [rolId], references: [id], onDelete: Cascade)
+  permiso   Permiso @relation(fields: [permisoId], references: [id], onDelete: Cascade)
+
+  @@unique([rolId, permisoId])
+  @@map("auth_rol_permisos")
+}
+
+model Usuario {
+  id                 String             @id @default(cuid())
+  email              String             @unique @db.VarChar(150)
+  password           String             @db.VarChar(150)
+  nombre             String             @db.VarChar(30)
+  apellidos          String             @db.VarChar(30)
+  telefono           String?            @db.VarChar(10)
+  direccion          String?
+  avatar             String?
+  estaActivo         Boolean            @default(true)
+  emailVerificado    Boolean            @default(false)
+  fechaCreacion      DateTime           @default(now())
+  fechaActualizacion DateTime           @updatedAt
+  // Relaciones de seguridad
+  roles              UsuarioRol[]
+  // Relaciones de negocio
+  itemsCarrito       ItemCarrito[]
+  pedidos            Pedido[]
+  reservas           Reserva[]
+  resenas            Resenia[]
+  mensajesContacto   MensajeContacto[]
+  // Relación con empleado
+  empleado           Empleado?
+  // Relación con direcciones de entrega
+  direcciones        DireccionEntrega[]
+
+  @@map("auth_usuarios")
+}
+
+model UsuarioRol {
+  id        Int     @id @default(autoincrement())
+  usuarioId String
+  rolId     Int
+  // Relaciones
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  rol       Rol     @relation(fields: [rolId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, rolId])
+  @@map("auth_usuario_roles")
+}
+
+// ============================================
+// MÓDULO DE EMPLEADOS
+// ============================================
+
+model Empleado {
+  id                 String   @id @default(cuid())
+  usuarioId          String   @unique
+  sucursalId         String? // opcional - empleado puede no estar asignado a sucursal
+  cargo              String // "vendedor", "gerente", "cajero", "almacenista", etc.
+  fechaContratacion  DateTime
+  salario            Float?
+  horarioTrabajo     String? // "mañana", "tarde", "noche", "día completo"
+  estaActivo         Boolean  @default(true)
+  fechaCreacion      DateTime @default(now())
+  fechaActualizacion DateTime @updatedAt
+  notas              String?
+
+  // Relaciones
+  usuario  Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  sucursal Sucursal? @relation(fields: [sucursalId], references: [id])
+
+  @@map("emp_empleados")
+}
+
+// ============================================
+// MÓDULO DE SUCURSALES Y UBICACIONES
+// ============================================
+
+model Sucursal {
+  id                 String   @id @default(cuid())
+  nombre             String
+  direccion          String
+  ciudad             String
+  telefono           String?
+  latitud            Float?
+  longitud           Float?
+  estaActiva         Boolean  @default(true)
+  fechaCreacion      DateTime @default(now())
+  fechaActualizacion DateTime @updatedAt
+
+  // Relaciones
+  inventarios          Inventario[]
+  horarios             HorarioAtencion[]
+  entregas             Entrega[]
+  Pedido               Pedido[]
+  InventarioVariante   InventarioVariante[]
+  InventarioMovimiento InventarioMovimiento[]
+  empleados            Empleado[] // Relación con empleados
+
+  @@map("loc_sucursales")
+}
+
+model HorarioAtencion {
+  id           String    @id @default(cuid())
+  sucursalId   String
+  diaSemana    DiaSemana // 0=Domingo, 1=Lunes, ..., 6=Sábado
+  horaApertura String // "08:00"
+  horaCierre   String // "18:00"
+  estaActivo   Boolean   @default(true)
+  // Relaciones
+  sucursal     Sucursal  @relation(fields: [sucursalId], references: [id], onDelete: Cascade)
+
+  @@unique([sucursalId, diaSemana])
+  @@map("loc_horarios_sucursal")
+}
+
+// ============================================
+// MÓDULO DE PRODUCTOS Y CATEGORÍAS
+// ============================================
+
+model Categoria {
+  id                 String   @id @default(cuid())
+  nombre             String   @unique
+  descripcion        String?
+  imagen             String?
+  estaActiva         Boolean  @default(true)
+  fechaCreacion      DateTime @default(now())
+  fechaActualizacion DateTime @updatedAt
+
+  // Relaciones
+  productos Producto[]
+
+  @@map("cat_categorias")
+}
+
+model TipoProducto {
+  id        String     @id @default(cuid())
+  nombre    String     @unique
+  productos Producto[]
+
+  @@map("cat_tipos_producto")
+}
+
+model Producto {
+  id                   String                 @id @default(cuid())
+  nombre               String
+  descripcion          String?                @db.VarChar(500)
+  precio               Float
+  peso                 Float // peso en gramos
+  // unidad             String           @default("gramos") // "gramos", "kg", "unidad"
+  unidad               UnidadMedida
+  stock                Int                    @default(0)
+  codigoSKU            String                 @unique
+  estaActivo           Boolean                @default(true)
+  fechaCreacion        DateTime               @default(now())
+  fechaActualizacion   DateTime               @updatedAt
+  tipoProductoId       String
+  // Relaciones
+  categoriaId          String
+  categoria            Categoria              @relation(fields: [categoriaId], references: [id])
+  tipo                 TipoProducto           @relation(fields: [tipoProductoId], references: [id])
+  imagenes             ImagenProducto[]
+  inventarios          Inventario[]
+  variantes            ProductoVariante[]
+  resenas              Resenia[]
+  itemsCarrito         ItemCarrito[]
+  itemsPedido          ItemPedido[]
+  ItemReserva          ItemReserva[]
+  // promociones        Promocion[]
+  InventarioMovimiento InventarioMovimiento[]
+
+  @@map("prod_productos")
+}
+
+model ImagenProducto {
+  id          String   @id @default(cuid())
+  url         String
+  esPrincipal Boolean  @default(false)
+  productoId  String
+  // Relaciones
+  producto    Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@map("prod_imagenes_producto")
+}
+
+model Inventario {
+  id                 String   @id @default(cuid())
+  productoId         String
+  sucursalId         String
+  stock              Int      @default(0)
+  stockMinimo        Int      @default(0)
+  stockMaximo        Int      @default(100)
+  cantidadReservado  Int      @default(0)
+  fechaActualizacion DateTime @updatedAt
+
+  // Relaciones
+  producto Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  sucursal Sucursal @relation(fields: [sucursalId], references: [id], onDelete: Cascade)
+
+  @@unique([productoId, sucursalId])
+  @@map("prod_inventarios")
+}
+
+// ============================================
+// VARIANTES DE PRODUCTO E INVENTARIO POR VARIANTE
+// ============================================
+
+model ProductoVariante {
+  id                 String        @id @default(cuid())
+  productoId         String
+  nombre             String
+  sku                String        @unique
+  precio             Float?
+  peso               Float?
+  unidad             UnidadMedida?
+  estaActivo         Boolean       @default(true)
+  imagenUrl          String?
+  fechaCreacion      DateTime      @default(now())
+  fechaActualizacion DateTime      @updatedAt
+
+  producto             Producto               @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  inventarios          InventarioVariante[]
+  InventarioMovimiento InventarioMovimiento[]
+
+  @@map("prod_variantes")
+}
+
+model InventarioVariante {
+  id                 String   @id @default(cuid())
+  varianteId         String
+  sucursalId         String
+  stock              Int      @default(0)
+  stockMinimo        Int      @default(0)
+  stockMaximo        Int      @default(100)
+  cantidadReservado  Int      @default(0)
+  fechaActualizacion DateTime @updatedAt
+
+  variante ProductoVariante @relation(fields: [varianteId], references: [id], onDelete: Cascade)
+  sucursal Sucursal         @relation(fields: [sucursalId], references: [id], onDelete: Cascade)
+
+  @@unique([varianteId, sucursalId])
+  @@map("prod_inventarios_variantes")
+}
+
+model InventarioMovimiento {
+  id            String   @id @default(cuid())
+  sucursalId    String
+  productoId    String?
+  varianteId    String?
+  tipo          String // ingreso, egreso, ajuste
+  cantidad      Int
+  stockAntes    Int
+  stockDespues  Int
+  motivo        String?
+  usuarioId     String?
+  fechaCreacion DateTime @default(now())
+
+  sucursal Sucursal          @relation(fields: [sucursalId], references: [id], onDelete: Cascade)
+  producto Producto?         @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  variante ProductoVariante? @relation(fields: [varianteId], references: [id], onDelete: Cascade)
+
+  @@map("prod_inventario_movimientos")
+}
+
+// ============================================
+// MÓDULO DE PROMOCIONES Y DESCUENTOS
+// ============================================
+
+// model Promocion {
+//   id                 String   @id @default(cuid())
+//   productoId         String
+//   nombre             String
+//   descripcion        String?
+//   tipo               String // "porcentaje", "monto_fijo", "compra_x_lleva_y"
+//   valorDescuento     Float // porcentaje o monto fijo
+//   codigo             String?  @unique
+//   fechaInicio        DateTime
+//   fechaFin           DateTime
+//   montoMinimo        Float? // monto mínimo de compra
+//   usosMaximos        Int? // máximo número de usos
+//   usosActuales       Int      @default(0)
+//   estaActiva         Boolean  @default(true)
+//   fechaCreacion      DateTime @default(now())
+//   fechaActualizacion DateTime @updatedAt
+//   producto           Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+//   // Relaciones
+//   pedidos            Pedido[]
+
+//   @@map("promociones")
+// }
+
+// ============================================
+// MÓDULO DE CARRITOS DE COMPRA
+// ============================================
+
+model ItemCarrito {
+  id                 String   @id @default(cuid())
+  usuarioId          String
+  productoId         String
+  cantidad           Int
+  precio             Float // precio al momento de agregar al carrito
+  fechaCreacion      DateTime @default(now())
+  fechaActualizacion DateTime @updatedAt
+
+  // Relaciones
+  usuario  Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  producto Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@map("ven_carrito_items")
+}
+
+// ============================================
+// MÓDULO DE RESERVAS
+// ============================================
+
+model Reserva {
+  id        String   @id @default(cuid())
+  usuarioId String
+  expiraEn  DateTime // Fecha de expiración (3 días después de creada)
+  estado    String   @default("activa") // "activa", "expirada", "convertida_a_pedido"
+  creadoEn  DateTime @default(now())
+
+  usuario Usuario       @relation(fields: [usuarioId], references: [id])
+  items   ItemReserva[]
+
+  @@map("ven_reservas")
+}
+
+model ItemReserva {
+  id         String @id @default(cuid())
+  reservaId  String
+  productoId String
+  cantidad   Int    @default(1)
+  precio     Float
+
+  reserva  Reserva  @relation(fields: [reservaId], references: [id], onDelete: Cascade)
+  producto Producto @relation(fields: [productoId], references: [id])
+
+  @@map("ven_reserva_items")
+}
+
+// ============================================
+// MÓDULO DE PEDIDOS Y VENTAS
+// ============================================
+
+model Pedido {
+  id                 String       @id @default(cuid())
+  usuarioId          String
+  sucursalId         String
+  numeroPedido       String       @unique
+  // estado             String       @default("pendiente") // "pendiente", "confirmado", "preparando", "listo", "entregado", "cancelado"
+  estado             EstadoPedido @default(PENDIENTE)
+  subtotal           Float
+  montoDescuento     Float        @default(0)
+  montoImpuestos     Float        @default(0)
+  montoEnvio         Float        @default(0)
+  montoTotal         Float
+  estadoPago         String       @default("pendiente") // "pendiente", "pagado", "fallido", "reembolsado"
+  metodoPago         String? // "tarjeta_credito", "tarjeta_debito", "paypal", "efectivo"
+  pagoId             String? // ID de pasarela de pagos (Stripe/PayPal)
+  notas              String?
+  fechaCreacion      DateTime     @default(now())
+  fechaActualizacion DateTime     @updatedAt
+  // Relaciones
+  entrega            Entrega?
+  usuario            Usuario      @relation(fields: [usuarioId], references: [id])
+  sucursal           Sucursal     @relation(fields: [sucursalId], references: [id])
+  // promocionId String?
+  // promocion   Promocion? @relation(fields: [promocionId], references: [id])
+  items              ItemPedido[]
+
+  @@map("ven_pedidos")
+}
+
+model ItemPedido {
+  id         String @id @default(cuid())
+  pedidoId   String
+  productoId String
+  cantidad   Int
+  precio     Float // precio al momento del pedido
+  subtotal   Float // cantidad * precio
+
+  // Relaciones
+  pedido   Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  producto Producto @relation(fields: [productoId], references: [id])
+
+  @@map("ven_pedido_items")
+}
+
+// ============================================
+// MÓDULO DE ENTREGAS
+// ============================================
+
+model Entrega {
+  id                   String        @id @default(cuid())
+  pedidoId             String        @unique
+  sucursalId           String?
+  direccionEntrega     String
+  nombreDestinatario   String
+  telefonoDestinatario String
+  fechaEntrega         DateTime?
+  horarioEntrega       String? // "mañana", "tarde", "noche"
+  // estado               String        @default("pendiente") // "pendiente", "asignado", "en_camino", "entregado"
+  estado               EstadoEntrega @default(PENDIENTE)
+  costoEntrega         Float         @default(0)
+  notas                String?
+  fechaCreacion        DateTime      @default(now())
+  fechaActualizacion   DateTime      @updatedAt
+
+  // Relaciones
+  pedido   Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  sucursal Sucursal? @relation(fields: [sucursalId], references: [id])
+
+  @@map("ven_entregas")
+}
+
+// ============================================
+// MÓDULO DE SERVICIOS INFORMATIVOS
+// ============================================
+
+model Servicio {
+  id                 String           @id @default(cuid())
+  nombre             String
+  descripcion        String
+  categoria          String // "cuidado", "peluqueria", "guarderia", "vacunacion"
+  precio             Float? // precio referencial
+  duracion           String? // "1 hora", "medio día", etc.
+  estaActivo         Boolean          @default(true)
+  fechaCreacion      DateTime         @default(now())
+  fechaActualizacion DateTime         @updatedAt
+  /// relaciones
+  imagenes           ImagenServicio[]
+
+  @@map("cat_servicios")
+}
+
+model ImagenServicio {
+  id          String   @id @default(cuid())
+  servicioId  String
+  url         String
+  esPrincipal Boolean  @default(false)
+  // Relaciones
+  servicio    Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+
+  @@map("imagenes_servicio")
+}
+
+// ============================================
+// MÓDULO DE CONTACTO
+// ============================================
+
+model MensajeContacto {
+  id                 String   @id @default(cuid())
+  usuarioId          String? // opcional, puede ser un usuario anónimo
+  nombre             String
+  correo             String
+  telefono           String?
+  asunto             String
+  mensaje            String
+  categoria          String   @default("consulta") // "consulta", "queja", "sugerencia", "reclamo", "felicitacion", "otro"
+  estado             String   @default("no_leido") // "no_leido", "leido", "en_proceso", "respondido", "cerrado"
+  fechaCreacion      DateTime @default(now())
+  fechaActualizacion DateTime @updatedAt
+
+  // Relaciones
+  usuario Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@map("int_mensajes_contacto")
+}
+
+// ============================================
+// MÓDULO DE RESEÑAS Y GALERÍA
+// ============================================
+
+model Resenia {
+  id            String   @id @default(cuid())
+  usuarioId     String
+  productoId    String
+  puntuacion    Int // 1 a 5 estrellas
+  comentario    String?
+  estaAprobada  Boolean  @default(false)
+  fechaCreacion DateTime @default(now())
+  // Relaciones
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  producto      Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, productoId])
+  @@map("int_resenias")
+}
+
+// ============================================
+// MÓDULO DE CONFIGURACIÓN DEL SISTEMA
+// ============================================
+
+model ConfiguracionSistema {
+  id                 String   @id @default(cuid())
+  clave              String   @unique
+  valor              String
+  tipo               String   @default("texto") // "texto", "numero", "booleano", "json"
+  descripcion        String?
+  fechaActualizacion DateTime @updatedAt
+
+  @@map("_configuracion_sistema")
+}
+
+// ============================================
+// MÓDULO DE INFORMACIÓN DE TIENDA/CONTACTO
+// ============================================
+
+model InformacionTienda {
+  id                   String   @id @default(cuid())
+  nombre               String   @default("PetStore")
+  descripcion          String?
+  email                String
+  telefono1            String
+  telefono2            String?
+  whatsapp             String?
+  direccionCompleta    String
+  ciudad               String
+  codigoPostal         String?
+  latitud              Float?
+  longitud             Float?
+  horarioLunesViernes  String   @default("8:00-19:00")
+  horarioSabado        String   @default("8:00-17:00")
+  horarioDomingo       String   @default("9:00-15:00")
+  facebook             String?
+  instagram            String?
+  tiktok               String?
+  youtube              String?
+  website              String?
+  informacionAdicional String?  @db.Text
+  logoUrl              String?
+  estaActivo           Boolean  @default(true)
+  fechaCreacion        DateTime @default(now())
+  fechaActualizacion   DateTime @updatedAt
+
+  @@map("info_tienda")
+}
+
+// ============================================
+// MÓDULO DE DIRECCIONES DE ENTREGA
+// ============================================
+
+model DireccionEntrega {
+  id            String   @id @default(cuid())
+  usuarioId     String
+  nombre        String // Nombre para identificar la dirección (Casa, Trabajo, etc.)
+  direccion     String
+  ciudad        String
+  codigoPostal  String?
+  referencia    String?
+  esPrincipal   Boolean  @default(false)
+  fechaCreacion DateTime @default(now())
+
+  // Relaciones
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("cli_direcciones_entrega")
+}

@@ -1,0 +1,52 @@
+import { Controller, Get, Post, Body, Query, Patch, Param } from '@nestjs/common';
+import { PermisosService } from './permisos.service';
+import { ApiDescription } from 'src/common/decorators/controller.decorator';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
+import { PermisoEnum } from 'src/enums/permisos.enum';
+import { PermisoWhereInput, ListPermisosArgsDto, UpdatePermisoActivoDto } from './dto/permisos.dto';
+import {
+  ResponseMessageType,
+  ResponsePermisosType,
+  PaginatePermisosType,
+} from './dto/permisos.response';
+import { ResponseRolDetailType } from '../roles/dto/roles.response';
+import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+
+@ApiTags('[auth] Permisos')
+@Controller('permisos')
+export class PermisosController {
+  constructor(private readonly permisosService: PermisosService) {}
+
+  @Post('list')
+  @BearerAuthPermision([PermisoEnum.PERMISOS_VER])
+  @ApiDescription('Listar permisos con filtros y paginado', [PermisoEnum.PERMISOS_VER])
+  @ApiResponse({ status: 200, type: () => PaginatePermisosType })
+  list(@Body() inputDto: ListPermisosArgsDto) {
+    return this.permisosService.filter(inputDto);
+  }
+
+  @Get()
+  @BearerAuthPermision([PermisoEnum.PERMISOS_VER])
+  @ApiDescription('Listar todos los permisos', [PermisoEnum.PERMISOS_VER])
+  @ApiResponse({ status: 200, type: () => ResponsePermisosType })
+  findAll(@Query() query: ListFindAllQueryDto) {
+    return this.permisosService.findAll(query);
+  }
+
+  @Post('asignar')
+  @BearerAuthPermision([PermisoEnum.ROLES_EDITAR])
+  @ApiDescription('Asignar permisos a un rol', [PermisoEnum.ROLES_EDITAR])
+  @ApiResponse({ status: 200, type: () => ResponseRolDetailType })
+  assign(@Body() body: { roleId: number; permisos: string[] }) {
+    return this.permisosService.assignToRoleByNames(body.roleId, body.permisos);
+  }
+
+  @Patch(':id/activo')
+  @BearerAuthPermision([PermisoEnum.PERMISOS_EDITAR])
+  @ApiDescription('Cambiar el estado activo de un permiso', [PermisoEnum.PERMISOS_EDITAR])
+  @ApiResponse({ status: 200, type: () => ResponseMessageType })
+  updateActivo(@Param('id') id: string, @Body() updateActivoDto: UpdatePermisoActivoDto) {
+    return this.permisosService.updateActivo(+id, updateActivoDto);
+  }
+}

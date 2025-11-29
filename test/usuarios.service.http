@@ -1,0 +1,17 @@
+@urlBase = http://192.168.100.44:3060
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOnsidXN1YXJpb0lkIjoiY21ma2k4ZmpuMDAwMHI5NmN2ZXBxY3Q4cyIsImFwbGljYWNpb25JZCI6MSwiZnVuY2lvbmFyaW9JZCI6MSwibXNQZXJzb25hSWQiOjEsImluc3RpdHVjaW9uSWQiOjEsInBlcmZpbFBlcnNvbmFJZCI6MSwib2ZpY2luYUlkIjoxLCJtdW5pY2lwaW9JZCI6MSwiZGVwYXJ0YW1lbnRvSWQiOjEsImNpIjoiY21ma2k4ZmpuMDAwMHI5NmN2ZXBxY3Q4cyIsIm5vbWJyZUNvbXBsZXRvIjoiVXN1YXJpbyIsImFwbGljYWNpb25UYWciOiJwZXRzLWFwcCJ9LCJpYXQiOjE3NTc5ODM2NjksImV4cCI6MTc1Nzk4NDU2OX0.ZcbzanO7i8OVPdFgiNetutNu4dSAL3zxSjnKJOxhc-Y
+
+###
+curl -X 'POST' \
+  '{{urlBase}}/admin/security/usuarios' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer {{token}}' \
+  -H 'Content-Type: multipart/form-data' \
+  -F 'email=stringsf' \
+  -F 'password=string' \
+  -F 'nombre=string' \
+  -F 'apellidos=string' \
+  -F 'telefono=string' \
+  -F 'direccion=string' \
+  -F 'avatar=@../test/1_image.png;type=image/png' \
+  -F 'rolesIds=[1,2]'

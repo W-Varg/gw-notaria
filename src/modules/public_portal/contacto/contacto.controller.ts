@@ -1,0 +1,29 @@
+import { Controller, Post, Body, Get } from '@nestjs/common';
+import { ContactoService } from './contacto.service';
+import { ContactoMensajeDto } from './dto/contacto.input.dto';
+import { ApiDescription } from 'src/common/decorators/controller.decorator';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ResponseMensajeType, ResponseContactoType } from './dto/contacto.response';
+
+@ApiTags('[public] Contacto')
+@Controller('contacto')
+export class ContactoController {
+  constructor(private readonly contactoService: ContactoService) {}
+
+  @Post('enviar-mensaje')
+  @ApiDescription('Enviar mensaje de contacto', [])
+  @ApiResponse({ status: 201, type: () => ResponseMensajeType })
+  enviarMensaje(@Body() dto: ContactoMensajeDto) {
+    return this.contactoService.enviarMensaje(dto);
+  }
+
+  @Get('informacion')
+  @ApiDescription(
+    'Obtener información de contacto (teléfonos, email, horarios, redes sociales)',
+    [],
+  )
+  @ApiResponse({ status: 200, type: () => ResponseContactoType })
+  getInformacionContacto() {
+    return this.contactoService.getInformacionContacto();
+  }
+}

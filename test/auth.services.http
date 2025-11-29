@@ -1,0 +1,36 @@
+### registro de usuarios
+curl -X 'POST' \
+  'http://192.168.100.44:3060/auth/register' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+ "email": "admin@gmail.com",
+  "password": "Cambiar123@",
+  "nombre": "Admin",
+  "apellidos": "mi-apellido",
+  "telefono": "78945612",
+  "direccion": "Calle aniceto arce"
+}'
+
+### login de usuario
+curl -X 'POST' \
+  'http://192.168.100.44:3060/auth/login' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "email": "admin@gmail.com",
+  "password": "Cambiar123@"
+}'
+
+### crear usuario con imagen
+curl -X 'POST' \
+  'http://192.168.100.44:3060/admin/security/usuarios' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOnsidXN1YXJpb0lkIjoiY21ma2k4ZmpuMDAwMHI5NmN2ZXBxY3Q4cyIsImFwbGljYWNpb25JZCI6MSwiZnVuY2lvbmFyaW9JZCI6MSwibXNQZXJzb25hSWQiOjEsImluc3RpdHVjaW9uSWQiOjEsInBlcmZpbFBlcnNvbmFJZCI6MSwib2ZpY2luYUlkIjoxLCJtdW5pY2lwaW9JZCI6MSwiZGVwYXJ0YW1lbnRvSWQiOjEsImNpIjoiY21ma2k4ZmpuMDAwMHI5NmN2ZXBxY3Q4cyIsIm5vbWJyZUNvbXBsZXRvIjoiVXN1YXJpbyIsImFwbGljYWNpb25UYWciOiJwZXRzLWFwcCJ9LCJpYXQiOjE3NTc5ODM2NjksImV4cCI6MTc1Nzk4NDU2OX0.ZcbzanO7i8OVPdFgiNetutNu4dSAL3zxSjnKJOxhc-Y' \
+  -H 'accept: application/json' \
+  -F 'email=test@example.com' \
+  -F 'password=password123' \
+  -F 'nombre=Juan' \
+  -F 'apellidos=Pérez' \
+  -F 'telefono=1234567890' \
+  -F 'rolesIds=[10,12,65,66]' \
+  -F 'avatar=@../test/1_image.png'

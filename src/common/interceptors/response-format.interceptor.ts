@@ -1,0 +1,49 @@
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { SKIP_RESPONSE_FORMAT } from '../decorators/interceptor.decorator';
+import { Reflector } from '@nestjs/core';
+import { Response } from 'express';
+import { map, Observable } from 'rxjs';
+
+@Injectable()
+export class ResponseFormatInterceptor implements NestInterceptor {
+  constructor(private readonly reflector: Reflector) {}
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const skipFormat = this.reflector.get<boolean>(SKIP_RESPONSE_FORMAT, context.getHandler());
+
+    if (skipFormat) {
+      return next.handle();
+    }
+
+    const httpContext = context.switchToHttp();
+    const response = httpContext.getResponse<Response>();
+
+    return next.handle().pipe(
+      map((data) => {
+        // Tu lógica de formateo existente
+        if (typeof data?.error !== 'boolean') {
+          const auxData = {
+            error: false,
+            message: 'Respuesta exitosa',
+            response: {
+              data: data,
+            },
+            status: 200,
+          };
+          response.status(auxData.status);
+          return auxData;
+        } else {
+          if (typeof data.status == 'number' && data.status > 200) response.status(data.status);
+          else if (!data.error) {
+            data.status = 200;
+            response.status(200);
+          } else {
+            data.status = 422;
+            response.status(422);
+          }
+          return data;
+        }
+      }),
+    );
+  }
+}
