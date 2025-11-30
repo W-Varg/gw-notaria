@@ -52,7 +52,6 @@ El proyecto incluye un sistema completo de envío de emails con plantillas HTML 
 Crea un archivo `.env` con:
 
 ```env
-EMAIL_FROM=tu.email@gmail.com
 EMAIL_USER=tu.email@gmail.com
 EMAIL_PASS=tu_contraseña_de_aplicación
 EMAIL_SERVICE=gmail

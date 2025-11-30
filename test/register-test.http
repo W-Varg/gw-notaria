@@ -188,13 +188,6 @@ Content-Type: application/json
 ### NOTAS IMPORTANTES
 ### ===================================================
 
-### CONFIGURACIÓN NECESARIA EN .ENV:
-# EMAIL_FROM=kryshot05@gmail.com
-# EMAIL_USER=kryshot05@gmail.com
-# EMAIL_PASS=ikhy abc szvb fzlf
-# EMAIL_SERVICE=gmail
-# ENV_FRONT_APP_URL=http://localhost:5173
-
 ### FLUJO COMPLETO DE REGISTRO:
 # 1. Usuario se registra → Recibe email de verificación
 # 2. Usuario hace clic en el enlace del email → Email verificado

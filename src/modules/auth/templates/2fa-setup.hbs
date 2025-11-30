@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autenticación de dos factores activada</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: #ffffff;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    .content {
+      padding: 40px 30px;
+      color: #333333;
+    }
+    .content h2 {
+      color: #38f9d7;
+      margin-top: 0;
+    }
+    .content p {
+      line-height: 1.6;
+      margin: 15px 0;
+    }
+    .footer {
+      background-color: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #666666;
+    }
+    .success-box {
+      background-color: #d4edda;
+      border-left: 4px solid #28a745;
+      padding: 15px;
+      margin: 20px 0;
+      font-size: 14px;
+      color: #155724;
+    }
+    .info-box {
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .info-box h3 {
+      color: #38f9d7;
+      margin-top: 0;
+    }
+    .info-box ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    .info-box li {
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔒 Autenticación de Dos Factores</h1>
+    </div>
+    <div class="content">
+      <h2>Hola, {{name}}!</h2>
+      
+      <div class="success-box">
+        <strong>✅ ¡Configuración exitosa!</strong> Has activado la autenticación de dos factores (2FA) en tu cuenta.
+      </div>
+
+      <p>Tu cuenta ahora tiene una capa adicional de seguridad. Cada vez que inicies sesión, necesitarás:</p>
+      <ol>
+        <li>Tu contraseña</li>
+        <li>Un código de verificación de 6 dígitos generado por tu aplicación de autenticación</li>
+      </ol>
+
+      <div class="info-box">
+        <h3>📱 ¿Cómo funciona?</h3>
+        <ul>
+          <li><strong>Al iniciar sesión:</strong> Después de ingresar tu contraseña, te pediremos el código de 6 dígitos</li>
+          <li><strong>Códigos temporales:</strong> Los códigos cambian cada 30 segundos para máxima seguridad</li>
+          <li><strong>Sin conexión:</strong> La aplicación funciona sin necesidad de internet</li>
+        </ul>
+      </div>
+
+      <div class="info-box">
+        <h3>🛡️ Beneficios de seguridad:</h3>
+        <ul>
+          <li>Protección contra accesos no autorizados</li>
+          <li>Seguridad adicional incluso si tu contraseña es comprometida</li>
+          <li>Estándar de seguridad utilizado por bancos y empresas tecnológicas</li>
+        </ul>
+      </div>
+
+      <p><strong>Importante:</strong> Guarda los códigos de respaldo en un lugar seguro. Los necesitarás si pierdes acceso a tu aplicación de autenticación.</p>
+
+      <p style="margin-top: 30px;">Si no activaste esta función o tienes alguna duda, contáctanos de inmediato.</p>
+    </div>
+    <div class="footer">
+      <p>© 2024 Tu Notaría. Todos los derechos reservados.</p>
+      <p>¿Necesitas desactivar 2FA? Puedes hacerlo desde la configuración de tu cuenta.</p>
+    </div>
+  </div>
+</body>
+</html>

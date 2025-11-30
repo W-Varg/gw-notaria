@@ -32,6 +32,7 @@
     "postinstall": "yarn prisma generate"
   },
   "dependencies": {
+    "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/cache-manager": "^3.0.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
@@ -50,7 +51,8 @@
     "class-validator": "^0.14.2",
     "csv-writer": "^1.6.0",
     "dotenv": "^17.2.3",
-    "nodemailer": "^7.0.6",
+    "handlebars": "^4.7.8",
+    "nodemailer": "^7.0.11",
     "otplib": "^12.0.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
