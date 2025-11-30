@@ -4,7 +4,7 @@ import {
   UpdateCategoriaDto,
   ListCategoriaArgsDto,
 } from './dto/categoria.input.dto';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/global/database/prisma.service';
 import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { Categoria } from './categoria.entity';

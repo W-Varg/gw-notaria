@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/global/database/prisma.service';
 import { IToken, getTokenInformacion } from 'src/common/decorators/token.decorator';
 import { Prisma } from 'src/generated/prisma/client';
 
@@ -111,114 +111,6 @@ export class SecurityService {
     } catch (error) {
       console.error('Error al obtener permisos del usuario:', error);
       return [];
-    }
-  }
-
-  /**
-   * Obtiene la lista de roles de un usuario
-   * @param tokenDecoded - Token decodificado del usuario
-   * @returns Promise<string[]> - Array de roles únicos
-   */
-  async userListRoles(tokenDecoded: IToken): Promise<string[]> {
-    try {
-      if (!tokenDecoded.usuarioId) {
-        return [];
-      }
-
-      const user = await this.prismaService.usuario.findUnique({
-        where: { id: tokenDecoded.usuarioId.toString() },
-        include: {
-          roles: {
-            include: {
-              rol: true,
-            },
-          },
-        },
-      });
-
-      if (!user || !user.estaActivo) {
-        return [];
-      }
-
-      // Extraer todos los roles únicos
-      const roles = user.roles.map((userRole) => userRole.rol.nombre);
-      return roles;
-    } catch (error) {
-      console.error('Error al obtener roles del usuario:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Verifica si un usuario tiene un permiso específico
-   * @param tokenDecoded - Token decodificado del usuario
-   * @param permission - Permiso a verificar
-   * @returns Promise<boolean> - True si tiene el permiso
-   */
-  async userHasPermission(tokenDecoded: IToken, permission: string): Promise<boolean> {
-    try {
-      const permissions = await this.userListPermissions(tokenDecoded);
-      return permissions.includes(permission);
-    } catch (error) {
-      return false;
-    }
-  }
-
-  /**
-   * Verifica si un usuario tiene un rol específico
-   * @param tokenDecoded - Token decodificado del usuario
-   * @param role - Rol a verificar
-   * @returns Promise<boolean> - True si tiene el rol
-   */
-  async userHasRole(tokenDecoded: IToken, role: string): Promise<boolean> {
-    try {
-      const roles = await this.userListRoles(tokenDecoded);
-      return roles.includes(role);
-    } catch (error) {
-      return false;
-    }
-  }
-
-  /**
-   * Obtiene información completa del usuario desde el token
-   * @param tokenDecoded - Token decodificado del usuario
-   * @returns Promise<any> - Información completa del usuario
-   */
-  async getUserInfo(tokenDecoded: IToken) {
-    try {
-      if (!tokenDecoded.usuarioId) {
-        return null;
-      }
-
-      const user = await this.prismaService.usuario.findUnique({
-        where: { id: tokenDecoded.usuarioId.toString() },
-        include: {
-          roles: {
-            include: {
-              rol: {
-                include: {
-                  rolPermisos: {
-                    include: {
-                      permiso: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
-
-      if (!user) {
-        return null;
-      }
-
-      // Remover contraseña de la respuesta
-      const { password, ...userWithoutPassword } = user;
-      return userWithoutPassword;
-    } catch (error) {
-      console.error('Error al obtener información del usuario:', error);
-      return null;
     }
   }
 

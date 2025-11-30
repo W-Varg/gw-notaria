@@ -4572,7 +4572,7 @@ c12@3.3.1:
     pkg-types "^2.3.0"
     rc9 "^2.1.2"
 
-cache-manager@^7.2.0:
+cache-manager@^7.2.5:
   version "7.2.5"
   resolved "https://registry.yarnpkg.com/cache-manager/-/cache-manager-7.2.5.tgz#be275c1638735b7bd6b3f9c433374a3f2eb0d22e"
   integrity sha512-Y5LF7olTrcKJn1NoKiWPOvjEiO5DfDVPxqZHETCRMaliC60KBNb4Ge/vEYep5TyaqpXvnpnPPo8zauCe6UzZwA==

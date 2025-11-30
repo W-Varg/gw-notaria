@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional, IntersectionType } from '@nestjs/swagger';
 import { Expose, Transform, TransformFnParams } from 'class-transformer';
-import { IsDateString, IsIn, IsInt, IsISO8601, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsDateString, IsIn, IsISO8601, IsOptional, IsString, Max, Min } from 'class-validator';
 import { smsIsDate } from 'src/helpers/validator.sms';
 
 export class PaginationQueryDto {
@@ -58,6 +58,6 @@ export class DateRangeQueryDto {
   toDate?: string;
 }
 
-export class BaseFilterDto extends IntersectionType(PaginationQueryDto, OrderQueryDto) { }
+export class BaseFilterDto extends IntersectionType(PaginationQueryDto, OrderQueryDto) {}
 
-export class ListFindAllQueryDto extends IntersectionType(PaginationQueryDto, OrderQueryDto) { }
+export class ListFindAllQueryDto extends IntersectionType(PaginationQueryDto, OrderQueryDto) {}

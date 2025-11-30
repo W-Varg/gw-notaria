@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/global/database/prisma.service';
 import { PermisosRepository } from './permisos.repository';
 import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';

@@ -56,10 +56,6 @@ export class ResponseFAQsType extends OmitType(ApiOkResponseDto, ['cache']) {
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-
-
-
-
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 class InformacionCompletaData extends OmitType(ResponseStructDTO, ['pagination']) {
