@@ -3,9 +3,14 @@ import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 export const paginationParamsFormat = (args: ListFindAllQueryDto, defaultPagination = false) => {
   const { page, size, orderBy, orderDirection } = args || {};
 
-  let skip: number | undefined;
-  let take: number | undefined;
-  let pagination: any = undefined;
+  let skip: number;
+  let take: number;
+  let pagination: {
+    total: number;
+    page: number;
+    size: number;
+    from: number;
+  };
   if (defaultPagination) {
     pagination = { total: 0, page: 0, size: 10, from: 1 };
     skip = 0;
