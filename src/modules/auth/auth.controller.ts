@@ -38,6 +38,7 @@ import {
   Response2FASetupType,
   Response2FAStatusType,
   ResponseMessage2FAType,
+  ResponseRegisterType,
 } from './dto/auth.resp';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { GoogleAuthGuard } from 'src/common/guards/google-auth.guard';
@@ -54,10 +55,12 @@ export class AuthController {
 
   @Post('register')
   @ApiDescription('Registrar un nuevo usuario', [])
-  @ApiResponse({ status: 200, type: () => ResponseAuthType })
+  @ApiResponse({ status: 200, type: () => ResponseRegisterType })
   async register(@Body() inputDto: RegistrarUserInput) {
     return this.authService.registerUser(inputDto);
   }
+
+  /* ------------------------------------------------------------------------------------------------------------------ */
 
   @Post('login')
   @ApiDescription('servicio para iniciar sesión', [])

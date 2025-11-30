@@ -25,25 +25,25 @@
 
 Backend NestJS para sistema de Notaría con autenticación completa, sistema de emails con Gmail, 2FA y Google OAuth.
 
-## ✨ Características Principales
+## Características Principales
 
-- 🔐 **Autenticación completa** con JWT
-- 📧 **Sistema de emails con Gmail** (Nodemailer + plantillas HTML)
-- 🔒 **Autenticación de dos factores (2FA)** con Google Authenticator
-- 🌐 **Google OAuth** integrado
-- 📝 **Prisma ORM** para base de datos
-- 🎨 **Swagger** para documentación de API
-- ✅ **Verificación de email** con tokens seguros
-- 🔑 **Recuperación de contraseña** vía email
+-- **Autenticación completa** con JWT
+-- **Sistema de emails con Gmail** (Nodemailer + plantillas HTML)
+-- **Autenticación de dos factores (2FA)** con Google Authenticator
+-- **Google OAuth** integrado
+-- **Prisma ORM** para base de datos
+-- **Swagger** para documentación de API
+-- **Verificación de email** con tokens seguros
+-- **Recuperación de contraseña** vía email
 
-## 📧 Sistema de Emails
+## Sistema de Emails
 
 El proyecto incluye un sistema completo de envío de emails con plantillas HTML profesionales:
 
-- ✅ Email de verificación de registro
-- 🎉 Email de bienvenida
-- 🔐 Email de recuperación de contraseña
-- 🔒 Email de confirmación de 2FA
+-- Email de verificación de registro
+-- Email de bienvenida
+-- Email de recuperación de contraseña
+-- Email de confirmación de 2FA
 
 **Documentación completa:** [docs/EMAIL_SYSTEM.md](docs/EMAIL_SYSTEM.md)
 
@@ -79,7 +79,7 @@ $ yarn run start:dev
 $ yarn run start:prod
 ```
 
-## 🧪 Pruebas
+## Pruebas
 
 ### Pruebas de Registro y Emails
 Usa el archivo `test/register-test.http` para probar el flujo completo:

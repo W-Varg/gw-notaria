@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/database/prisma.service';
 import { dataResponseError, dataResponseSuccess, ResponseDTO } from 'src/common/dtos/response.dto';
@@ -18,7 +18,7 @@ import {
   Verify2FAInput,
   Disable2FAInput,
 } from './dto/auth.input';
-import { AuthResponse, UserProfile, TwoFactorSetup, GoogleUserData } from './auth.entity';
+import { AuthResponse, UserProfile, TwoFactorSetup, GoogleUserData, AuthUser } from './auth.entity';
 import { SecurityService } from './security.service';
 import { EmailService } from './services/email.service';
 import { ConfigService } from '@nestjs/config';
@@ -50,39 +50,22 @@ export class AuthService {
     // Encriptar la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Crear el usuario
+    // Crear el usuario (inactivo hasta que verifique el email)
     const user = await this.prismaService.usuario.create({
       data: {
         ...userData,
         email,
         password: hashedPassword,
         emailVerificado: false,
+        estaActivo: false,
+      },
+      select: {
+        id: true,
+        email: true,
+        nombre: true,
+        apellidos: true,
       },
     });
-
-    // Generar tokens usando SecurityService
-    const tokens = await this.securityService.generateTokens(user);
-
-    // Construir perfil de usuario
-    const userProfile: UserProfile = {
-      usuarioId: user.id,
-      email: user.email,
-      nombre: user.nombre,
-      apellidos: user.apellidos,
-      estaActivo: user.estaActivo,
-      emailVerificado: user.emailVerificado,
-      telefono: user.telefono || null,
-      direccion: user.direccion || null,
-      avatar: user.avatar || null,
-    };
-
-    // Construir respuesta de autenticación
-    const response: AuthResponse = {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      user: userProfile,
-      roles: [],
-    };
 
     // Generar token de verificación
     const verifyToken = crypto.randomBytes(32).toString('hex');
@@ -106,7 +89,7 @@ export class AuthService {
     // Enviar email de verificación usando el EmailService
     await this.emailService.sendVerificationEmail(user.email, user.nombre, verifyToken);
 
-    return dataResponseSuccess<AuthResponse>({ data: response });
+    return dataResponseSuccess({ data: user }, { message: 'Usuario registrado exitosamente' });
   }
 
   async login(inputDto: LoginUserInput) {
@@ -154,12 +137,19 @@ export class AuthService {
       return dataResponseError('Credenciales inválidas');
     }
 
-    // Verificar que el usuario esté activo
-    if (!user.estaActivo) {
-      return dataResponseError('Usuario inactivo');
+    // Verificar que el email esté verificado
+    if (!user.emailVerificado) {
+      return dataResponseError(
+        'Debes verificar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.',
+      );
     }
 
-    // Si el usuario tiene 2FA habilitado, retornar respuesta parcial
+    // Verificar que el usuario esté activo
+    if (!user.estaActivo) {
+      return dataResponseError('Tu cuenta se encuentra inactiva. Contacta al administrador.');
+    }
+
+    // Si el usuario tiene 2FA habilitado (Google Authenticator)
     if (user.twoFactorEnabled) {
       const partialResponse: AuthResponse = {
         accessToken: '',
@@ -177,8 +167,61 @@ export class AuthService {
           twoFactorEnabled: true,
         },
         requiresTwoFactor: true,
+        otpMethod: 'authenticator', // Indica que debe usar Google Authenticator
       };
-      return dataResponseSuccess<AuthResponse>({ data: partialResponse });
+      return dataResponseSuccess<AuthResponse>(
+        { data: partialResponse },
+        { message: 'Introduce el codigo de vericacion de google' },
+      );
+    }
+
+    // Si twoFactorEnabled está desactivado, enviar OTP por email
+    if (!user.twoFactorEnabled && user.emailVerificado) {
+      // Generar código OTP de 6 dígitos
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // Guardar OTP en configuración del sistema con expiración de 10 minutos
+      const expirationTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+      await this.prismaService.configuracionSistema.upsert({
+        where: { clave: `otp_email_${user.id}` },
+        update: {
+          valor: JSON.stringify({ code: otpCode, expiresAt: expirationTime.toISOString() }),
+          tipo: 'json',
+          descripcion: 'OTP temporal para login por email',
+        },
+        create: {
+          clave: `otp_email_${user.id}`,
+          valor: JSON.stringify({ code: otpCode, expiresAt: expirationTime.toISOString() }),
+          tipo: 'json',
+          descripcion: 'OTP temporal para login por email',
+        },
+      });
+
+      // Enviar OTP por email
+      await this.emailService.sendOTPEmail(user.email, user.nombre, otpCode);
+
+      const partialResponse: AuthResponse = {
+        accessToken: '',
+        refreshToken: '',
+        user: {
+          usuarioId: user.id,
+          email: user.email,
+          nombre: user.nombre,
+          apellidos: user.apellidos,
+          estaActivo: user.estaActivo,
+          emailVerificado: user.emailVerificado,
+          telefono: user.telefono || null,
+          direccion: user.direccion || null,
+          avatar: user.avatar || null,
+          twoFactorEnabled: false,
+        },
+        requiresTwoFactor: true,
+        otpMethod: 'email', // Indica que debe usar código por email
+      };
+      return dataResponseSuccess<AuthResponse>(
+        { data: partialResponse },
+        { message: 'se envió un código de verificacion a tu correo electrónico' },
+      );
     }
 
     // Generar tokens usando SecurityService
@@ -536,13 +579,8 @@ export class AuthService {
       where: { id: userId },
     });
 
-    if (!user) {
-      return dataResponseError('Usuario no encontrado');
-    }
-
-    if (user.emailVerificado) {
-      return dataResponseError('El email ya está verificado');
-    }
+    if (!user) return dataResponseError('Usuario no encontrado');
+    if (user.emailVerificado) return dataResponseError('El email ya está verificado');
 
     // Generar token de verificación
     const verifyToken = crypto.randomBytes(32).toString('hex');
@@ -746,15 +784,55 @@ export class AuthService {
       return dataResponseError('Usuario no encontrado');
     }
 
-    if (!user.twoFactorEnabled || !user.twoFactorSecret) {
-      return dataResponseError('2FA no está habilitado para este usuario');
-    }
+    let isValid = false;
 
-    // Verificar el código TOTP
-    const isValid = authenticator.verify({
-      token: code,
-      secret: user.twoFactorSecret,
-    });
+    // Si tiene 2FA habilitado (Google Authenticator)
+    if (user.twoFactorEnabled && user.twoFactorSecret) {
+      // Verificar el código TOTP
+      isValid = authenticator.verify({
+        token: code,
+        secret: user.twoFactorSecret,
+      });
+    }
+    // Si no tiene 2FA habilitado, validar OTP por email
+    else if (!user.twoFactorEnabled) {
+      // Buscar el OTP guardado
+      const otpConfig = await this.prismaService.configuracionSistema.findUnique({
+        where: { clave: `otp_email_${user.id}` },
+      });
+
+      if (!otpConfig) {
+        return dataResponseError('Código OTP no encontrado o expirado');
+      }
+
+      try {
+        const otpData = JSON.parse(otpConfig.valor);
+        const expiresAt = new Date(otpData.expiresAt);
+
+        // Verificar si el código expiró
+        if (new Date() > expiresAt) {
+          // Eliminar OTP expirado
+          await this.prismaService.configuracionSistema.delete({
+            where: { id: otpConfig.id },
+          });
+          return dataResponseError('El código OTP ha expirado. Solicita uno nuevo.');
+        }
+
+        // Verificar que el código coincida
+        isValid = otpData.code === code;
+
+        // Si es válido, eliminar el OTP usado
+        if (isValid) {
+          await this.prismaService.configuracionSistema.delete({
+            where: { id: otpConfig.id },
+          });
+        }
+      } catch (error) {
+        return dataResponseError('Error al validar el código OTP');
+      }
+    } else {
+      return dataResponseError('Método de verificación no válido');
+    }
 
     if (!isValid) {
       return dataResponseError('Código de verificación inválido');

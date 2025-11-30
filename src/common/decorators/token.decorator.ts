@@ -60,10 +60,12 @@ function GetDataOfJWT(request: Request): IToken {
       tokenInformacion = result.tokenInformacion;
 
       tokenInformacion.client = request.headers['user-agent'];
-      if (isTokenExpire(tokenInformacion.expireIn))
+      if (isTokenExpire(tokenInformacion.expireIn)) {
         throw new ApiUnauthorizedError('el token expiró');
-      if (tokenInformacion.estaActivo === false)
+      }
+      if (tokenInformacion.estaActivo === false) {
         throw new ApiUnauthorizedError('Usuario inactivo');
+      }
     } catch (e) {
       throw new ApiUnauthorizedError('el token no es valido/expiro', textError);
     }

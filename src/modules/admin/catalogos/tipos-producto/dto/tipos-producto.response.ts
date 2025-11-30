@@ -2,7 +2,7 @@ import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { TipoProducto, TipoProductoDetail } from '../tipo-producto.entity';
 import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
 
-export class TipoProductoData extends OmitType(ResponseStructDTO, ['pagination']) {
+class TipoProductoData extends OmitType(ResponseStructDTO, ['pagination']) {
   @ApiProperty({ type: TipoProducto })
   data: TipoProducto;
 }

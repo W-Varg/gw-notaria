@@ -194,6 +194,15 @@ export class AuthResponse {
     example: false,
   })
   requiresTwoFactor?: boolean;
+
+  @ApiPropertyOptional({
+    type: String,
+    description:
+      'Método de verificación OTP: "authenticator" para Google Authenticator, "email" para código por email',
+    example: 'email',
+    enum: ['authenticator', 'email'],
+  })
+  otpMethod?: 'authenticator' | 'email';
 }
 
 export class TwoFactorSetup {

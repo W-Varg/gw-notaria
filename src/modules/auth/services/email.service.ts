@@ -10,7 +10,7 @@ export class EmailService {
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
   ) {
-    this.logger.log('✅ Servicio de email configurado correctamente');
+    this.logger.log('Servicio de email configurado');
   }
 
   /**
@@ -24,10 +24,7 @@ export class EmailService {
       to: email,
       subject: 'Verifica tu cuenta - Tu Notaría',
       template: 'verification',
-      context: {
-        name,
-        verificationLink,
-      },
+      context: { name, verificationLink },
     });
   }
 
@@ -37,11 +34,9 @@ export class EmailService {
   async sendWelcomeEmail(email: string, name: string): Promise<boolean> {
     return this.sendEmail({
       to: email,
-      subject: '🎉 Bienvenido a Tu Notaría',
+      subject: 'Bienvenido a Tu Notaría',
       template: 'welcome',
-      context: {
-        name,
-      },
+      context: { name },
     });
   }
 
@@ -54,12 +49,9 @@ export class EmailService {
 
     return this.sendEmail({
       to: email,
-      subject: '🔐 Recuperación de contraseña - Tu Notaría',
+      subject: 'Recuperación de contraseña - Tu Notaría',
       template: 'reset-password',
-      context: {
-        name,
-        resetLink,
-      },
+      context: { name, resetLink },
     });
   }
 
@@ -69,37 +61,39 @@ export class EmailService {
   async send2FASetupEmail(email: string, name: string): Promise<boolean> {
     return this.sendEmail({
       to: email,
-      subject: '🔒 Autenticación de dos factores activada',
+      subject: 'Autenticación de dos factores activada',
       template: '2fa-setup',
-      context: {
-        name,
-      },
+      context: { name },
     });
   }
 
   /**
-   * Método genérico para enviar emails con templates de Handlebars
+   * Enviar email con código OTP temporal para login
+   */
+  async sendOTPEmail(email: string, name: string, otpCode: string): Promise<boolean> {
+    return this.sendEmail({
+      to: email,
+      subject: 'Código de verificación - Tu Notaría',
+      template: 'otp',
+      context: { name, code: otpCode },
+    });
+  }
+
+  /**
+   * Método genérico para enviar emails
    */
   private async sendEmail(options: {
     to: string;
     subject: string;
-    template: string;
-    context: Record<string, any>;
+    template?: string;
+    context?: Record<string, any>;
   }): Promise<boolean> {
     const emailUser = this.configService.get<string>('emailUser');
     const emailPass = this.configService.get<string>('emailPass');
 
-    // Si no hay credenciales configuradas, simular envío
     if (!emailUser || !emailPass) {
-      this.logger.warn('Credenciales de email no configuradas. Simulando envío...');
-      this.logger.log(`\n${'='.repeat(80)}`);
-      this.logger.log(`📧 EMAIL SIMULADO`);
-      this.logger.log(`${'='.repeat(80)}`);
-      this.logger.log(`Para: ${options.to}`);
-      this.logger.log(`Asunto: ${options.subject}`);
-      this.logger.log(`Template: ${options.template}.hbs`);
-      this.logger.log(`Contexto:`, JSON.stringify(options.context, null, 2));
-      this.logger.log(`${'='.repeat(80)}\n`);
+      this.logger.warn('Credenciales de email no configuradas. Simulando envío de email.');
+      this.logger.log(`Email simulado - Para: ${options.to} - Asunto: ${options.subject}`);
       return false;
     }
 
@@ -111,10 +105,10 @@ export class EmailService {
         context: options.context,
       });
 
-      this.logger.log(`📧 Email enviado exitosamente a: ${options.to}`);
+      this.logger.log(`Email enviado exitosamente a: ${options.to}`);
       return true;
     } catch (error) {
-      this.logger.error(`❌ Error al enviar email a ${options.to}:`, error.message);
+      this.logger.error(`Error al enviar email a ${options.to}: ${error.message || error}`);
       return false;
     }
   }

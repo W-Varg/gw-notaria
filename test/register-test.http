@@ -49,7 +49,7 @@ Content-Type: application/json
 
 ### IMPORTANTE: 
 ### - Revisa tu bandeja de entrada del email que registraste
-### - Abre el email "✅ Verifica tu cuenta - Tu Notaría"
+### - Abre el email "Verifica tu cuenta - Tu Notaría"
 ### - Copia el token del enlace de verificación
 ### - El token está después de "?token=" en la URL
 
@@ -81,7 +81,7 @@ Content-Type: application/json
 
 ### IMPORTANTE:
 ### - Después de verificar, recibirás un email de bienvenida
-### - Abre el email "🎉 Bienvenido a Tu Notaría"
+### - Abre el email "Bienvenido a Tu Notaría"
 
 ### ===================================================
 
@@ -124,7 +124,7 @@ Content-Type: application/json
 
 ### IMPORTANTE:
 ### - Revisa tu email
-### - Abre el email "🔐 Recuperación de contraseña - Tu Notaría"
+### - Abre el email "Recuperación de contraseña - Tu Notaría"
 ### - Copia el token del enlace de recuperación
 
 @resetToken = PEGA_AQUI_EL_TOKEN_DEL_EMAIL

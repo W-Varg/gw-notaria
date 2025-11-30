@@ -1,0 +1,272 @@
+### ============================================
+### FLUJO COMPLETO DE AUTENTICACIÓN MEJORADA
+### ============================================
+
+### Variables
+@baseUrl = http://localhost:3060
+@email = kryshot05@gmail.com
+@password = Test123@Pass
+@nombre = Juan
+@apellidos = Pérez
+# Estas variables se llenarán automáticamente con las respuestas
+@verifyToken = 
+@otpCode = 
+@userId = 
+@accessToken = 
+
+### ============================================
+### 1. REGISTRO DE USUARIO
+### ============================================
+### Esperado: Usuario creado con emailVerificado=false, estaActivo=false
+### Se envía email de verificación
+
+# @name registro
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "nombre": "{{nombre}}",
+  "apellidos": "{{apellidos}}",
+  "telefono": "12345678",
+  "direccion": "Calle Test 123"
+}
+
+### ============================================
+### 2. INTENTO DE LOGIN SIN VERIFICAR EMAIL
+### ============================================
+### Esperado: Error - "Debes verificar tu correo electrónico antes de iniciar sesión"
+
+# @name loginSinVerificar
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### ============================================
+### 3. VERIFICAR EMAIL
+### ============================================
+### Instrucciones:
+### 1. Revisar el email enviado en el paso 1
+### 2. Copiar el token del enlace (parte después de ?token=)
+### 3. Reemplazar {TOKEN_DEL_EMAIL} con el token real
+### Esperado: emailVerificado=true, estaActivo=true
+### @name verificarEmail
+
+@verificationToken = PEGA_AQUI_EL_TOKEN_DEL_EMAIL
+
+POST {{baseUrl}}/auth/verify-email
+Content-Type: application/json
+
+{
+  "token": "{{verificationToken}}"
+}
+
+### ============================================
+### 4. LOGIN CON EMAIL VERIFICADO (Sin 2FA)
+### ============================================
+### Escenario A: Usuario sin twoFactorEnabled
+### Esperado: Login exitoso directo con tokens
+
+# @name loginVerificado
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### ============================================
+### 5. LOGIN CON OTP POR EMAIL
+### ============================================
+### Escenario B: Usuario con twoFactorEnabled=false pero requiere OTP
+### Esperado: requiresTwoFactor=true, otpMethod='email'
+### Se envía email con código OTP de 6 dígitos
+
+# @name loginConOTPEmail
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@gmail.com",
+  "password": "Cambiar123@"
+}
+
+### ============================================
+### 6. VERIFICAR OTP POR EMAIL
+### ============================================
+### Instrucciones:
+### 1. Revisar el email enviado en el paso 5
+### 2. Copiar el código de 6 dígitos
+### 3. Reemplazar {CODIGO_DEL_EMAIL} con el código real
+### 4. Usar el userId del paso 5 (authData.user.usuarioId)
+### Esperado: Login completado con accessToken y refreshToken
+
+# @name verificarOTP
+
+@CODIGO_DEL_EMAIL= 824355
+POST {{baseUrl}}/auth/2fa/verify
+Content-Type: application/json
+
+{
+  "userId": "cmim5ch810000u9r90ubqiy3x",
+  "code": "{{CODIGO_DEL_EMAIL}}"
+}
+
+### ============================================
+### 7. LOGIN CON GOOGLE AUTHENTICATOR
+### ============================================
+### Escenario C: Usuario con twoFactorEnabled=true
+### Esperado: requiresTwoFactor=true, otpMethod='authenticator'
+
+# @name loginConAuthenticator
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "usuario2fa@example.com",
+  "password": "Password123@"
+}
+
+### ============================================
+### 8. VERIFICAR GOOGLE AUTHENTICATOR
+### ============================================
+### Instrucciones:
+### 1. Abrir Google Authenticator en tu móvil
+### 2. Copiar el código de 6 dígitos
+### 3. Reemplazar {CODIGO_AUTHENTICATOR} con el código
+### Esperado: Login completado con tokens
+
+# @name verificarAuthenticator
+POST {{baseUrl}}/auth/2fa/verify
+Content-Type: application/json
+
+{
+  "userId": "{USER_ID_DEL_PASO_7}",
+  "code": "{CODIGO_AUTHENTICATOR}"
+}
+
+### ============================================
+### 9. OBTENER INFORMACIÓN DEL USUARIO
+### ============================================
+### Usar el accessToken del paso 6 u 8
+
+# @name getMe
+@ACCESS_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOnsidXN1YXJpb0lkIjoiY21pbTVjaDgxMDAwMHU5cjkwdWJxaXkzeCIsIm5vbWJyZUNvbXBsZXRvIjoiSnVhbiIsImVzdGFBY3Rpdm8iOnRydWV9LCJpYXQiOjE3NjQ1MzM4NzgsImV4cCI6MTc2NDU0ODI3OH0.VxEMtGe8ZnbFcO9SqavYcuC6QevMQMS5ZohV7l1j20Y
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{ACCESS_TOKEN}}
+
+### ============================================
+### CASOS DE ERROR
+### ============================================
+
+### Error 1: Login con credenciales incorrectas
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "PasswordIncorrecto123@"
+}
+
+###
+
+### Error 2: Verificar con token inválido
+POST {{baseUrl}}/auth/verify-email
+Content-Type: application/json
+
+{
+  "token": "token-invalido-12345"
+}
+
+###
+
+### Error 3: Verificar OTP expirado (esperar 10 minutos)
+POST {{baseUrl}}/auth/2fa/verify
+Content-Type: application/json
+
+{
+  "userId": "{USER_ID}",
+  "code": "123456"
+}
+
+###
+
+### Error 4: Verificar OTP con código incorrecto
+POST {{baseUrl}}/auth/2fa/verify
+Content-Type: application/json
+
+{
+  "userId": "{USER_ID}",
+  "code": "000000"
+}
+
+###
+
+### ============================================
+### VERIFICAR ESTADO EN BASE DE DATOS
+### ============================================
+### Usar estos queries SQL para verificar el estado:
+
+### Ver usuario creado
+# SELECT id, email, "emailVerificado", "estaActivo", "twoFactorEnabled" 
+# FROM auth_usuarios 
+# WHERE email = 'test-otp@example.com';
+
+### Ver token de verificación (antes de verificar)
+# SELECT * FROM _configuracion_sistema 
+# WHERE clave LIKE 'verify_token_%';
+
+### Ver OTP guardado (válido por 10 minutos)
+# SELECT * FROM _configuracion_sistema 
+# WHERE clave LIKE 'otp_email_%';
+
+### ============================================
+### FLUJO RECOMENDADO PARA TESTING
+### ============================================
+
+# 1. Ejecutar paso 1 (Registro)
+# 2. Ejecutar paso 2 (Debería fallar con error de email no verificado)
+# 3. Revisar email, copiar token y ejecutar paso 3 (Verificar Email)
+# 4. Ejecutar paso 4 o 5 dependiendo del escenario
+# 5. Si se requiere OTP, revisar email y ejecutar paso 6
+# 6. Verificar acceso con paso 9 (Get Me)
+
+### ============================================
+### NOTAS IMPORTANTES
+### ============================================
+
+# • Los usuarios se crean con estaActivo=false
+# • Solo pueden hacer login después de verificar email
+# • El OTP por email expira en 10 minutos
+# • Los OTP son de un solo uso
+# • El otpMethod indica si debe usar Authenticator o Email
+# • Los tokens de verificación no tienen expiración automática
+# • Implementar rate limiting en producción
+
+### ============================================
+### TROUBLESHOOTING
+### ============================================
+
+# Problema: "Email no verificado"
+# Solución: Ejecutar paso 3 con el token del email
+
+# Problema: "Usuario inactivo"
+# Solución: Verificar que emailVerificado=true en la BD
+
+# Problema: "Código OTP inválido"
+# Solución: 
+#   - Verificar que no hayan pasado 10 minutos
+#   - Verificar que estés usando el código más reciente
+#   - No reutilizar códigos ya usados
+
+# Problema: "Email no llega"
+# Solución:
+#   - Revisar carpeta de spam
+#   - Verificar logs del backend
+#   - Comprobar variables de entorno EMAIL_*

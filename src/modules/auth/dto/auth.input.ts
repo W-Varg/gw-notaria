@@ -297,7 +297,6 @@ export class SendResetPasswordEmailInput {
 // DTOs para Two-Factor Authentication (2FA)
 // ============================================
 
-
 @DtoPipePlainToClassOptions()
 export class Enable2FAInput {
   @Expose()
@@ -355,4 +354,3 @@ export class Disable2FAInput {
   })
   password: string;
 }
-

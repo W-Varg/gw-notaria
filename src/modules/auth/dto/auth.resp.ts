@@ -4,6 +4,17 @@ import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dt
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
+class AuthRegisterData extends OmitType(ResponseStructDTO, ['pagination']) {
+  @ApiProperty({ type: AuthUser })
+  data: AuthUser;
+}
+
+export class ResponseRegisterType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: AuthRegisterData })
+  declare response: AuthRegisterData;
+}
+/* ------------------------------------------------------------------------------------------------------------------ */
+
 class AuthData extends OmitType(ResponseStructDTO, ['pagination']) {
   @ApiProperty({ type: AuthResponse })
   data: AuthResponse;
@@ -198,7 +209,6 @@ export class ResponseSendResetPasswordEmailType extends OmitType(ApiOkResponseDt
 /*                                            class for gogle authenticator                                           */
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-
 class TwoFactorSetupData extends OmitType(ResponseStructDTO, ['pagination']) {
   @ApiProperty({ type: TwoFactorSetup })
   data: TwoFactorSetup;
@@ -232,4 +242,3 @@ export class ResponseMessage2FAType extends OmitType(ApiOkResponseDto, ['cache']
   @ApiProperty({ type: Message2FAData })
   declare response: Message2FAData;
 }
-

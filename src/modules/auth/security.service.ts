@@ -240,8 +240,6 @@ export class SecurityService {
       },
     };
 
-    console.log(user.estaActivo);
-
     if (user.estaActivo) {
       const accessToken = this.jwtService.sign(payload, {
         secret: this.configService.get('jwtSecret') || 'jwt-secret',

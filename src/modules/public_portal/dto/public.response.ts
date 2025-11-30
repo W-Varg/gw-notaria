@@ -10,9 +10,9 @@ export class CategoriaPublica extends OmitType(Categoria, [
   'estaActiva',
   'fechaCreacion',
   'fechaActualizacion',
-]) {}
+]) { }
 
-export class CategoriaDataPublic {
+class CategoriaDataPublic {
   @ApiProperty({ type: [CategoriaPublica] })
   data: CategoriaPublica[];
 }
@@ -26,7 +26,7 @@ export class CategoriasTypePublic extends OmitType(ApiOkResponseDto, ['cache']) 
 /*                                                 tipo producto types                                                */
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-export class TiposProductosTypePublic extends ResponseTipoProductoType {}
+export class TiposProductosTypePublic extends ResponseTipoProductoType { }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 /*                                                    reseñas types                                                   */

@@ -124,7 +124,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     error: Prisma.PrismaClientKnownRequestError,
     resp: IResponseDTO<any>,
   ): void {
-    const prismaError = error as Prisma.PrismaClientKnownRequestError;
+    const prismaError = error;
 
     // Errores de conexión a la base de datos
     if (prismaError.code === 'EHOSTUNREACH') {

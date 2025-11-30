@@ -45,4 +45,4 @@ import { GoogleStrategy } from 'src/common/guards/google.strategy';
   providers: [AuthService, SecurityService, EmailService, GoogleStrategy],
   exports: [AuthService, SecurityService, EmailService],
 })
-export class AuthModule { }
+export class AuthModule {}

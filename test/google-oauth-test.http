@@ -6,7 +6,7 @@
 ### PRUEBAS DE GOOGLE OAUTH
 ### ====================================
 
-### 🔧 CONFIGURACIÓN PREVIA NECESARIA:
+### CONFIGURACIÓN PREVIA NECESARIA:
 # 
 # 1. Configura las siguientes variables en el .env del backend:
 #    GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
@@ -25,7 +25,7 @@
 
 ### 1. Iniciar autenticación con Google (MÉTODO MANUAL)
 # Este endpoint redirige al navegador a Google para autenticación
-# ⚠️  NO EJECUTAR DESDE REST CLIENT - Copiar URL y abrir en navegador
+# NO EJECUTAR DESDE REST CLIENT - Copiar URL y abrir en navegador
 
 # URL para copiar y pegar en el navegador:
 # http://localhost:3060/auth/google
@@ -44,7 +44,7 @@
 ### ====================================
 
 ### 2. Simular callback de Google (para testing)
-# ⚠️  Este endpoint normalmente solo lo llama Google
+# Este endpoint normalmente solo lo llama Google
 # Para probarlo manualmente, necesitas un código válido de Google
 
 ### GUARDAR EL CÓDIGO QUE RECIBISTE DE GOOGLE AQUÍ:
@@ -172,25 +172,25 @@ Content-Type: application/json
 ### CASOS DE PRUEBA
 ### ====================================
 
-### ✅ CASO 1: Usuario nuevo se registra con Google
+### CASO 1: Usuario nuevo se registra con Google
 # 1. Ir a: http://localhost:3060/auth/google
 # 2. Iniciar sesión con cuenta de Google nueva
 # 3. Verificar que se crea el usuario en la BD
 # 4. Verificar que email está verificado automáticamente
 # 5. Verificar que se guarda el avatar de Google
 
-### ✅ CASO 2: Usuario existente hace login con Google
+### CASO 2: Usuario existente hace login con Google
 # 1. Ir a: http://localhost:3060/auth/google
 # 2. Iniciar sesión con cuenta de Google existente en la BD
 # 3. Verificar que no se duplica el usuario
 # 4. Verificar que se retornan sus roles y permisos existentes
 
-### ✅ CASO 3: Usuario inactivo intenta login con Google
+### CASO 3: Usuario inactivo intenta login con Google
 # 1. Desactivar usuario en la BD (estaActivo = false)
 # 2. Intentar login con Google
 # 3. Verificar que retorna error "Usuario inactivo"
 
-### ✅ CASO 4: Código de Google inválido o expirado
+### CASO 4: Código de Google inválido o expirado
 # 1. Intentar usar un código antiguo o inventado
 # 2. Verificar que retorna error apropiado
 
@@ -199,26 +199,26 @@ Content-Type: application/json
 ### NOTAS IMPORTANTES
 ### ====================================
 
-### 📝 Sobre los códigos de Google:
+### Sobre los códigos de Google:
 # - Los códigos son de UN SOLO USO
 # - Expiran después de ~10 minutos
 # - No se pueden reutilizar
 # - Deben ser intercambiados por tokens inmediatamente
 
-### 🔒 Seguridad:
+### Seguridad:
 # - Los usuarios creados con Google tienen contraseña aleatoria
 # - No pueden hacer login con contraseña tradicional
 # - Deben usar siempre Google OAuth
 # - El email se marca como verificado automáticamente
 
-### 🎯 Datos guardados de Google:
+### Datos guardados de Google:
 # - Email (usado como identificador único)
 # - Nombre (given_name)
 # - Apellidos (family_name)
 # - Avatar (picture URL)
 # - Email verificado (verified_email)
 
-### 🔄 Flujo completo:
+### Flujo completo:
 # 1. Usuario → Frontend → Click "Continuar con Google"
 # 2. Frontend → Backend → GET /auth/google
 # 3. Backend → Google → Redirige para autenticación
@@ -239,22 +239,22 @@ Content-Type: application/json
 ### TROUBLESHOOTING
 ### ====================================
 
-### ❌ Error: "Google OAuth no está configurado"
+### Error: "Google OAuth no está configurado"
 # Solución: Verifica que GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET 
 #          estén en el .env del backend
 
-### ❌ Error: "redirect_uri_mismatch"
+### Error: "redirect_uri_mismatch"
 # Solución: Verifica que la URI en Google Cloud Console coincida 
 #          exactamente con GOOGLE_REDIRECT_URI
 
-### ❌ Error: "Error al autenticar con Google"
+### Error: "Error al autenticar con Google"
 # Solución: Revisa los logs del backend para más detalles
 #          Verifica que el código no haya expirado
 
-### ❌ Error: "Usuario inactivo"
+### Error: "Usuario inactivo"
 # Solución: Activa el usuario en la base de datos
 
-### ❌ Error: "invalid_grant"
+### Error: "invalid_grant"
 # Solución: El código ya fue usado o expiró
 #          Genera un nuevo código iniciando el flujo de nuevo
 
@@ -263,11 +263,11 @@ Content-Type: application/json
 ### ENLACES ÚTILES
 ### ====================================
 
-# 🔗 Google Cloud Console:
+# Google Cloud Console:
 # https://console.cloud.google.com/
 
-# 🔗 Documentación OAuth 2.0 de Google:
+# Documentación OAuth 2.0 de Google:
 # https://developers.google.com/identity/protocols/oauth2
 
-# 🔗 Probar OAuth sin implementar backend:
+# Probar OAuth sin implementar backend:
 # https://developers.google.com/oauthplayground/

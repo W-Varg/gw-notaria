@@ -4,7 +4,6 @@ import {
   PoliticaTienda,
   PromocionActiva,
   PreguntaFrecuente,
-  InformacionEmpresa,
   InformacionCompletaTienda,
 } from '../info.entity';
 import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
@@ -57,15 +56,9 @@ export class ResponseFAQsType extends OmitType(ApiOkResponseDto, ['cache']) {
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-class EmpresaData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: InformacionEmpresa })
-  data: InformacionEmpresa;
-}
 
-export class ResponseEmpresaType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: EmpresaData })
-  declare response: EmpresaData;
-}
+
+
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 

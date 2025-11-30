@@ -12,7 +12,7 @@ export default tseslint.config(
       '**/node_modules/**',
       'prisma/seed/**',
       'commitlint.config.ts',
-      // 'src/generated/**',
+      'src/generated/**',
       'prisma.config.ts',
     ],
   },

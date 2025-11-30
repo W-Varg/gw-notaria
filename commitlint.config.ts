@@ -7,17 +7,17 @@ const configuration: UserConfig = {
       2,
       'always',
       [
-        'feat', //      🚀 Nueva funcionalidad.
-        'fix', //       🐞 Corrección de errores.
-        'perf', //      ⚡ Mejoras de rendimiento(performance).
-        'refactor', //  ♻️ Cambios en el código que no afectan el comportamiento.
-        'test', //      🧪 cambios en pruebas unitarias o de integración.
-        'build', //     🏗️ Cambios en el sistema de construcción (webpack, tsc).
-        'ci', //        🔧 Configuración de CI/CD.
-        'docs', //      📚 Cambios en la documentación.
-        'revert', //    ⏪ reversion de commit.
-        'style', //     💄 Cambios en el formato del código o aplicacion de linter
-        'chore', //     📦 Mantenimiento (dependencias, configuración, scripts)
+        'feat', //      Nueva funcionalidad.
+        'fix', //       Corrección de errores.
+        'perf', //      Mejoras de rendimiento(performance).
+        'refactor', //  Cambios en el código que no afectan el comportamiento.
+        'test', //      cambios en pruebas unitarias o de integración.
+        'build', //     Cambios en el sistema de construcción (webpack, tsc).
+        'ci', //        Configuración de CI/CD.
+        'docs', //      Cambios en la documentación.
+        'revert', //    reversion de commit.
+        'style', //     Cambios en el formato del código o aplicacion de linter
+        'chore', //     Mantenimiento (dependencias, configuración, scripts)
       ],
     ],
   },

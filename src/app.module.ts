@@ -13,6 +13,7 @@ import { GuardsModule } from './common/guards/guards.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { PublicModule } from './modules/public_portal/public.module';
 import { CacheInterceptor } from './common/interceptors/cache.interceptor';
+import { ScheduledTasksModule } from './modules/scheduled-tasks/scheduled-tasks.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { CacheInterceptor } from './common/interceptors/cache.interceptor';
     GuardsModule, // Importar GuardsModule globalmente
     AdminModule,
     PublicModule,
+    ScheduledTasksModule, // Módulo de tareas programadas
   ],
   controllers: [AppController],
   providers: [
