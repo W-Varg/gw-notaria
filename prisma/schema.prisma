@@ -10,14 +10,7 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
-// /// https://github.com/dbgso/prisma-generator-plantuml-erd/tree/main/packages/generator
 
-// generator erd_plantuml {
-//   provider                   = "prisma-generator-plantuml-erd"
-//   output                     = "erd.puml"
-//   exportPerTables            = true
-//   showUniqueKeyLabel         = true
-//   isShowForeignKeyOnRelation = true
 // }
 
 // /// https://github.com/kimjbstar/prisma-class-generator
@@ -31,10 +24,10 @@ generator client {
 
 // /// https://github.com/unlight/prisma-nestjs-graphql
 
-// generator nestgraphql {
-//   provider = "node node_modules/prisma-nestjs-graphql"
-//   output   = "../src/generated/graphql-nestjs"
-// }
+generator nestgraphql {
+  provider = "node node_modules/prisma-nestjs-graphql"
+  output   = "../src/generated/graphql-nestjs"
+}
 
 // /// https://github.com/vegardit/prisma-generator-nestjs-dto
 
@@ -176,6 +169,8 @@ model Usuario {
   fechaActualizacion        DateTime                   @updatedAt
   // Relaciones de seguridad
   roles                     UsuarioRol[]
+  sesiones                  Sesion[]
+  historialLogins           HistorialLogin[]
   // Relaciones de negocio
   mensajesContacto          MensajeContacto[]
   // Relación con empleado
@@ -198,6 +193,43 @@ model UsuarioRol {
 
   @@unique([usuarioId, rolId])
   @@map("auth_usuario_roles")
+}
+
+model Sesion {
+  id                 String   @id @default(cuid())
+  usuarioId          String
+  refreshToken       String   @unique
+  userAgent          String?  @db.VarChar(500)
+  ipAddress          String?  @db.VarChar(50)
+  dispositivo        String?  @db.VarChar(255)
+  navegador          String?  @db.VarChar(100)
+  ubicacion          String?  @db.VarChar(255)
+  estaActiva         Boolean  @default(true)
+  fechaCreacion      DateTime @default(now())
+  fechaExpiracion    DateTime
+  ultimaActividad    DateTime @default(now())
+  fechaActualizacion DateTime @updatedAt
+  /// Relaciones
+  usuario            Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("auth_sesiones")
+}
+
+model HistorialLogin {
+  id           String   @id @default(cuid())
+  usuarioId    String
+  exitoso      Boolean
+  ipAddress    String?  @db.VarChar(50)
+  userAgent    String?  @db.VarChar(500)
+  dispositivo  String?  @db.VarChar(255)
+  navegador    String?  @db.VarChar(100)
+  ubicacion    String?  @db.VarChar(255)
+  motivoFallo  String?  @db.VarChar(255)
+  fechaIntento DateTime @default(now())
+  // Relaciones
+  usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("auth_historial_login")
 }
 
 // ============================================

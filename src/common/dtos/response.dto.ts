@@ -63,31 +63,6 @@ export class ApiOkResponseDto {
   cache?: boolean;
 }
 
-export class ApiResponseError {
-  @ApiProperty({ description: 'Si la respuesta es de error' })
-  @Expose()
-  error: boolean;
-
-  @ApiProperty({ description: 'Menasje de la respuesta' })
-  @Expose()
-  message: string;
-
-  @ApiProperty({
-    type: PickType(ResponseStructDTO, ['validationErrors']),
-    description: 'Estructura de respuesta',
-  })
-  @Expose()
-  response: any;
-
-  @ApiProperty({ description: 'Codigo de estado de la respuesta' })
-  @Expose()
-  status: number;
-
-  @ApiProperty({ description: 'Si la respuesta es de cache', nullable: true })
-  @Expose()
-  cache?: boolean;
-}
-
 export interface IResponse {
   error: boolean;
   message: string;
@@ -95,7 +70,7 @@ export interface IResponse {
   status: number;
 }
 
-export interface IResponseDTOBody<T> {
+interface IResponseDTOBody<T> {
   data?: T;
   pagination?: {
     total: number;
@@ -138,7 +113,7 @@ export type ValidationErrorsType<T> = {
   [key in keyof T]: Array<string>;
 };
 
-export type SuggestionsType<T> = {
+type SuggestionsType<T> = {
   [key in keyof T]: Array<string>;
 };
 
@@ -177,24 +152,4 @@ export const dataResponseError = <T>(
   { error = true, status = 422, response = null } = {},
 ): ResponseDTO<T> => {
   return { error, message, response, status };
-};
-
-/**
- * @param response,
- * @param param1, optional data, this methos have values default
- * @returns Data default of Type IResponse
- */
-export const msConnectionRegected = (
-  dataError,
-  { error = true, message = 'Ocurrio un error', status = 406 } = {},
-): IResponse => {
-  if (dataError.code === 'ECONNREFUSED')
-    return {
-      error: true,
-      message: 'Conección no establecido',
-      response: `${dataError.code}, address: ${dataError.address}, port: ${dataError.port}`,
-      status: 503,
-    };
-  // message = dataError.message ? dataError.message : message;
-  return { error, message, response: dataError, status };
 };

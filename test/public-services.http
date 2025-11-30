@@ -7,22 +7,6 @@ curl -X POST http://localhost:3060/public/contacto/enviar-mensaje \
   -d '{"nombre":"Juan Pérez","email":"juan@test.com","telefono":"76543210","asunto":"Consulta sobre productos","mensaje":"Me gustaría saber más información sobre los productos para perros."}'
 
 ###
-curl -X GET "http://localhost:3060/public/busqueda/sugerencias?q=comida"
-
-###
-curl -X GET http://localhost:3060/public/resenias/destacadas
-
-###
 curl -X GET http://localhost:3060/public/info/faqs
 
 
-###
-curl -X POST http://localhost:3060/public/products/search \
-  -H "Content-Type: application/json" \
-  -d '{"pagination":{"page":1,"pageSize":10},"search":"comida"}'
-
-###
-curl -X GET http://localhost:3060/public/products/filters
-
-###
-curl -X GET "http://localhost:3060/public/products/suggestions?q=comida"

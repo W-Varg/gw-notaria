@@ -243,7 +243,7 @@ export class ApiBadRequestError extends BadRequestException {
 /**
  * servicio para generar una exception BadRequestException personalizada con un mensaje
  */
-export class NotAcceptableError extends NotAcceptableException {
+class NotAcceptableError extends NotAcceptableException {
   constructor(
     message = 'no es posible devolver datos por un error',
     status = 406,
@@ -273,7 +273,3 @@ export class MsSeguridadHttpError extends HttpException {
     super({ error, message, status, response }, status);
   }
 }
-
-export const throwHttpExceptionFromResponseDTO = (resp: ResponseDTO<any>) => {
-  if (resp.error) throw new HttpException(resp, resp.status);
-};

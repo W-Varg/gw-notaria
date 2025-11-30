@@ -3,7 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { TokenAuthGuard } from './token-auth.guard';
 import { PermissionsGuard } from './permision.guard';
-import { SecurityService } from 'src/modules/auth/security.service';
+import { TokenService } from './token-auth.service';
 
 @Global()
 @Module({
@@ -14,7 +14,7 @@ import { SecurityService } from 'src/modules/auth/security.service';
       signOptions: { expiresIn: '15m' },
     }),
   ],
-  providers: [TokenAuthGuard, PermissionsGuard, SecurityService],
-  exports: [TokenAuthGuard, PermissionsGuard, SecurityService],
+  providers: [TokenAuthGuard, PermissionsGuard, TokenService],
+  exports: [TokenAuthGuard, PermissionsGuard, TokenService],
 })
 export class GuardsModule {}

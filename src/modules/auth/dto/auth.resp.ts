@@ -27,18 +27,6 @@ export class ResponseAuthType extends OmitType(ApiOkResponseDto, ['cache']) {
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-class UserData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: AuthUser })
-  data: AuthUser;
-}
-
-export class ResponseUserType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: UserData })
-  declare response: UserData;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
 class ProfileData extends OmitType(ResponseStructDTO, ['pagination']) {
   @ApiProperty({ type: UserProfile })
   data: UserProfile;
@@ -63,18 +51,6 @@ export class ResponseRolesType extends OmitType(ApiOkResponseDto, ['cache']) {
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-class PermissionsData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: [String] })
-  data: string[];
-}
-
-export class ResponsePermissionsType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: PermissionsData })
-  declare response: PermissionsData;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
 class MessageData extends OmitType(ResponseStructDTO, ['pagination']) {
   @ApiProperty({ type: String })
   data: string;
@@ -95,18 +71,6 @@ class LogoutData extends OmitType(ResponseStructDTO, ['pagination']) {
 export class ResponseLogoutType extends OmitType(ApiOkResponseDto, ['cache']) {
   @ApiProperty({ type: LogoutData })
   declare response: LogoutData;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-class ChangePasswordData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: String })
-  data: string;
-}
-
-export class ResponseChangePasswordType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: ChangePasswordData })
-  declare response: ChangePasswordData;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -143,18 +107,6 @@ class VerifyEmailData extends OmitType(ResponseStructDTO, ['pagination']) {
 export class ResponseVerifyEmailType extends OmitType(ApiOkResponseDto, ['cache']) {
   @ApiProperty({ type: VerifyEmailData })
   declare response: VerifyEmailData;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-class SendVerificationLinkData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: String })
-  data: string;
-}
-
-export class ResponseSendVerificationLinkType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: SendVerificationLinkData })
-  declare response: SendVerificationLinkData;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -203,42 +155,4 @@ class SendResetPasswordEmailData extends OmitType(ResponseStructDTO, ['paginatio
 export class ResponseSendResetPasswordEmailType extends OmitType(ApiOkResponseDto, ['cache']) {
   @ApiProperty({ type: SendResetPasswordEmailData })
   declare response: SendResetPasswordEmailData;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-/*                                            class for gogle authenticator                                           */
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-class TwoFactorSetupData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: TwoFactorSetup })
-  data: TwoFactorSetup;
-}
-
-export class Response2FASetupType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: TwoFactorSetupData })
-  declare response: TwoFactorSetupData;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-class TwoFactorStatusData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: Boolean })
-  data: boolean;
-}
-
-export class Response2FAStatusType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: TwoFactorStatusData })
-  declare response: TwoFactorStatusData;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-class Message2FAData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: String })
-  data: string;
-}
-
-export class ResponseMessage2FAType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: Message2FAData })
-  declare response: Message2FAData;
 }

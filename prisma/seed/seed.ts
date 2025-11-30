@@ -46,15 +46,6 @@ async function main() {
     roles.allRoles.filter((r) => r.nombre !== 'ADMIN'),
   );
 
-  // Crear sucursales
-  const sucursales = await createSucursales();
-
-  // Crear empleados
-  await createEmpleados(usuarios, sucursales);
-
-  // Crear horarios para sucursales
-  await createHorariosAtencion(sucursales.sucursal1.id);
-
   // Crear categorías
   await createCategorias();
 
@@ -62,7 +53,6 @@ async function main() {
   await createTiposProducto();
 
   // Crear información de tienda
-  await createInformacionTienda();
 
   // Crear productos ficticios
   const categorias = await prisma.categoria.findMany();
@@ -73,12 +63,8 @@ async function main() {
 
 async function clearDatabase() {
   // Eliminar registros en orden inverso a las dependencias
-  await prisma.empleado.deleteMany();
-  await prisma.horarioAtencion.deleteMany();
   await prisma.categoria.deleteMany();
   await prisma.tipoProducto.deleteMany();
-  await prisma.sucursal.deleteMany();
-  await prisma.informacionTienda.deleteMany();
   await prisma.rolPermiso.deleteMany();
   await prisma.permiso.deleteMany();
   await prisma.usuarioRol.deleteMany();
@@ -93,22 +79,6 @@ async function createRoles() {
     { nombre: 'MANAGER', descripcion: 'Gerente de sucursal' },
     { nombre: 'EMPLOYEE', descripcion: 'Empleado general' },
     { nombre: 'VETERINARIAN', descripcion: 'Veterinario' },
-    { nombre: 'GROOMER', descripcion: 'Peluquero de mascotas' },
-    { nombre: 'CASHIER', descripcion: 'Cajero' },
-    { nombre: 'STOCK_MANAGER', descripcion: 'Gerente de inventario' },
-    { nombre: 'SALES_REP', descripcion: 'Representante de ventas' },
-    { nombre: 'CUSTOMER_SERVICE', descripcion: 'Servicio al cliente' },
-    { nombre: 'DELIVERY_DRIVER', descripcion: 'Repartidor' },
-    { nombre: 'WAREHOUSE_WORKER', descripcion: 'Trabajador de almacén' },
-    { nombre: 'SUPERVISOR', descripcion: 'Supervisor' },
-    { nombre: 'ACCOUNTANT', descripcion: 'Contador' },
-    { nombre: 'MARKETING', descripcion: 'Especialista en marketing' },
-    { nombre: 'HR_MANAGER', descripcion: 'Gerente de recursos humanos' },
-    { nombre: 'IT_ADMIN', descripcion: 'Administrador de TI' },
-    { nombre: 'QUALITY_CONTROL', descripcion: 'Control de calidad' },
-    { nombre: 'PURCHASING', descripcion: 'Compras' },
-    { nombre: 'LOGISTICS', descripcion: 'Logística' },
-    { nombre: 'SECURITY', descripcion: 'Seguridad' },
     { nombre: 'CLEANING_STAFF', descripcion: 'Personal de limpieza' },
     { nombre: 'PET_TRAINER', descripcion: 'Entrenador de mascotas' },
     { nombre: 'PET_SITTER', descripcion: 'Cuidador de mascotas' },
@@ -240,47 +210,6 @@ async function assignAllRolesToAdmin(userId: string, allRoles: any[]) {
   }
 }
 
-async function createSucursales() {
-  const sucursal1 = await prisma.sucursal.create({
-    data: {
-      nombre: 'Sucursal Central',
-      direccion: 'Av. Principal 123',
-      ciudad: 'La Paz',
-      telefono: '22334455',
-      latitud: -16.495647,
-      longitud: -68.132721,
-    },
-  });
-
-  const sucursal2 = await prisma.sucursal.create({
-    data: {
-      nombre: 'Sucursal Sur',
-      direccion: 'Av. Secundaria 456',
-      ciudad: 'La Paz',
-      telefono: '22334466',
-      latitud: -16.508061,
-      longitud: -68.122679,
-    },
-  });
-
-  return { sucursal1, sucursal2 };
-}
-
-async function createHorariosAtencion(sucursalId: string) {
-  const diasSemana = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
-
-  for (const dia of diasSemana) {
-    await prisma.horarioAtencion.create({
-      data: {
-        sucursalId: sucursalId,
-        diaSemana: dia as any,
-        horaApertura: '08:00',
-        horaCierre: '20:00',
-      },
-    });
-  }
-}
-
 async function createCategorias() {
   const categorias = [
     { nombre: 'Alimentos', descripcion: 'Alimentos para mascotas' },
@@ -319,89 +248,6 @@ async function createTiposProducto() {
   }
 
   return tiposCreados;
-}
-
-async function createEmpleados(usuarios: any, sucursales: any) {
-  const empleados = [
-    {
-      usuarioId: usuarios.adminUser.id,
-      sucursalId: sucursales.sucursal1.id,
-      cargo: 'Administrador del Sistema',
-      fechaContratacion: new Date('2024-01-01'),
-      salario: 6000.0,
-      horarioTrabajo: 'matutino',
-      notas: 'Administrador principal del sistema con acceso completo',
-    },
-    {
-      usuarioId: usuarios.managerUser.id,
-      sucursalId: sucursales.sucursal1.id,
-      cargo: 'Gerente de Sucursal',
-      fechaContratacion: new Date('2024-01-15'),
-      salario: 4500.0,
-      horarioTrabajo: 'matutino',
-      notas: 'Gerente principal de la sucursal central',
-    },
-    {
-      usuarioId: usuarios.vetUser.id,
-      sucursalId: sucursales.sucursal1.id,
-      cargo: 'Veterinario',
-      fechaContratacion: new Date('2024-02-01'),
-      salario: 3800.0,
-      horarioTrabajo: 'matutino',
-      notas: 'Veterinario con especialización en medicina felina',
-    },
-    {
-      usuarioId: usuarios.groomerUser.id,
-      sucursalId: sucursales.sucursal2.id,
-      cargo: 'Peluquero de Mascotas',
-      fechaContratacion: new Date('2024-03-10'),
-      salario: 2200.0,
-      horarioTrabajo: 'vespertino',
-      notas: 'Especialista en peluquería canina y felina',
-    },
-  ];
-
-  for (const empleado of empleados) {
-    await prisma.empleado.create({
-      data: empleado,
-    });
-  }
-
-  console.info(`Created ${empleados.length} empleados`);
-}
-
-async function createInformacionTienda() {
-  // Crear información de tienda con datos completos de ejemplo
-  await prisma.informacionTienda.create({
-    data: {
-      nombre: 'Tu Notaria',
-      descripcion:
-        'Somos una empresa dedicada al cuidado y bienestar de las mascotas, ofreciendo productos de alta calidad y servicios especializados para brindar a tu mascota todo lo que necesita.',
-      email: 'contacto@crunchis.com',
-      telefono1: '+591 67924913',
-      telefono2: '',
-      whatsapp: '+591 67924913',
-      direccionCompleta: 'Av. 6 de Agosto #1234, Edificio PetCenter, Piso 2',
-      ciudad: 'Sucre',
-      codigoPostal: '',
-      latitud: -16.495647,
-      longitud: -68.132721,
-      horarioLunesViernes: '8:00-19:00',
-      horarioSabado: '8:00-17:00',
-      horarioDomingo: '9:00-15:00',
-      facebook: '@CrunchisSucre',
-      instagram: '@Crunchis_oficial',
-      tiktok: '@Crunchis_pets',
-      youtube: '@CrunchisOficial',
-      website: 'https://www.crunchis.com.bo',
-      informacionAdicional:
-        'Entrega gratuita para compras mayores a 100 Bs. Servicios veterinarios y peluquería disponibles.',
-      logoUrl: 'https://via.placeholder.com/200x100?text=Crunchis+Logo',
-      estaActivo: true,
-    },
-  });
-
-  console.info('Created información de tienda');
 }
 
 main()

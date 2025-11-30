@@ -2,11 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { IToken, getTokenInformacion } from 'src/common/decorators/token.decorator';
-import { Prisma } from 'src/generated/prisma/client';
+import { getTokenInformacion, IToken } from '../decorators/token.decorator';
 
 @Injectable()
-export class SecurityService {
+export class TokenService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -66,6 +65,54 @@ export class SecurityService {
   }
 
   /**
+   * Verifica un refresh token JWT y retorna el payload decodificado
+   * @param refreshToken - Token de refresh a verificar
+   * @returns Payload decodificado del token
+   */
+  verifyRefreshToken(refreshToken: string): any {
+    try {
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: this.configService.get('jwtRefreshSecret'),
+      });
+      return payload;
+    } catch (error) {
+      throw new Error('Refresh token inválido');
+    }
+  }
+  async generateTokens(user: {
+    id: string;
+    nombre: string;
+    estaActivo: boolean;
+  }): Promise<{ accessToken: string; refreshToken: string }> {
+    const payload = {
+      sub: {
+        usuarioId: user.id,
+        nombreCompleto: user.nombre, // Valor por defecto
+        estaActivo: user.estaActivo,
+      },
+    };
+
+    if (user.estaActivo) {
+      const accessToken = this.jwtService.sign(payload, {
+        secret: this.configService.get('jwtSecret') || 'jwt-secret',
+        expiresIn: this.configService.get('jwtExpiresIn') || '1h',
+      });
+
+      const refreshToken = this.jwtService.sign(payload, {
+        secret: this.configService.get('jwtRefreshSecret') || 'refresh-secret',
+        expiresIn: '7d',
+      });
+      return { accessToken, refreshToken };
+    } else {
+      const accessToken = this.jwtService.sign(payload, {
+        secret: this.configService.get('jwtSecret') || 'jwt-secret',
+        expiresIn: '10s',
+      });
+      return { accessToken, refreshToken: '' };
+    }
+  }
+
+  /**
    * Obtiene la lista de permisos de un usuario basado en sus roles
    * @param tokenDecoded - Token decodificado del usuario
    * @returns Promise<string[]> - Array de permisos únicos
@@ -111,60 +158,6 @@ export class SecurityService {
     } catch (error) {
       console.error('Error al obtener permisos del usuario:', error);
       return [];
-    }
-  }
-
-  /**
-   * Genera un nuevo token JWT para un usuario
-   * @param userId - ID del usuario
-   * @returns Promise<{accessToken: string, refreshToken: string}>
-   */
-  async generateTokens(user: {
-    id: string;
-    nombre: string;
-    estaActivo: boolean;
-  }): Promise<{ accessToken: string; refreshToken: string }> {
-    const payload = {
-      sub: {
-        usuarioId: user.id,
-        nombreCompleto: user.nombre, // Valor por defecto
-        estaActivo: user.estaActivo,
-      },
-    };
-
-    if (user.estaActivo) {
-      const accessToken = this.jwtService.sign(payload, {
-        secret: this.configService.get('jwtSecret') || 'jwt-secret',
-        expiresIn: this.configService.get('jwtExpiresIn') || '1h',
-      });
-
-      const refreshToken = this.jwtService.sign(payload, {
-        secret: this.configService.get('jwtRefreshSecret') || 'refresh-secret',
-        expiresIn: '7d',
-      });
-      return { accessToken, refreshToken };
-    } else {
-      const accessToken = this.jwtService.sign(payload, {
-        secret: this.configService.get('jwtSecret') || 'jwt-secret',
-        expiresIn: '10s',
-      });
-      return { accessToken: '', refreshToken: '' };
-    }
-  }
-
-  /**
-   * Verifica si un token JWT es válido
-   * @param token - Token JWT a verificar
-   * @returns Promise<boolean> - True si el token es válido
-   */
-  async verifyToken(token: string): Promise<boolean> {
-    try {
-      const decoded = this.jwtService.verify(token, {
-        secret: this.configService.get('JWT_SECRET') || 'jwt-secret',
-      });
-      return !!decoded;
-    } catch (error) {
-      return false;
     }
   }
 }

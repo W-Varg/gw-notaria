@@ -1,11 +1,10 @@
-import { Controller, Post, Body, Get, Patch, Query, Res, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Res, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import {
   RegistrarUserInput,
   LoginUserInput,
-  ChangePasswordInput,
   ForgotPasswordInput,
   ResetPasswordInput,
   VerifyEmailInput,
@@ -14,19 +13,13 @@ import {
   SendWelcomeEmailInput,
   SendVerificationEmailInput,
   SendResetPasswordEmailInput,
-  Enable2FAInput,
   Verify2FAInput,
-  Disable2FAInput,
 } from './dto/auth.input';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   ResponseAuthType,
-  ResponseUserType,
-  ResponseRolesType,
-  ResponsePermissionsType,
   ResponseLogoutType,
-  ResponseChangePasswordType,
   ResponseForgotPasswordType,
   ResponseResetPasswordType,
   ResponseVerifyEmailType,
@@ -34,10 +27,6 @@ import {
   ResponseSendWelcomeEmailType,
   ResponseSendVerificationEmailType,
   ResponseSendResetPasswordEmailType,
-  ResponseSendVerificationLinkType,
-  Response2FASetupType,
-  Response2FAStatusType,
-  ResponseMessage2FAType,
   ResponseRegisterType,
 } from './dto/auth.resp';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
@@ -45,7 +34,7 @@ import { GoogleAuthGuard } from 'src/common/guards/google-auth.guard';
 import { Prisma } from 'src/generated/prisma/client';
 import { dataResponseError } from 'src/common/dtos/response.dto';
 
-@ApiTags('[auth] Registro y Autorización')
+@ApiTags('[auth] Autenticación')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -60,10 +49,8 @@ export class AuthController {
     return this.authService.registerUser(inputDto);
   }
 
-  /* ------------------------------------------------------------------------------------------------------------------ */
-
   @Post('login')
-  @ApiDescription('servicio para iniciar sesión', [])
+  @ApiDescription('Iniciar sesión', [])
   @ApiResponse({ status: 200, type: () => ResponseAuthType })
   async login(@Body() inputDto: LoginUserInput) {
     return this.authService.login(inputDto);
@@ -83,42 +70,6 @@ export class AuthController {
   @ApiResponse({ status: 200, type: () => ResponseAuthType })
   async refresh(@Body() inputDto: RefreshTokenInput) {
     return this.authService.refresh(inputDto);
-  }
-
-  @Get('me')
-  @BearerAuthPermision()
-  @ApiDescription('Obtener información del usuario autenticado')
-  @ApiResponse({ status: 200, type: () => ResponseUserType })
-  async me(@Req() req: any) {
-    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
-    return this.authService.me(userId);
-  }
-
-  @Get('roles')
-  @BearerAuthPermision()
-  @ApiDescription('Obtener roles del usuario autenticado', [])
-  @ApiResponse({ status: 200, type: () => ResponseRolesType })
-  async roles(@Req() req: any) {
-    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
-    return this.authService.roles(userId);
-  }
-
-  @Get('permissions')
-  @BearerAuthPermision()
-  @ApiDescription('Obtener permisos del usuario autenticado', [])
-  @ApiResponse({ status: 200, type: () => ResponsePermissionsType })
-  async permissions(@Req() req: any) {
-    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
-    return this.authService.permissions(userId);
-  }
-
-  @Patch('change-password')
-  @BearerAuthPermision()
-  @ApiDescription('Cambiar contraseña del usuario autenticado', [])
-  @ApiResponse({ status: 200, type: () => ResponseChangePasswordType })
-  async changePassword(@Req() req: any, @Body() inputDto: ChangePasswordInput) {
-    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
-    return this.authService.changePassword(userId, inputDto);
   }
 
   @Post('forgot-password')
@@ -142,14 +93,25 @@ export class AuthController {
     return this.authService.verifyEmail(inputDto);
   }
 
-  @Post('send-verification-link')
-  @BearerAuthPermision()
-  @ApiDescription('Enviar enlace de verificación de email', [])
-  @ApiResponse({ status: 200, type: () => ResponseSendVerificationLinkType })
-  async sendVerificationLink(@Req() req: any) {
-    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
-    return this.authService.sendVerificationLink(userId);
+  @Post('2fa/verify')
+  @ApiDescription('Verificar código 2FA durante el login', [])
+  @ApiResponse({ status: 200, type: () => ResponseAuthType })
+  async verify2FA(@Body() inputDto: Verify2FAInput) {
+    return this.authService.verify2FA(inputDto);
   }
+
+  @Post('resend-otp')
+  @BearerAuthPermision()
+  @ApiDescription('Reenviar código OTP por email', [])
+  @ApiResponse({ status: 200, type: () => ResponseSendEmailLinkType })
+  async resendOTP(@Req() req: any) {
+    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
+    return this.authService.resendOTP(userId);
+  }
+
+  // ============================================
+  // Endpoints de testing para envío de emails
+  // ============================================
 
   @Post('send-reset-password-link')
   @ApiDescription('Enviar enlace de reset de contraseña', [])
@@ -191,53 +153,6 @@ export class AuthController {
   @ApiResponse({ status: 200, type: () => ResponseSendResetPasswordEmailType })
   async sendForgotPasswordEmail(@Body() body: SendResetPasswordEmailInput) {
     return this.authService.sendForgotPasswordEmail(body.email, body.token);
-  }
-
-  // ============================================
-  // Endpoints para Two-Factor Authentication (2FA)
-  // ============================================
-
-  @Get('2fa/setup')
-  @BearerAuthPermision()
-  @ApiDescription('Generar código QR para configurar 2FA', [])
-  @ApiResponse({ status: 200, type: () => Response2FASetupType })
-  async setup2FA(@Req() req: any) {
-    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
-    return this.authService.setup2FA(userId);
-  }
-
-  @Post('2fa/enable')
-  @BearerAuthPermision()
-  @ApiDescription('Habilitar 2FA después de verificar el código', [])
-  @ApiResponse({ status: 200, type: () => ResponseMessage2FAType })
-  async enable2FA(@Req() req: any, @Body() inputDto: Enable2FAInput) {
-    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
-    return this.authService.enable2FA(userId, inputDto);
-  }
-
-  @Post('2fa/verify')
-  @ApiDescription('Verificar código 2FA durante el login', [])
-  @ApiResponse({ status: 200, type: () => ResponseAuthType })
-  async verify2FA(@Body() inputDto: Verify2FAInput) {
-    return this.authService.verify2FA(inputDto);
-  }
-
-  @Post('2fa/disable')
-  @BearerAuthPermision()
-  @ApiDescription('Desactivar 2FA', [])
-  @ApiResponse({ status: 200, type: () => ResponseMessage2FAType })
-  async disable2FA(@Req() req: any, @Body() inputDto: Disable2FAInput) {
-    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
-    return this.authService.disable2FA(userId, inputDto);
-  }
-
-  @Get('2fa/status')
-  @BearerAuthPermision()
-  @ApiDescription('Obtener estado de 2FA del usuario', [])
-  @ApiResponse({ status: 200, type: () => Response2FAStatusType })
-  async get2FAStatus(@Req() req: any) {
-    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
-    return this.authService.get2FAStatus(userId);
   }
 
   // ============================================

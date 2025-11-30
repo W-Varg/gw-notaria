@@ -1,8 +1,7 @@
-import { Injectable, CanActivate, ExecutionContext, Inject, SetMetadata } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, SetMetadata } from '@nestjs/common';
 import { ApiUnauthorizedError } from 'src/common/filters/global-exception.filter';
-import { SecurityService } from 'src/modules/auth/security.service';
+import { TokenService } from './token-auth.service';
 import { IToken } from '../decorators/token.decorator';
-import { MS_SEGURIDAD_APPLICATION_CODE_TAG } from 'src/modules/auth/auth.const';
 
 /* ------------------------- opciones adicionales para validar el token ------------------------- */
 const VALIDATE_TOKEN_VALUES = 'validate_token_extra_values';
@@ -17,7 +16,7 @@ export const validateAppToken = (options: ValidateTokenOptions) => {
 
 @Injectable()
 export class TokenAuthGuard implements CanActivate {
-  constructor(private readonly authService: SecurityService) {}
+  constructor(private readonly tokenService: TokenService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -33,12 +32,12 @@ export class TokenAuthGuard implements CanActivate {
     }
 
     // Verifica el token utilizando el MsSeguridadService
-    const tokenDecoded: IToken = this.authService.decodeToken(token);
+    const tokenDecoded: IToken = this.tokenService.decodeToken(token);
 
     if (!tokenDecoded) throw new ApiUnauthorizedError('Usuario no autenticado y/o token no válido');
 
     // Verifica el token utilizando el MsSeguridadService
-    const { error } = await this.authService.validateToken(tokenDecoded, false);
+    const { error } = await this.tokenService.validateToken(tokenDecoded, false);
 
     if (error)
       throw new ApiUnauthorizedError('Usuario no autenticado y/o token no válido de seguridad');

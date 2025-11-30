@@ -1,6 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext, SetMetadata, Inject } from '@nestjs/common';
-import { MS_SEGURIDAD_APPLICATION_CODE_TAG } from 'src/modules/auth/auth.const';
-import { SecurityService } from 'src/modules/auth/security.service';
+import { TokenService } from './token-auth.service';
 import { MsSeguridadHttpError } from '../filters/global-exception.filter';
 import { Reflector } from '@nestjs/core';
 
@@ -11,7 +10,7 @@ export const RequiredPermissions = (...permissions: string[]) =>
 @Injectable()
 export class PermissionsGuard implements CanActivate {
   constructor(
-    private readonly msSeguridadService: SecurityService,
+    private readonly tokenService: TokenService,
     private readonly reflector: Reflector, // Añadir Reflector
   ) {}
 
@@ -20,7 +19,7 @@ export class PermissionsGuard implements CanActivate {
     const token = request.headers.authorization.split(' ')[1];
     const requiredPermissions = this.getRequiredPermissions(context);
 
-    const userPermissions = await this.msSeguridadService.userListPermissions(request.userHeader);
+    const userPermissions = await this.tokenService.userListPermissions(request.userHeader);
 
     request.permissions = userPermissions;
 

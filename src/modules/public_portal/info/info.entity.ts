@@ -82,41 +82,6 @@ export class PreguntaFrecuente {
   estaActiva: boolean;
 }
 
-export class InformacionEmpresa {
-  @ApiProperty({ type: String })
-  nombre: string;
-
-  @ApiProperty({ type: String })
-  descripcion: string;
-
-  @ApiProperty({ type: String })
-  mision: string;
-
-  @ApiProperty({ type: String })
-  vision: string;
-
-  @ApiProperty({ type: Array })
-  valores: string[];
-
-  @ApiProperty({ type: Object })
-  historia: {
-    anoFundacion: number;
-    fundadores: string[];
-    hitos: {
-      ano: number;
-      evento: string;
-    }[];
-  };
-
-  @ApiProperty({ type: Object })
-  estadisticas: {
-    clientesSatisfechos: number;
-    productosVendidos: number;
-    anosExperiencia: number;
-    sucursales: number;
-  };
-}
-
 export class InformacionCompletaTienda {
   // Información de la empresa
   @ApiProperty({ type: String })

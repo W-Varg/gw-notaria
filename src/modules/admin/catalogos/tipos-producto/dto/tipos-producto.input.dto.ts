@@ -24,7 +24,7 @@ export class UpdateTipoProductoDto extends PartialType(CreateTipoProductoDto) {
   nombre?: string;
 }
 
-export class TipoProductoWhereInput {
+class TipoProductoWhereInput {
   @Expose()
   @ApiPropertyOptional({ type: StringFilter })
   @IsOptional()
@@ -33,7 +33,7 @@ export class TipoProductoWhereInput {
   nombre?: StringFilter;
 }
 
-export class TipoProductoSelectInput {
+class TipoProductoSelectInput {
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
   @IsOptional()

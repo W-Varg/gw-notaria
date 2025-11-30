@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from 'src/global/database/prisma.service';
 import { dataResponseError, dataResponseSuccess, ResponseDTO } from 'src/common/dtos/response.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
@@ -19,18 +18,15 @@ import {
   Disable2FAInput,
 } from './dto/auth.input';
 import { AuthResponse, UserProfile, TwoFactorSetup, GoogleUserData, AuthUser } from './auth.entity';
-import { SecurityService } from './security.service';
-import { EmailService } from './services/email.service';
-import { ConfigService } from '@nestjs/config';
-import { Usuario as UserModel, Prisma } from '../../generated/prisma/client';
+import { TokenService } from '../../common/guards/token-auth.service';
+import { EmailService } from '../../global/emails/email.service';
+import { Usuario as UserModel } from '../../generated/prisma/client';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
-    private readonly securityService: SecurityService,
+    private readonly tokenService: TokenService,
     private readonly emailService: EmailService,
   ) {}
 
@@ -224,8 +220,7 @@ export class AuthService {
       );
     }
 
-    // Generar tokens usando SecurityService
-    const tokens = await this.securityService.generateTokens(user);
+    const tokens = await this.tokenService.generateTokens(user);
 
     // Construir perfil de usuario
     const userProfile: UserProfile = {
@@ -272,9 +267,7 @@ export class AuthService {
 
     try {
       // Verificar el refresh token
-      const payload = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get('jwtRefreshSecret'),
-      });
+      const payload = this.tokenService.verifyRefreshToken(refreshToken);
 
       // Buscar el usuario
       const user = await this.prismaService.usuario.findUnique({
@@ -309,8 +302,7 @@ export class AuthService {
         return dataResponseError('Token inválido');
       }
 
-      // Generar nuevos tokens usando SecurityService
-      const tokens = await this.securityService.generateTokens(user);
+      const tokens = await this.tokenService.generateTokens(user);
 
       // Construir perfil de usuario
       const userProfile: UserProfile = {
@@ -838,8 +830,7 @@ export class AuthService {
       return dataResponseError('Código de verificación inválido');
     }
 
-    // Generar tokens usando SecurityService
-    const tokens = await this.securityService.generateTokens(user);
+    const tokens = await this.tokenService.generateTokens(user);
 
     // Construir perfil de usuario
     const userProfile: UserProfile = {
@@ -1009,7 +1000,7 @@ export class AuthService {
       }
 
       // Generar tokens
-      const tokens = await this.securityService.generateTokens(fullUser);
+      const tokens = await this.tokenService.generateTokens(fullUser);
 
       // Construir perfil de usuario
       const userProfile: UserProfile = {
@@ -1047,5 +1038,61 @@ export class AuthService {
       Logger.error(error, 'Error al procesar autenticación de Google');
       return dataResponseError('Error al procesar autenticación de Google');
     }
+  }
+
+  /**
+   * Reenviar código OTP por email
+   */
+  async resendOTP(userId: string) {
+    const user = await this.prismaService.usuario.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        nombre: true,
+        emailVerificado: true,
+        twoFactorEnabled: true,
+      },
+    });
+
+    if (!user) {
+      return dataResponseError('Usuario no encontrado');
+    }
+
+    if (!user.emailVerificado) {
+      return dataResponseError('Primero debes verificar tu email');
+    }
+
+    if (user.twoFactorEnabled) {
+      return dataResponseError('Tienes 2FA habilitado, usa Google Authenticator');
+    }
+
+    // Generar nuevo código OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expirationTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+
+    // Guardar OTP en configuración del sistema
+    await this.prismaService.configuracionSistema.upsert({
+      where: { clave: `otp_email_${user.id}` },
+      update: {
+        valor: JSON.stringify({ code: otpCode, expiresAt: expirationTime.toISOString() }),
+        tipo: 'json',
+        descripcion: 'OTP temporal para login por email',
+      },
+      create: {
+        clave: `otp_email_${user.id}`,
+        valor: JSON.stringify({ code: otpCode, expiresAt: expirationTime.toISOString() }),
+        tipo: 'json',
+        descripcion: 'OTP temporal para login por email',
+      },
+    });
+
+    // Enviar OTP por email
+    await this.emailService.sendOTPEmail(user.email, user.nombre, otpCode);
+
+    return dataResponseSuccess(
+      { data: 'Código OTP reenviado exitosamente' },
+      { message: 'Se envió un nuevo código a tu correo electrónico' },
+    );
   }
 }
