@@ -7,7 +7,7 @@ import {
 import { PrismaService } from 'src/database/prisma.service';
 import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
-import { Categoria, CategoriaDetail } from './categoria.entity';
+import { Categoria } from './categoria.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 
@@ -45,7 +45,7 @@ export class CategoriaService {
         orderBy,
         include: { productos: true },
       }),
-      pagination ? this.prismaService.categoria.count() : Promise.resolve(undefined),
+      pagination ? this.prismaService.categoria.count() : undefined,
     ]);
 
     if (pagination && total !== undefined) pagination.total = total;
