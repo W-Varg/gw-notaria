@@ -14,6 +14,7 @@ import {
 import { ExecutionContextHost } from '@nestjs/core/helpers/execution-context-host';
 import { IResponseDTO, ResponseDTO } from 'src/common/dtos/response.dto';
 import { printRequestUrl } from '../pipes/http-service.pipe';
+import { Prisma } from '../../generated/prisma/client';
 
 const printRequestBodyLog = (host: ArgumentsHost, status: number, validations: any) => {
   const request = host.switchToHttp().getRequest();
@@ -89,32 +90,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       printRequestUrl(host, resp.status);
       resp.response = null;
       error = null;
-    } else if (error instanceof Error) {
-      // Captura del error de conversion de datos por grpc
-      const grpcParsingError = error as any;
-
-      if (
-        grpcParsingError.code === 14 &&
-        grpcParsingError.details.includes('No connection established')
-      ) {
-        resp.message = 'Error al conectarse al servicio de GRPC';
-        resp.status = 422;
-      } else if (
-        grpcParsingError.code === 13 &&
-        grpcParsingError.details.includes('Response message parsing error:')
-      ) {
-        resp.message = 'Error al convertir las respuestas de GRPC';
-        resp.status = 422;
-      }
-      // Captura del error de servicio no implementado en server
-      else if (
-        grpcParsingError.code === 12 &&
-        grpcParsingError.details.includes('[object Object]')
-      ) {
-        resp.message =
-          'Error: el micro servicio de GRPC no tiene implementado este método o esta ignorado en MS-MYSQL.';
-        resp.status = 422;
-      }
+    } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      this.handlePrismaKnownRequestError(error, resp);
+    } else if (error instanceof Prisma.PrismaClientInitializationError) {
+      this.handlePrismaInitializationError(error, resp);
+    } else if (error instanceof Prisma.PrismaClientRustPanicError) {
+      this.handlePrismaRustPanicError(error, resp);
+    } else if (error instanceof Prisma.PrismaClientValidationError) {
+      this.handlePrismaValidationError(error, resp);
     }
 
     if (
@@ -128,6 +111,110 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     // TODO: Completar mas errores
     response.status(resp.status).json(resp);
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                     Métodos privados para errores de Prisma                */
+  /* -------------------------------------------------------------------------- */
+
+  /**
+   * Maneja errores conocidos de Prisma (PrismaClientKnownRequestError)
+   */
+  private handlePrismaKnownRequestError(
+    error: Prisma.PrismaClientKnownRequestError,
+    resp: IResponseDTO<any>,
+  ): void {
+    const prismaError = error as Prisma.PrismaClientKnownRequestError;
+
+    // Errores de conexión a la base de datos
+    if (prismaError.code === 'EHOSTUNREACH') {
+      resp.message = 'No se puede alcanzar el servidor de base de datos';
+      resp.status = 503;
+      Logger.error(`Database connection error: EHOSTUNREACH - ${prismaError.message}`);
+    } else if (prismaError.code === 'ECONNREFUSED') {
+      resp.message = 'Conexión a la base de datos rechazada';
+      resp.status = 503;
+      Logger.error(`Database connection error: ECONNREFUSED - ${prismaError.message}`);
+    } else if (prismaError.code === 'ETIMEDOUT') {
+      resp.message = 'Tiempo de espera agotado al conectar con la base de datos';
+      resp.status = 503;
+      Logger.error(`Database connection error: ETIMEDOUT - ${prismaError.message}`);
+    } else if (prismaError.code === 'P1001') {
+      resp.message = 'No se puede alcanzar el servidor de base de datos';
+      resp.status = 503;
+      Logger.error(`Prisma error P1001: Can't reach database server - ${prismaError.message}`);
+    } else if (prismaError.code === 'P1002') {
+      resp.message = 'Tiempo de espera agotado al conectar con la base de datos';
+      resp.status = 503;
+      Logger.error(`Prisma error P1002: Database timeout - ${prismaError.message}`);
+    } else if (prismaError.code === 'P1008') {
+      resp.message = 'Tiempo de espera agotado en la operación de base de datos';
+      resp.status = 504;
+      Logger.error(`Prisma error P1008: Operations timeout - ${prismaError.message}`);
+    } else if (prismaError.code === 'P1017') {
+      resp.message = 'El servidor de base de datos cerró la conexión';
+      resp.status = 503;
+      Logger.error(`Prisma error P1017: Server closed connection - ${prismaError.message}`);
+    } else if (prismaError.code === 'P2002') {
+      resp.message = 'Ya existe un registro con esos datos únicos';
+      resp.status = 409;
+    } else if (prismaError.code === 'P2025') {
+      resp.message = 'Registro no encontrado';
+      resp.status = 404;
+    } else {
+      resp.message = 'Error en la operación de base de datos';
+      resp.status = 500;
+      Logger.error(`Prisma error ${prismaError.code}: ${prismaError.message}`);
+    }
+
+    if (process.env.DEBUG_FRONT === 'true') {
+      resp.response = {
+        code: prismaError.code,
+        meta: prismaError.meta,
+      };
+    }
+  }
+
+  /**
+   * Maneja errores de inicialización del cliente de Prisma
+   */
+  private handlePrismaInitializationError(
+    error: Prisma.PrismaClientInitializationError,
+    resp: IResponseDTO<any>,
+  ): void {
+    resp.message = 'Error al inicializar la conexión con la base de datos';
+    resp.status = 503;
+    Logger.error(`Prisma initialization error: ${error.message}`);
+
+    if (process.env.DEBUG_FRONT === 'true') {
+      resp.response = {
+        errorCode: error.errorCode,
+      };
+    }
+  }
+
+  /**
+   * Maneja errores críticos del motor de Prisma (Rust panic)
+   */
+  private handlePrismaRustPanicError(
+    error: Prisma.PrismaClientRustPanicError,
+    resp: IResponseDTO<any>,
+  ): void {
+    resp.message = 'Error crítico en el motor de base de datos';
+    resp.status = 500;
+    Logger.error(`Prisma rust panic: ${error.message}`);
+  }
+
+  /**
+   * Maneja errores de validación de Prisma
+   */
+  private handlePrismaValidationError(
+    error: Prisma.PrismaClientValidationError,
+    resp: IResponseDTO<any>,
+  ): void {
+    resp.message = 'Error de validación en la consulta de base de datos';
+    resp.status = 400;
+    Logger.warn(`Prisma validation error: ${error.message}`);
   }
 }
 

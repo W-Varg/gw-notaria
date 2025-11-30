@@ -16,6 +16,11 @@ export default () => {
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || null,
     googleRedirectUri: process.env.GOOGLE_CALLBACK_URL || null,
 
+    emailFrom: process.env.EMAIL_FROM || 'no-reply@tunotaria.com',
+    emailUser: process.env.EMAIL_USER || 'no-reply@tunotaria.com',
+    emailPass: process.env.EMAIL_PASS || 'password',
+    emailService: process.env.EMAIL_SERVICE || 'gmail',
+
     jwtSecret: process.env.JWT_SECRET || 'jwt-secret',
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'jwt-refresh-secret',
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',

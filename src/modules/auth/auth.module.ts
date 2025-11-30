@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { SecurityService } from './security.service';
+import { EmailService } from './services/email.service';
 import { GoogleStrategy } from 'src/common/guards/google.strategy';
 
 @Module({
@@ -15,7 +16,7 @@ import { GoogleStrategy } from 'src/common/guards/google.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, SecurityService, GoogleStrategy],
-  exports: [AuthService, SecurityService],
+  providers: [AuthService, SecurityService, EmailService, GoogleStrategy],
+  exports: [AuthService, SecurityService, EmailService],
 })
 export class AuthModule {}

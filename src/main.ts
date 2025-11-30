@@ -14,6 +14,9 @@ import { ResponseFormatInterceptor } from './common/interceptors/response-format
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Habilitar hooks de apagado para limpiar recursos (como conexiones a BD)
+  app.enableShutdownHooks();
+
   // Servir archivos estáticos usando middleware directo de Express ANTES de cualquier cosa
   // __dirname en producción apunta a dist/src, necesitamos subir 2 niveles
   app.use('/storage', express.static(join(__dirname, '..', '..', 'storage')));
@@ -21,7 +24,6 @@ async function bootstrap() {
   app.use(express.static(join(__dirname, '..', '..', 'public')));
 
   app.enableVersioning({ type: VersioningType.URI });
-  app.enableShutdownHooks();
 
   // load configuration from .env, packageJson
   const configService = app.get(ConfigService);
@@ -36,10 +38,6 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
-
-  // Configurar filtro global de excepciones
-  const { AllExceptionsFilter } = await import('./common/filters/http-exception.filter');
-  app.useGlobalFilters(new AllExceptionsFilter());
 
   app.use(json({ limit: configService.get('appMaxSize') }));
   app.use(urlencoded({ limit: configService.get('appMaxSize'), extended: true }));

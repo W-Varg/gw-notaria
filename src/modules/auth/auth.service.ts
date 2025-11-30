@@ -20,6 +20,7 @@ import {
 } from './dto/auth.input';
 import { AuthResponse, UserProfile, TwoFactorSetup, GoogleUserData } from './auth.entity';
 import { SecurityService } from './security.service';
+import { EmailService } from './services/email.service';
 import { ConfigService } from '@nestjs/config';
 import { Usuario as UserModel, Prisma } from '../../generated/prisma/client';
 
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly securityService: SecurityService,
+    private readonly emailService: EmailService,
   ) {}
 
   async registerUser(inputDto: RegistrarUserInput) {
@@ -42,7 +44,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      return dataResponseError('El email ya está registrado');
+      return dataResponseError('El correo electrónico ya está registrado');
     }
 
     // Encriptar la contraseña
@@ -101,8 +103,8 @@ export class AuthService {
       },
     });
 
-    // Enviar email de verificación (simulado)
-    this.sendVerificationEmail(user.email, verifyToken);
+    // Enviar email de verificación usando el EmailService
+    await this.emailService.sendVerificationEmail(user.email, user.nombre, verifyToken);
 
     return dataResponseSuccess<AuthResponse>({ data: response });
   }
@@ -443,8 +445,8 @@ export class AuthService {
       },
     });
 
-    // Enviar email de reset (simulado)
-    this.sendResetPasswordEmail(user.email, resetToken);
+    // Enviar email de reset usando EmailService
+    await this.emailService.sendResetPasswordEmail(user.email, user.nombre, resetToken);
 
     return dataResponseSuccess({
       data: 'Si el email existe, se enviará un enlace de recuperación',
@@ -504,6 +506,12 @@ export class AuthService {
     // Extraer el ID del usuario del clave
     const userId = tokenConfig.clave.replace('verify_token_', '');
 
+    // Obtener datos del usuario
+    const user = await this.prismaService.usuario.findUnique({
+      where: { id: userId },
+      select: { nombre: true, email: true },
+    });
+
     // Marcar el email como verificado
     await this.prismaService.usuario.update({
       where: { id: userId },
@@ -514,6 +522,11 @@ export class AuthService {
     await this.prismaService.configuracionSistema.delete({
       where: { id: tokenConfig.id },
     });
+
+    // Enviar email de bienvenida
+    if (user) {
+      await this.emailService.sendWelcomeEmail(user.email, user.nombre);
+    }
 
     return dataResponseSuccess({ data: 'Email verificado exitosamente' });
   }
@@ -550,8 +563,8 @@ export class AuthService {
       },
     });
 
-    // Enviar email de verificación
-    this.sendVerificationEmail(user.email, verifyToken);
+    // Enviar email de verificación usando EmailService
+    await this.emailService.sendVerificationEmail(user.email, user.nombre, verifyToken);
 
     return dataResponseSuccess({ data: 'Enlace de verificación enviado' });
   }
@@ -564,45 +577,30 @@ export class AuthService {
     return this.forgotPassword({ email });
   }
 
-  sendWelcomeEmail(_email: string, _name: string) {
-    // Simulación de envío de email de bienvenida
-    console.info(`Enviando email de bienvenida a ${_email} para ${_name}`);
+  async sendWelcomeEmail(email: string, name: string) {
+    await this.emailService.sendWelcomeEmail(email, name);
     return dataResponseSuccess<string>({ data: 'Email de bienvenida enviado' });
   }
 
-  sendVerificationEmail(_email: string, _token: string) {
-    const urlFrontend = this.configService.get<string>('appFrontUrlBase');
-    const verificationLink = `${urlFrontend}/verify-email?token=${_token}`;
+  async sendVerificationEmail(email: string, token: string) {
+    const user = await this.prismaService.usuario.findUnique({
+      where: { email },
+      select: { nombre: true },
+    });
 
-    // Simulación de envío de email de verificación
-    console.info(`\n${'='.repeat(80)}`);
-    console.info(`📧 EMAIL DE VERIFICACIÓN`);
-    console.info(`${'='.repeat(80)}`);
-    console.info(`Para: ${_email}`);
-    console.info(`\nEnlace de verificación:`);
-    console.info(`${verificationLink}\n`);
-    console.info(`⚠️  Abre este enlace en tu navegador para verificar tu email.`);
-    console.info(`${'='.repeat(80)}\n`);
-
+    const userName = user?.nombre || 'Usuario';
+    await this.emailService.sendVerificationEmail(email, userName, token);
     return dataResponseSuccess<string>({ data: 'Email de verificación enviado' });
   }
 
-  sendResetPasswordEmail(_email: string, _token: string) {
-    const urlFrontend = this.configService.get<string>('appFrontUrlBase');
-    const resetLink = `${urlFrontend}/auth/reset-password?token=${_token}`;
+  async sendResetPasswordEmail(email: string, token: string) {
+    const user = await this.prismaService.usuario.findUnique({
+      where: { email },
+      select: { nombre: true },
+    });
 
-    // Simulación de envío de email de reset
-    console.info(`\n${'='.repeat(80)}`);
-    console.info(`🔐 EMAIL DE RECUPERACIÓN DE CONTRASEÑA`);
-    console.info(`${'='.repeat(80)}`);
-    console.info(`Para: ${_email}`);
-    console.info(`Enlace para restablecer contraseña:`);
-    console.info(`\n${resetLink}\n`);
-    console.info(
-      `⚠️  Este enlace debe abrirse en el navegador para establecer una nueva contraseña.`,
-    );
-    console.info(`${'='.repeat(80)}\n`);
-
+    const userName = user?.nombre || 'Usuario';
+    await this.emailService.sendResetPasswordEmail(email, userName, token);
     return dataResponseSuccess<string>({ data: 'Email de reset enviado' });
   }
 
@@ -666,7 +664,12 @@ export class AuthService {
   async enable2FA(userId: string, inputDto: Enable2FAInput) {
     const user = await this.prismaService.usuario.findUnique({
       where: { id: userId },
-      select: { twoFactorSecret: true, twoFactorEnabled: true },
+      select: {
+        email: true,
+        nombre: true,
+        twoFactorSecret: true,
+        twoFactorEnabled: true,
+      },
     });
 
     if (!user) {
@@ -696,6 +699,9 @@ export class AuthService {
       where: { id: userId },
       data: { twoFactorEnabled: true },
     });
+
+    // Enviar email de confirmación de 2FA
+    await this.emailService.send2FASetupEmail(user.email, user.nombre);
 
     return dataResponseSuccess<string>({ data: '2FA habilitado exitosamente' });
   }

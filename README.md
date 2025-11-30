@@ -23,7 +23,43 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Backend NestJS para sistema de Notaría con autenticación completa, sistema de emails con Gmail, 2FA y Google OAuth.
+
+## ✨ Características Principales
+
+- 🔐 **Autenticación completa** con JWT
+- 📧 **Sistema de emails con Gmail** (Nodemailer + plantillas HTML)
+- 🔒 **Autenticación de dos factores (2FA)** con Google Authenticator
+- 🌐 **Google OAuth** integrado
+- 📝 **Prisma ORM** para base de datos
+- 🎨 **Swagger** para documentación de API
+- ✅ **Verificación de email** con tokens seguros
+- 🔑 **Recuperación de contraseña** vía email
+
+## 📧 Sistema de Emails
+
+El proyecto incluye un sistema completo de envío de emails con plantillas HTML profesionales:
+
+- ✅ Email de verificación de registro
+- 🎉 Email de bienvenida
+- 🔐 Email de recuperación de contraseña
+- 🔒 Email de confirmación de 2FA
+
+**Documentación completa:** [docs/EMAIL_SYSTEM.md](docs/EMAIL_SYSTEM.md)
+
+### Configuración de Emails
+
+Crea un archivo `.env` con:
+
+```env
+EMAIL_FROM=tu.email@gmail.com
+EMAIL_USER=tu.email@gmail.com
+EMAIL_PASS=tu_contraseña_de_aplicación
+EMAIL_SERVICE=gmail
+ENV_FRONT_APP_URL=http://localhost:5173
+```
+
+**Nota:** Usa una [contraseña de aplicación de Gmail](https://myaccount.google.com/apppasswords), no tu contraseña normal.
 
 ## Project setup
 
@@ -43,6 +79,19 @@ $ yarn run start:dev
 # production mode
 $ yarn run start:prod
 ```
+
+## 🧪 Pruebas
+
+### Pruebas de Registro y Emails
+Usa el archivo `test/register-test.http` para probar el flujo completo:
+
+1. Registrar usuario
+2. Verificar email
+3. Iniciar sesión
+4. Recuperar contraseña
+
+### Pruebas de 2FA
+Usa el archivo `test/2fa-test.http` para probar autenticación de dos factores.
 
 ## Run tests
 

@@ -1,0 +1,214 @@
+### Variables
+@baseUrl = http://localhost:3060
+@newUserEmail = kryshot05@gmail.com
+@newUserPassword = Test123@Strong
+@newUserNombre = Juan
+@newUserApellidos = Pérez García
+
+### ===================================================
+### PRUEBA COMPLETA DE REGISTRO Y VERIFICACIÓN DE EMAIL
+### ===================================================
+
+### 1. REGISTRAR NUEVO USUARIO
+# Este endpoint creará un usuario y enviará un email de verificación a su correo
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{newUserEmail}}",
+  "password": "{{newUserPassword}}",
+  "nombre": "{{newUserNombre}}",
+  "apellidos": "{{newUserApellidos}}",
+  "telefono": "931753472",
+  "direccion": "calle Colo Colo"
+}
+
+### RESPUESTA ESPERADA:
+# {
+#   "error": false,
+#   "message": "Operación exitosa",
+#   "response": {
+#     "data": {
+#       "accessToken": "eyJhbGc...",
+#       "refreshToken": "eyJhbGc...",
+#       "user": {
+#         "usuarioId": "cm...",
+#         "email": "test.user@example.com",
+#         "nombre": "Juan",
+#         "apellidos": "Pérez García",
+#         "estaActivo": true,
+#         "emailVerificado": false,
+#         "telefono": null,
+#         "direccion": null,
+#         "avatar": null
+#       },
+#       "roles": []
+#     }
+#   }
+# }
+
+### IMPORTANTE: 
+### - Revisa tu bandeja de entrada del email que registraste
+### - Abre el email "✅ Verifica tu cuenta - Tu Notaría"
+### - Copia el token del enlace de verificación
+### - El token está después de "?token=" en la URL
+
+### EJEMPLO DE TOKEN:
+# URL: http://localhost:5173/auth/verify-email?token=a1b2c3d4e5f6...
+# Token: a1b2c3d4e5f6...
+
+@verificationToken = PEGA_AQUI_EL_TOKEN_DEL_EMAIL
+
+### ===================================================
+
+### 2. VERIFICAR EMAIL CON TOKEN
+# Usa el token que recibiste en el email
+POST {{baseUrl}}/auth/verify-email
+Content-Type: application/json
+
+{
+  "token": "{{verificationToken}}"
+}
+
+### RESPUESTA ESPERADA:
+# {
+#   "error": false,
+#   "message": "Operación exitosa",
+#   "response": {
+#     "data": "Email verificado exitosamente"
+#   }
+# }
+
+### IMPORTANTE:
+### - Después de verificar, recibirás un email de bienvenida
+### - Abre el email "🎉 Bienvenido a Tu Notaría"
+
+### ===================================================
+
+### 3. INICIAR SESIÓN CON EL USUARIO VERIFICADO
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{newUserEmail}}",
+  "password": "{{newUserPassword}}"
+}
+
+### GUARDAR EL accessToken DE LA RESPUESTA:
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### ===================================================
+
+### 4. OBTENER INFORMACIÓN DEL USUARIO AUTENTICADO
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{accessToken}}
+
+### ===================================================
+
+### 5. RE-ENVIAR EMAIL DE VERIFICACIÓN (si es necesario)
+# Solo funciona si el email aún no está verificado
+POST {{baseUrl}}/auth/send-verification-link
+Authorization: Bearer {{accessToken}}
+
+### ===================================================
+### PRUEBAS DE RECUPERACIÓN DE CONTRASEÑA
+### ===================================================
+
+### 6. SOLICITAR RESET DE CONTRASEÑA
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "{{newUserEmail}}"
+}
+
+### IMPORTANTE:
+### - Revisa tu email
+### - Abre el email "🔐 Recuperación de contraseña - Tu Notaría"
+### - Copia el token del enlace de recuperación
+
+@resetToken = PEGA_AQUI_EL_TOKEN_DEL_EMAIL
+
+### 7. RESTABLECER CONTRASEÑA CON TOKEN
+POST {{baseUrl}}/auth/reset-password
+Content-Type: application/json
+
+{
+  "token": "{{resetToken}}",
+  "newPassword": "NewPassword123@"
+}
+
+### ===================================================
+### PRUEBAS ADICIONALES
+### ===================================================
+
+### 8. REGISTRAR OTRO USUARIO PARA PRUEBAS
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "maria.lopez@example.com",
+  "password": "Maria123@Strong",
+  "nombre": "María",
+  "apellidos": "López Rodríguez"
+}
+
+### ===================================================
+
+### 9. INTENTAR REGISTRAR CON EMAIL DUPLICADO (debería fallar)
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{newUserEmail}}",
+  "password": "Test123@Strong",
+  "nombre": "Otro",
+  "apellidos": "Usuario"
+}
+
+### RESPUESTA ESPERADA:
+# {
+#   "error": true,
+#   "message": "El email ya está registrado"
+# }
+
+### ===================================================
+
+### 10. CAMBIAR CONTRASEÑA (usuario autenticado)
+PATCH {{baseUrl}}/auth/change-password
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "currentPassword": "{{newUserPassword}}",
+  "newPassword": "NewSecurePassword123@"
+}
+
+### ===================================================
+### NOTAS IMPORTANTES
+### ===================================================
+
+### CONFIGURACIÓN NECESARIA EN .ENV:
+# EMAIL_FROM=kryshot05@gmail.com
+# EMAIL_USER=kryshot05@gmail.com
+# EMAIL_PASS=ikhy abc szvb fzlf
+# EMAIL_SERVICE=gmail
+# ENV_FRONT_APP_URL=http://localhost:5173
+
+### FLUJO COMPLETO DE REGISTRO:
+# 1. Usuario se registra → Recibe email de verificación
+# 2. Usuario hace clic en el enlace del email → Email verificado
+# 3. Usuario recibe email de bienvenida
+# 4. Usuario puede iniciar sesión normalmente
+
+### FLUJO DE RECUPERACIÓN DE CONTRASEÑA:
+# 1. Usuario solicita reset → Recibe email con enlace
+# 2. Usuario hace clic en el enlace → Ingresa nueva contraseña
+# 3. Contraseña actualizada exitosamente
+
+### VALIDACIONES DEL SISTEMA:
+# - Email único (no duplicados)
+# - Contraseñas encriptadas con bcrypt
+# - Tokens de un solo uso
+# - Emails con plantillas HTML profesionales
+# - Verificación requerida antes de ciertas acciones

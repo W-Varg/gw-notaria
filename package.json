@@ -2,11 +2,11 @@
   "name": "backend_pets",
   "version": "0.0.1",
   "description": "backend NestJS",
-  "author": "erika",
+  "author": "devs-sucre",
   "contact": {
-    "name": "developer erika",
-    "url": "developer erika",
-    "email": "paniaguaerika76@gmail.com"
+    "name": "developers",
+    "url": "developers",
+    "email": "developers@gmail.com"
   },
   "private": true,
   "license": "UNLICENSED",
