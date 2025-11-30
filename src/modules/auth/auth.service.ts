@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import { dataResponseError, dataResponseSuccess, ResponseDTO } from 'src/common/dtos/response.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { authenticator } from 'otplib';
@@ -18,9 +18,10 @@ import {
   Verify2FAInput,
   Disable2FAInput,
 } from './dto/auth.input';
-import { AuthResponse, UserProfile, TwoFactorSetup } from './auth.entity';
+import { AuthResponse, UserProfile, TwoFactorSetup, GoogleUserData } from './auth.entity';
 import { SecurityService } from './security.service';
 import { ConfigService } from '@nestjs/config';
+import { Usuario as UserModel, Prisma } from '../../generated/prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -29,7 +30,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly securityService: SecurityService,
-  ) { }
+  ) {}
 
   async registerUser(inputDto: RegistrarUserInput) {
     const { email, password, ...userData } = inputDto;
@@ -58,7 +59,7 @@ export class AuthService {
     });
 
     // Generar tokens usando SecurityService
-    const tokens = await this.securityService.generateTokens(user.id);
+    const tokens = await this.securityService.generateTokens(user);
 
     // Construir perfil de usuario
     const userProfile: UserProfile = {
@@ -179,7 +180,7 @@ export class AuthService {
     }
 
     // Generar tokens usando SecurityService
-    const tokens = await this.securityService.generateTokens(user.id);
+    const tokens = await this.securityService.generateTokens(user);
 
     // Construir perfil de usuario
     const userProfile: UserProfile = {
@@ -227,7 +228,7 @@ export class AuthService {
     try {
       // Verificar el refresh token
       const payload = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET || 'refresh-secret',
+        secret: this.configService.get('jwtRefreshSecret'),
       });
 
       // Buscar el usuario
@@ -264,7 +265,7 @@ export class AuthService {
       }
 
       // Generar nuevos tokens usando SecurityService
-      const tokens = await this.securityService.generateTokens(user.id);
+      const tokens = await this.securityService.generateTokens(user);
 
       // Construir perfil de usuario
       const userProfile: UserProfile = {
@@ -307,25 +308,14 @@ export class AuthService {
     const user = await this.prismaService.usuario.findUnique({
       where: { id: userId },
       include: {
-        roles: {
-          include: {
-            rol: {
-              include: {
-                rolPermisos: {
-                  include: {
-                    permiso: true,
-                  },
-                },
-              },
-            },
-          },
-        },
+        roles: { include: { rol: { include: { rolPermisos: { include: { permiso: true } } } } } },
       },
     });
 
     if (!user) {
       return dataResponseError('Usuario no encontrado');
     }
+    if (!user.estaActivo) return dataResponseError('El usuario aun nose encuentra activado');
 
     // Remover contraseña de la respuesta
     const { password: _, ...userWithoutPassword } = user;
@@ -638,7 +628,9 @@ export class AuthService {
     }
 
     if (user.twoFactorEnabled) {
-      return dataResponseError('2FA ya está habilitado. Desactívalo primero si deseas reconfigurarlo.');
+      return dataResponseError(
+        '2FA ya está habilitado. Desactívalo primero si deseas reconfigurarlo.',
+      );
     }
 
     // Generar secreto TOTP
@@ -763,7 +755,7 @@ export class AuthService {
     }
 
     // Generar tokens usando SecurityService
-    const tokens = await this.securityService.generateTokens(user.id);
+    const tokens = await this.securityService.generateTokens(user);
 
     // Construir perfil de usuario
     const userProfile: UserProfile = {
@@ -851,29 +843,125 @@ export class AuthService {
   }
 
   /**
-   * Callback de autenticación de Google
+   *  Valida un usuario de Google o lo registra si no existe
+   * @param googleUser - Datos del usuario obtenidos de Google OAuth
+   * @returns Usuario encontrado o creado, o null en caso de error
    */
-  async googleCallback(code: string) {
-    // TODO: Implementar lógica de autenticación con Google
-    // 1. Intercambiar el código por un token de acceso
-    // 2. Obtener la información del usuario desde Google
-    // 3. Verificar si el usuario existe en la base de datos
-    // 4. Si no existe, crear el usuario
-    // 5. Generar tokens JWT
-    // 6. Retornar la respuesta de autenticación
+  async validateGoogleUser(googleUser: GoogleUserData): Promise<UserModel | null> {
+    try {
+      // 1. Verificar si el usuario existe en la base de datos
+      const user = await this.prismaService.usuario.findUnique({
+        where: { email: googleUser.email },
+      });
 
+      if (user) return user;
 
-    const googleClientId = this.configService.get('googleClientId')
-    const googleClientSecret = this.configService.get('googleClientSecret')
+      // 2. Si no existe, crear el usuario
+      const randomPassword = crypto.randomBytes(32).toString('hex');
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-    return dataResponseSuccess<AuthResponse>({
-      data: {
-        accessToken: '',
-        refreshToken: '',
-        user: {} as UserProfile,
-        permissions: [],
-        roles: [],
+      return this.prismaService.usuario.create({
+        data: {
+          email: googleUser.email,
+          nombre: googleUser.firstName || 'Usuario',
+          apellidos: googleUser.lastName || 'Google',
+          password: hashedPassword,
+          emailVerificado: true,
+          avatar: googleUser.avatarUrl || null,
+          estaActivo: false,
+        },
+      });
+    } catch (error) {
+      Logger.error('Error en validateGoogleUser:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Callback de autenticación de Google
+   * @param user - Usuario autenticado por Google
+   * @returns Respuesta con tokens de autenticación o error
+   */
+  async googleCallback(
+    user: UserModel,
+  ): Promise<ResponseDTO<{ accessToken: string; refreshToken: string }>> {
+    try {
+      if (!user.estaActivo) {
+        return dataResponseError('Usuario inactivo');
       }
-    });
+
+      // Obtener usuario completo con roles y permisos
+      const fullUser = await this.prismaService.usuario.findUnique({
+        where: { id: user.id },
+        select: {
+          id: true,
+          email: true,
+          nombre: true,
+          apellidos: true,
+          estaActivo: true,
+          emailVerificado: true,
+          telefono: true,
+          direccion: true,
+          avatar: true,
+          twoFactorEnabled: true,
+          roles: {
+            include: {
+              rol: {
+                include: {
+                  rolPermisos: {
+                    include: {
+                      permiso: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!fullUser) {
+        return dataResponseError('Usuario no encontrado');
+      }
+
+      // Generar tokens
+      const tokens = await this.securityService.generateTokens(fullUser);
+
+      // Construir perfil de usuario
+      const userProfile: UserProfile = {
+        usuarioId: fullUser.id,
+        email: fullUser.email,
+        nombre: fullUser.nombre,
+        apellidos: fullUser.apellidos,
+        estaActivo: fullUser.estaActivo,
+        emailVerificado: fullUser.emailVerificado,
+        telefono: fullUser.telefono || null,
+        direccion: fullUser.direccion || null,
+        avatar: fullUser.avatar || null,
+        twoFactorEnabled: fullUser.twoFactorEnabled,
+      };
+
+      // Extraer permisos únicos
+      const permissions = new Set<string>();
+      fullUser.roles.forEach((userRole) => {
+        userRole.rol.rolPermisos.forEach((rolPermiso) => {
+          permissions.add(rolPermiso.permiso.nombre);
+        });
+      });
+
+      // Construir respuesta completa de autenticación
+      const response: AuthResponse = {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: userProfile,
+        permissions: Array.from(permissions),
+        roles: fullUser.roles.map((userRole) => userRole.rol.nombre),
+      };
+
+      return dataResponseSuccess({ data: response as any });
+    } catch (error) {
+      Logger.error(error, 'Error al procesar autenticación de Google');
+      return dataResponseError('Error al procesar autenticación de Google');
+    }
   }
 }

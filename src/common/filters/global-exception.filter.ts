@@ -73,7 +73,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     } else if (error instanceof ValidatorException) {
       resp = error.getResponse() as IResponseDTO<any>;
       printRequestBodyLog(host, resp.status, resp?.response);
-      // printRequestUrl(host, resp.status);
     } else if (error.constructor.toString().includes('class HttpException extends Error')) {
       const respErr = (error as HttpException).getResponse() as IResponseDTO<any>;
       if (typeof respErr?.error !== 'boolean' && typeof respErr?.message !== 'string') {

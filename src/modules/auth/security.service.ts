@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/database/prisma.service';
 import { IToken, getTokenInformacion } from 'src/common/decorators/token.decorator';
+import { Prisma } from 'src/generated/prisma/client';
 
 @Injectable()
 export class SecurityService {
@@ -226,35 +227,39 @@ export class SecurityService {
    * @param userId - ID del usuario
    * @returns Promise<{accessToken: string, refreshToken: string}>
    */
-  async generateTokens(userId: string): Promise<{ accessToken: string; refreshToken: string }> {
+  async generateTokens(user: {
+    id: string;
+    nombre: string;
+    estaActivo: boolean;
+  }): Promise<{ accessToken: string; refreshToken: string }> {
     const payload = {
       sub: {
-        usuarioId: userId,
-        aplicacionId: 1, // Valor por defecto
-        funcionarioId: 1, // Valor por defecto
-        msPersonaId: 1, // Valor por defecto
-        institucionId: 1, // Valor por defecto
-        perfilPersonaId: 1, // Valor por defecto
-        oficinaId: 1, // Valor por defecto
-        municipioId: 1, // Valor por defecto
-        departamentoId: 1, // Valor por defecto
-        ci: userId, // Usar userId como CI temporal
-        nombreCompleto: 'Usuario', // Valor por defecto
-        aplicacionTag: 'pets-app', // Tag de la aplicación
+        usuarioId: user.id,
+        nombreCompleto: user.nombre, // Valor por defecto
+        estaActivo: user.estaActivo,
       },
     };
 
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_SECRET') || 'jwt-secret',
-      expiresIn: '15m',
-    });
+    console.log(user.estaActivo);
 
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_REFRESH_SECRET') || 'refresh-secret',
-      expiresIn: '7d',
-    });
+    if (user.estaActivo) {
+      const accessToken = this.jwtService.sign(payload, {
+        secret: this.configService.get('jwtSecret') || 'jwt-secret',
+        expiresIn: this.configService.get('jwtExpiresIn') || '1h',
+      });
 
-    return { accessToken, refreshToken };
+      const refreshToken = this.jwtService.sign(payload, {
+        secret: this.configService.get('jwtRefreshSecret') || 'refresh-secret',
+        expiresIn: '7d',
+      });
+      return { accessToken, refreshToken };
+    } else {
+      const accessToken = this.jwtService.sign(payload, {
+        secret: this.configService.get('jwtSecret') || 'jwt-secret',
+        expiresIn: '10s',
+      });
+      return { accessToken: '', refreshToken: '' };
+    }
   }
 
   /**

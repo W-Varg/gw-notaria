@@ -255,3 +255,14 @@ export class TokenPayload {
   })
   exp?: number;
 }
+
+/**
+ * Datos del usuario de Google OAuth
+ */
+export interface GoogleUserData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string;
+  password: string;
+}

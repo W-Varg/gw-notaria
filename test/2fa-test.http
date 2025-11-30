@@ -1,0 +1,108 @@
+### Variables
+@baseUrl = http://localhost:3060
+@email = admin@gmail.com
+@password = Cambiar123@
+
+### 1. Login inicial (sin 2FA)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### GUARDAR EL accessToken DE LA RESPUESTA ANTERIOR AQUÍ:
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOnsidXN1YXJpb0lkIjoiY21pa256bHFkMDAwMGlrcjllbm1uNXM0aiIsImFwbGljYWNpb25JZCI6MSwiZnVuY2lvbmFyaW9JZCI6MSwibXNQZXJzb25hSWQiOjEsImluc3RpdHVjaW9uSWQiOjEsInBlcmZpbFBlcnNvbmFJZCI6MSwib2ZpY2luYUlkIjoxLCJtdW5pY2lwaW9JZCI6MSwiZGVwYXJ0YW1lbnRvSWQiOjEsImNpIjoiY21pa256bHFkMDAwMGlrcjllbm1uNXM0aiIsIm5vbWJyZUNvbXBsZXRvIjoiVXN1YXJpbyIsImFwbGljYWNpb25UYWciOiJwZXRzLWFwcCJ9LCJpYXQiOjE3NjQ0NTU5MzMsImV4cCI6MTc2NDQ1NjgzM30.e6btQVCn18HcfSaLarVlwHVRs9rfwdY6sDC8S2BXPtE
+
+### 2. Setup 2FA - Generar QR Code
+GET {{baseUrl}}/auth/2fa/setup
+Authorization: Bearer {{accessToken}}
+
+### RESPUESTA ESPERADA:
+# {
+#   "success": true,
+#   "data": {
+#     "secret": "BASE32_SECRET",
+#     "qrCode": "data:image/png;base64,..."
+#   }
+# }
+
+### 3. Escanear el QR con Google Authenticator y obtener el código de 6 dígitos
+### Luego habilitar 2FA con el código
+
+### IMPORTANTE: Reemplaza 123456 con el código de tu app
+@totpCode = 840001
+
+POST {{baseUrl}}/auth/2fa/enable
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "code": "{{totpCode}}"
+}
+
+### 4. Verificar estado de 2FA
+GET {{baseUrl}}/auth/2fa/status
+Authorization: Bearer {{accessToken}}
+
+### 5. Ahora intenta hacer login nuevamente - debería pedirte el código 2FA
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### RESPUESTA ESPERADA:
+# {
+#   "success": false,
+#   "message": "2FA requerido. Use el endpoint /auth/2fa/verify",
+#   "data": {
+#     "requires2FA": true,
+#     "userId": "USER_ID_TEMPORAL"
+#   }
+# }
+
+### 6. Verificar código 2FA durante el login
+### GUARDAR EL userId DE LA RESPUESTA ANTERIOR:
+@userId = cmiknzlqd0000ikr9enmn5s4j
+
+POST {{baseUrl}}/auth/2fa/verify
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "code": "{{totpCode}}"
+}
+
+### 7. Desactivar 2FA (opcional)
+POST {{baseUrl}}/auth/2fa/disable
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "password": "{{password}}"
+}
+
+### ====================================
+### PRUEBA COMPLETA DEL FLUJO
+### ====================================
+
+### Paso 1: Login
+# POST {{baseUrl}}/auth/login
+
+### Paso 2: Setup 2FA
+# GET {{baseUrl}}/auth/2fa/setup
+
+### Paso 3: Escanear QR con Google Authenticator
+
+### Paso 4: Habilitar 2FA con código
+# POST {{baseUrl}}/auth/2fa/enable
+
+### Paso 5: Logout y volver a hacer login
+# POST {{baseUrl}}/auth/login
+
+### Paso 6: Verificar con código 2FA
+# POST {{baseUrl}}/auth/2fa/verify

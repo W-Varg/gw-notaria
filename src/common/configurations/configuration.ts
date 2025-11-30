@@ -14,9 +14,11 @@ export default () => {
 
     googleClientId: process.env.GOOGLE_CLIENT_ID || null,
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || null,
+    googleRedirectUri: process.env.GOOGLE_CALLBACK_URL || null,
 
-    defaultRolRegister: process.env.ENV_DEFAUL_ROL_REGISTER || 'CLIENTE',
-
+    jwtSecret: process.env.JWT_SECRET || 'jwt-secret',
+    jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'jwt-refresh-secret',
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1h',
 
     // ## MS MYSQL
     msMysql: process.env.DATABASE_URL,

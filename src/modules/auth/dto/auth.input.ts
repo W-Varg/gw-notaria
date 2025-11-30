@@ -9,6 +9,7 @@ import {
   MaxLength,
   Matches,
 } from 'class-validator';
+import { DtoPipePlainToClassOptions } from 'src/common/decorators/dto.decorator';
 
 export class RegistrarUserInput {
   @Expose()
@@ -296,6 +297,8 @@ export class SendResetPasswordEmailInput {
 // DTOs para Two-Factor Authentication (2FA)
 // ============================================
 
+
+@DtoPipePlainToClassOptions()
 export class Enable2FAInput {
   @Expose()
   @IsDefined()

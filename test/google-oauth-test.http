@@ -1,0 +1,273 @@
+### Variables
+@baseUrl = http://localhost:3060
+@frontendUrl = http://localhost:5173
+
+### ====================================
+### PRUEBAS DE GOOGLE OAUTH
+### ====================================
+
+### 🔧 CONFIGURACIÓN PREVIA NECESARIA:
+# 
+# 1. Configura las siguientes variables en el .env del backend:
+#    GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
+#    GOOGLE_CLIENT_SECRET=tu-client-secret
+#    GOOGLE_REDIRECT_URI=http://localhost:3060/auth/google/callback
+#    FRONTEND_URL=http://localhost:5173
+#
+# 2. Asegúrate de tener configuradas las URIs en Google Cloud Console:
+#    - URI de redirección: http://localhost:3060/auth/google/callback
+#    - Origen autorizado: http://localhost:5173
+#
+
+### ====================================
+### FLUJO COMPLETO DE AUTENTICACIÓN
+### ====================================
+
+### 1. Iniciar autenticación con Google (MÉTODO MANUAL)
+# Este endpoint redirige al navegador a Google para autenticación
+# ⚠️  NO EJECUTAR DESDE REST CLIENT - Copiar URL y abrir en navegador
+
+# URL para copiar y pegar en el navegador:
+# http://localhost:3060/auth/google
+
+### NOTA: 
+# Al abrir esa URL en el navegador:
+# 1. Te redirigirá a Google para iniciar sesión
+# 2. Autorizarás la aplicación
+# 3. Google te redirigirá a: http://localhost:3060/auth/google/callback?code=XXXXX
+# 4. El backend procesará el código y te redirigirá a: http://localhost:5173/auth/login?code=XXXXX
+# 5. El frontend completará la autenticación
+
+
+### ====================================
+### PRUEBAS DEL ENDPOINT DE CALLBACK
+### ====================================
+
+### 2. Simular callback de Google (para testing)
+# ⚠️  Este endpoint normalmente solo lo llama Google
+# Para probarlo manualmente, necesitas un código válido de Google
+
+### GUARDAR EL CÓDIGO QUE RECIBISTE DE GOOGLE AQUÍ:
+@googleCode = CODIGO_QUE_OBTUVISTE_DE_GOOGLE
+
+GET {{baseUrl}}/auth/google/callback?code={{googleCode}}
+
+### RESPUESTA ESPERADA (si el código es válido):
+# Redirige a: http://localhost:5173/auth/login?code={{googleCode}}
+# El frontend luego llamará al endpoint para completar la autenticación
+
+
+### ====================================
+### ENDPOINT PARA EL FRONTEND
+### ====================================
+
+### 3. Completar autenticación con código de Google
+# Este es el endpoint que el frontend llama después del callback
+POST {{baseUrl}}/auth/google/callback
+Content-Type: application/json
+
+{
+  "code": "{{googleCode}}"
+}
+
+### RESPUESTA ESPERADA (éxito):
+# {
+#   "error": false,
+#   "message": "Operación exitosa",
+#   "response": {
+#     "data": {
+#       "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+#       "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
+#       "user": {
+#         "usuarioId": "cm...",
+#         "email": "usuario@gmail.com",
+#         "nombre": "Juan",
+#         "apellidos": "Pérez",
+#         "estaActivo": true,
+#         "emailVerificado": true,
+#         "telefono": null,
+#         "direccion": null,
+#         "avatar": "https://lh3.googleusercontent.com/..."
+#       },
+#       "permissions": ["USUARIOS_LISTAR", "CLIENTES_CREAR", ...],
+#       "roles": ["admin", "usuario"]
+#     }
+#   }
+# }
+
+### RESPUESTA ESPERADA (error - código inválido):
+# {
+#   "error": true,
+#   "message": "Error al autenticar con Google",
+#   "response": {
+#     "data": null
+#   }
+# }
+
+
+### ====================================
+### VERIFICAR USUARIO CREADO
+### ====================================
+
+### 4. Guardar el accessToken de la respuesta anterior
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### 5. Verificar información del usuario autenticado
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{accessToken}}
+
+### RESPUESTA ESPERADA:
+# {
+#   "error": false,
+#   "message": "Operación exitosa",
+#   "response": {
+#     "data": {
+#       "id": "cm...",
+#       "email": "usuario@gmail.com",
+#       "nombre": "Juan",
+#       "apellidos": "Pérez",
+#       "emailVerificado": true,
+#       "avatar": "https://lh3.googleusercontent.com/...",
+#       "estaActivo": true,
+#       "roles": [...]
+#     }
+#   }
+# }
+
+### 6. Verificar roles del usuario
+GET {{baseUrl}}/auth/roles
+Authorization: Bearer {{accessToken}}
+
+### 7. Verificar permisos del usuario
+GET {{baseUrl}}/auth/permissions
+Authorization: Bearer {{accessToken}}
+
+
+### ====================================
+### CERRAR SESIÓN
+### ====================================
+
+### 8. Logout
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{accessToken}}
+
+
+### ====================================
+### REFRESH TOKEN
+### ====================================
+
+### 9. Guardar el refreshToken de la respuesta de login
+@refreshToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### 10. Renovar tokens
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+
+### ====================================
+### CASOS DE PRUEBA
+### ====================================
+
+### ✅ CASO 1: Usuario nuevo se registra con Google
+# 1. Ir a: http://localhost:3060/auth/google
+# 2. Iniciar sesión con cuenta de Google nueva
+# 3. Verificar que se crea el usuario en la BD
+# 4. Verificar que email está verificado automáticamente
+# 5. Verificar que se guarda el avatar de Google
+
+### ✅ CASO 2: Usuario existente hace login con Google
+# 1. Ir a: http://localhost:3060/auth/google
+# 2. Iniciar sesión con cuenta de Google existente en la BD
+# 3. Verificar que no se duplica el usuario
+# 4. Verificar que se retornan sus roles y permisos existentes
+
+### ✅ CASO 3: Usuario inactivo intenta login con Google
+# 1. Desactivar usuario en la BD (estaActivo = false)
+# 2. Intentar login con Google
+# 3. Verificar que retorna error "Usuario inactivo"
+
+### ✅ CASO 4: Código de Google inválido o expirado
+# 1. Intentar usar un código antiguo o inventado
+# 2. Verificar que retorna error apropiado
+
+
+### ====================================
+### NOTAS IMPORTANTES
+### ====================================
+
+### 📝 Sobre los códigos de Google:
+# - Los códigos son de UN SOLO USO
+# - Expiran después de ~10 minutos
+# - No se pueden reutilizar
+# - Deben ser intercambiados por tokens inmediatamente
+
+### 🔒 Seguridad:
+# - Los usuarios creados con Google tienen contraseña aleatoria
+# - No pueden hacer login con contraseña tradicional
+# - Deben usar siempre Google OAuth
+# - El email se marca como verificado automáticamente
+
+### 🎯 Datos guardados de Google:
+# - Email (usado como identificador único)
+# - Nombre (given_name)
+# - Apellidos (family_name)
+# - Avatar (picture URL)
+# - Email verificado (verified_email)
+
+### 🔄 Flujo completo:
+# 1. Usuario → Frontend → Click "Continuar con Google"
+# 2. Frontend → Backend → GET /auth/google
+# 3. Backend → Google → Redirige para autenticación
+# 4. Google → Usuario → Pide autorización
+# 5. Usuario → Google → Autoriza
+# 6. Google → Backend → GET /auth/google/callback?code=XXX
+# 7. Backend → Google API → Intercambia código por token
+# 8. Backend → Google API → Obtiene info del usuario
+# 9. Backend → Base de Datos → Busca o crea usuario
+# 10. Backend → JWT → Genera tokens propios
+# 11. Backend → Frontend → Redirige con código
+# 12. Frontend → Backend → POST /auth/google/callback con código
+# 13. Backend → Frontend → Retorna tokens y datos de usuario
+# 14. Frontend → Dashboard → Usuario autenticado
+
+
+### ====================================
+### TROUBLESHOOTING
+### ====================================
+
+### ❌ Error: "Google OAuth no está configurado"
+# Solución: Verifica que GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET 
+#          estén en el .env del backend
+
+### ❌ Error: "redirect_uri_mismatch"
+# Solución: Verifica que la URI en Google Cloud Console coincida 
+#          exactamente con GOOGLE_REDIRECT_URI
+
+### ❌ Error: "Error al autenticar con Google"
+# Solución: Revisa los logs del backend para más detalles
+#          Verifica que el código no haya expirado
+
+### ❌ Error: "Usuario inactivo"
+# Solución: Activa el usuario en la base de datos
+
+### ❌ Error: "invalid_grant"
+# Solución: El código ya fue usado o expiró
+#          Genera un nuevo código iniciando el flujo de nuevo
+
+
+### ====================================
+### ENLACES ÚTILES
+### ====================================
+
+# 🔗 Google Cloud Console:
+# https://console.cloud.google.com/
+
+# 🔗 Documentación OAuth 2.0 de Google:
+# https://developers.google.com/identity/protocols/oauth2
+
+# 🔗 Probar OAuth sin implementar backend:
+# https://developers.google.com/oauthplayground/

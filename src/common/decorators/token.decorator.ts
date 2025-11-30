@@ -13,17 +13,8 @@ function isTokenExpire(exp) {
 
 export interface IToken {
   usuarioId?: number;
-  aplicacionId: number;
-  funcionarioId: number;
-  msPersonaId: number;
-  institucionId: number;
-  perfilPersonaId: number;
-  oficinaId: number;
-  municipioId: number;
-  departamentoId: number;
-  ci: string;
   nombreCompleto: string;
-  aplicacionTag: string;
+  estaActivo?: boolean;
   // declaracion de variables para adjuntar la informacion de la sesion del token como ser el token() y client(informacion del cliente que consume(navegador) )
   expireIn: number;
   token: string;
@@ -33,17 +24,8 @@ export interface IToken {
 export interface TokenPayload {
   sub: {
     usuarioId: number;
-    aplicacionId: number;
-    funcionarioId: number;
-    msPersonaId: number;
-    institucionId: number;
-    oficinaId: number;
-    municipioId: number;
-    departamentoId: number;
-    perfilPersonaId: number;
-    ci: string;
     nombreCompleto: string;
-    aplicacionTag: string;
+    estaActivo: boolean;
   };
 }
 
@@ -68,18 +50,7 @@ function GetDataOfJWT(request: Request): IToken {
 
     const _token = token.split(' ')[1];
     let tokenInformacion: IToken = {
-      aplicacionId: null,
-      funcionarioId: null,
-      msPersonaId: null,
-      institucionId: null,
-      perfilPersonaId: null,
-      oficinaId: null,
-      municipioId: null,
-      departamentoId: null,
-      ci: null,
       nombreCompleto: null,
-      aplicacionTag: null,
-
       token,
       expireIn: null,
       client: null,
@@ -91,6 +62,8 @@ function GetDataOfJWT(request: Request): IToken {
       tokenInformacion.client = request.headers['user-agent'];
       if (isTokenExpire(tokenInformacion.expireIn))
         throw new ApiUnauthorizedError('el token expiró');
+      if (tokenInformacion.estaActivo === false)
+        throw new ApiUnauthorizedError('Usuario inactivo');
     } catch (e) {
       throw new ApiUnauthorizedError('el token no es valido/expiro', textError);
     }
@@ -119,17 +92,8 @@ export const getTokenInformacion = (token): { tokenInformacion: IToken; tokenV1:
     if (decoded == null) throw new ApiUnauthorizedError('Sesion inválida');
     const tokenInformacion: IToken = {
       usuarioId: null,
-      aplicacionId: null,
-      funcionarioId: null,
-      msPersonaId: null,
-      institucionId: null,
-      perfilPersonaId: null,
-      oficinaId: null,
-      municipioId: null,
-      departamentoId: null,
-      ci: null,
       nombreCompleto: null,
-      aplicacionTag: null,
+      estaActivo: null,
       token: token,
       expireIn: decoded['exp'],
     };
@@ -142,17 +106,8 @@ export const getTokenInformacion = (token): { tokenInformacion: IToken; tokenV1:
       }
 
       tokenInformacion.usuarioId = item['usuarioId'];
-      tokenInformacion.aplicacionId = item['aplicacionId'];
-      tokenInformacion.funcionarioId = item['funcionarioId'];
-      tokenInformacion.msPersonaId = item['msPersonaId'];
-      tokenInformacion.institucionId = item['institucionId'];
-      tokenInformacion.perfilPersonaId = item['perfilPersonaId'];
-      tokenInformacion.oficinaId = item['oficinaId'];
-      tokenInformacion.municipioId = item['municipioId'];
-      tokenInformacion.departamentoId = item['departamentoId'];
-      tokenInformacion.ci = item['ci'];
       tokenInformacion.nombreCompleto = item['nombreCompleto'] ?? null;
-      tokenInformacion.aplicacionTag = item['aplicacionTag'] ?? null;
+      tokenInformacion.estaActivo = item['estaActivo'] ?? false;
     }
     return { tokenInformacion, tokenV1 };
   } catch (e) {

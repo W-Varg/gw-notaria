@@ -1,5 +1,7 @@
-import { Controller, Post, Body, Get, Patch, Request, Query } from '@nestjs/common';
+import { Controller, Post, Body, Get, Patch, Query, Res, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { ConfigService } from '@nestjs/config';
+import { Request, Response } from 'express';
 import {
   RegistrarUserInput,
   LoginUserInput,
@@ -38,11 +40,17 @@ import {
   ResponseMessage2FAType,
 } from './dto/auth.resp';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
+import { GoogleAuthGuard } from 'src/common/guards/google-auth.guard';
+import { Prisma } from 'src/generated/prisma/client';
+import { dataResponseError } from 'src/common/dtos/response.dto';
 
 @ApiTags('[auth] Registro y Autorización')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('register')
   @ApiDescription('Registrar un nuevo usuario', [])
@@ -62,7 +70,7 @@ export class AuthController {
   @BearerAuthPermision()
   @ApiDescription('Cerrar sesión', [])
   @ApiResponse({ status: 200, type: () => ResponseLogoutType })
-  async logout(@Request() req: any) {
+  async logout(@Req() req: any) {
     const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
     return this.authService.logout(userId);
   }
@@ -78,7 +86,7 @@ export class AuthController {
   @BearerAuthPermision()
   @ApiDescription('Obtener información del usuario autenticado')
   @ApiResponse({ status: 200, type: () => ResponseUserType })
-  async me(@Request() req: any) {
+  async me(@Req() req: any) {
     const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
     return this.authService.me(userId);
   }
@@ -87,7 +95,7 @@ export class AuthController {
   @BearerAuthPermision()
   @ApiDescription('Obtener roles del usuario autenticado', [])
   @ApiResponse({ status: 200, type: () => ResponseRolesType })
-  async roles(@Request() req: any) {
+  async roles(@Req() req: any) {
     const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
     return this.authService.roles(userId);
   }
@@ -96,7 +104,7 @@ export class AuthController {
   @BearerAuthPermision()
   @ApiDescription('Obtener permisos del usuario autenticado', [])
   @ApiResponse({ status: 200, type: () => ResponsePermissionsType })
-  async permissions(@Request() req: any) {
+  async permissions(@Req() req: any) {
     const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
     return this.authService.permissions(userId);
   }
@@ -105,7 +113,7 @@ export class AuthController {
   @BearerAuthPermision()
   @ApiDescription('Cambiar contraseña del usuario autenticado', [])
   @ApiResponse({ status: 200, type: () => ResponseChangePasswordType })
-  async changePassword(@Request() req: any, @Body() inputDto: ChangePasswordInput) {
+  async changePassword(@Req() req: any, @Body() inputDto: ChangePasswordInput) {
     const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
     return this.authService.changePassword(userId, inputDto);
   }
@@ -135,7 +143,7 @@ export class AuthController {
   @BearerAuthPermision()
   @ApiDescription('Enviar enlace de verificación de email', [])
   @ApiResponse({ status: 200, type: () => ResponseSendVerificationLinkType })
-  async sendVerificationLink(@Request() req: any) {
+  async sendVerificationLink(@Req() req: any) {
     const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
     return this.authService.sendVerificationLink(userId);
   }
@@ -190,7 +198,7 @@ export class AuthController {
   @BearerAuthPermision()
   @ApiDescription('Generar código QR para configurar 2FA', [])
   @ApiResponse({ status: 200, type: () => Response2FASetupType })
-  async setup2FA(@Request() req: any) {
+  async setup2FA(@Req() req: any) {
     const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
     return this.authService.setup2FA(userId);
   }
@@ -199,7 +207,7 @@ export class AuthController {
   @BearerAuthPermision()
   @ApiDescription('Habilitar 2FA después de verificar el código', [])
   @ApiResponse({ status: 200, type: () => ResponseMessage2FAType })
-  async enable2FA(@Request() req: any, @Body() inputDto: Enable2FAInput) {
+  async enable2FA(@Req() req: any, @Body() inputDto: Enable2FAInput) {
     const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
     return this.authService.enable2FA(userId, inputDto);
   }
@@ -215,7 +223,7 @@ export class AuthController {
   @BearerAuthPermision()
   @ApiDescription('Desactivar 2FA', [])
   @ApiResponse({ status: 200, type: () => ResponseMessage2FAType })
-  async disable2FA(@Request() req: any, @Body() inputDto: Disable2FAInput) {
+  async disable2FA(@Req() req: any, @Body() inputDto: Disable2FAInput) {
     const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
     return this.authService.disable2FA(userId, inputDto);
   }
@@ -224,15 +232,66 @@ export class AuthController {
   @BearerAuthPermision()
   @ApiDescription('Obtener estado de 2FA del usuario', [])
   @ApiResponse({ status: 200, type: () => Response2FAStatusType })
-  async get2FAStatus(@Request() req: any) {
+  async get2FAStatus(@Req() req: any) {
     const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
     return this.authService.get2FAStatus(userId);
   }
 
+  // ============================================
+  // Endpoints para Google OAuth
+  // ============================================
+
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  @ApiDescription('Iniciar autenticación con Google', [])
+  async googleAuth() {}
+
   @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
   @ApiDescription('Callback de autenticación de Google', [])
-  @ApiResponse({ status: 200, type: () => ResponseAuthType })
-  async googleCallback(@Query('code') code: string) {
-    return this.authService.googleCallback(code);
+  async googleCallback(
+    @Query('code') code: string,
+    @Res() res: Response,
+    @Req() req: Request & { user?: Prisma.UsuarioModel },
+  ): Promise<void> {
+    const frontendUrl = this.configService.get<string>('appFrontUrlBase');
+
+    // Si la respuesta ya fue enviada por el guard, no hacer nada más
+    if (res.headersSent) {
+      return;
+    }
+
+    if (!code) {
+      const errorResponse = dataResponseError<null>('No se recibió el código de autorización');
+      const errorJsonString = JSON.stringify(errorResponse);
+      return res.redirect(
+        `${frontendUrl}/auth/login?response=${encodeURIComponent(errorJsonString)}`,
+      );
+    }
+
+    // Validar que req.user exista (el guard debería manejarlo, pero por seguridad)
+    if (!req.user) {
+      const errorResponse = dataResponseError<null>('No fue posible iniciar ingresar con google');
+      const errorJsonString = JSON.stringify(errorResponse);
+      return res.redirect(
+        `${frontendUrl}/auth/login?response=${encodeURIComponent(errorJsonString)}`,
+      );
+    }
+
+    const result = await this.authService.googleCallback(req.user as Prisma.UsuarioModel);
+
+    if (result.error) {
+      const errorResponse = dataResponseError<null>(result.message || 'Error de autenticación');
+      const errorJsonString = JSON.stringify(errorResponse);
+      return res.redirect(
+        `${frontendUrl}/auth/login?response=${encodeURIComponent(errorJsonString)}`,
+      );
+    }
+
+    // Redirigir al frontend con los tokens en formato JSON
+    const successJsonString = JSON.stringify(result);
+    return res.redirect(
+      `${frontendUrl}/auth/callback?response=${encodeURIComponent(successJsonString)}`,
+    );
   }
 }
