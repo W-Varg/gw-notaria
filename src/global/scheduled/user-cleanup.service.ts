@@ -4,8 +4,6 @@ import { PrismaService } from 'src/global/database/prisma.service';
 
 @Injectable()
 export class UserCleanupService {
-  private readonly logger = new Logger(UserCleanupService.name);
-
   constructor(private readonly prismaService: PrismaService) {}
 
   /**
@@ -14,7 +12,7 @@ export class UserCleanupService {
    */
   @Cron(CronExpression.EVERY_HOUR)
   async cleanupUnverifiedUsers(): Promise<void> {
-    this.logger.log('Iniciando limpieza de usuarios no verificados...');
+    Logger.log('Iniciando limpieza de usuarios no verificados...');
 
     try {
       // Calcular la fecha límite (24 horas atrás)
@@ -28,13 +26,11 @@ export class UserCleanupService {
       });
 
       if (unverifiedUsers.length === 0) {
-        this.logger.log('No hay usuarios no verificados para eliminar');
+        Logger.log('No hay usuarios no verificados para eliminar');
         return;
       }
 
-      this.logger.log(
-        `Se encontraron ${unverifiedUsers.length} usuarios no verificados para eliminar`,
-      );
+      Logger.log(`Se encontraron ${unverifiedUsers.length} usuarios no verificados para eliminar`);
 
       // Eliminar tokens de verificación asociados
       const userIds = unverifiedUsers.map((user) => user.id);
@@ -57,17 +53,17 @@ export class UserCleanupService {
         },
       });
 
-      this.logger.log(`Se eliminaron ${result.count} usuarios no verificados exitosamente`);
+      Logger.log(`Se eliminaron ${result.count} usuarios no verificados exitosamente`);
 
       // Log de cada usuario eliminado (para auditoría)
       unverifiedUsers.forEach((user) => {
-        this.logger.debug(
+        Logger.debug(
           `Usuario eliminado: ${user.email} (Creado: ${user.fechaCreacion.toISOString()})`,
         );
       });
     } catch (error) {
-      this.logger.error('Error al limpiar usuarios no verificados:', error.message);
-      this.logger.error(error.stack);
+      Logger.error('Error al limpiar usuarios no verificados:', error.message);
+      Logger.error(error.stack);
     }
   }
 
@@ -75,7 +71,7 @@ export class UserCleanupService {
    * Método manual para ejecutar la limpieza (útil para testing o ejecución manual)
    */
   async executeCleanupManually(): Promise<{ deleted: number; message: string }> {
-    this.logger.log('Ejecución manual de limpieza de usuarios no verificados');
+    Logger.log('Ejecución manual de limpieza de usuarios no verificados');
 
     const twentyFourHoursAgo = new Date();
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);

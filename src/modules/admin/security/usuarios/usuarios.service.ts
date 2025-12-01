@@ -11,10 +11,10 @@ import { Prisma } from 'src/generated/prisma/client';
 import { Usuario } from './usuario.entity';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
-import * as bcrypt from 'bcrypt';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
+import { basename, extname, join } from 'node:path';
 import { v4 as uuidv4 } from 'uuid';
+import { hash } from 'bcrypt';
 import { AuthService } from 'src/modules/auth/auth.service';
 
 @Injectable()
@@ -28,16 +28,16 @@ export class UsuariosService {
 
   private async saveAvatar(file: Express.Multer.File): Promise<string> {
     try {
-      const fileExtension = path.extname(file.originalname);
+      const fileExtension = extname(file.originalname);
       const fileName = `avatar-${uuidv4()}${fileExtension}`;
       // si no existe la ruta uploadPath crear entonces
-      if (!fs.existsSync(this.uploadPath)) {
-        fs.mkdirSync(this.uploadPath, { recursive: true });
+      if (!existsSync(this.uploadPath)) {
+        mkdirSync(this.uploadPath, { recursive: true });
       }
-      const filePath = path.join(this.uploadPath, fileName);
+      const filePath = join(this.uploadPath, fileName);
 
       // Guardar archivo
-      fs.writeFileSync(filePath, file.buffer);
+      writeFileSync(filePath, file.buffer);
 
       // Retornar URL relativa
       return `/storage/avatars/${fileName}`;
@@ -49,40 +49,40 @@ export class UsuariosService {
 
   private async deleteAvatarFile(fileName: string): Promise<void> {
     try {
-      const filePath = path.join(this.uploadPath, fileName);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+      const filePath = join(this.uploadPath, fileName);
+      if (existsSync(filePath)) {
+        unlinkSync(filePath);
       }
     } catch (error) {
       console.error('Error al eliminar archivo de avatar:', error);
     }
   }
 
-  private async uploadToS3(file: Express.Multer.File): Promise<string> {
-    const fileName = `avatars/avatar-${uuidv4()}${path.extname(file.originalname)}`;
+  // private async uploadToS3(file: Express.Multer.File): Promise<string> {
+  //   const fileName = `avatars/avatar-${uuidv4()}${extname(file.originalname)}`;
 
-    const uploadParams = {
-      Bucket: process.env.AWS_S3_BUCKET,
-      Key: fileName,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    };
+  //   const uploadParams = {
+  //     Bucket: process.env.AWS_S3_BUCKET,
+  //     Key: fileName,
+  //     Body: file.buffer,
+  //     ContentType: file.mimetype,
+  //   };
 
-    // TODO: Implement S3 upload when configured
-    return 'result.Location';
-  }
+  //   // TODO: Implement S3 upload when configured
+  //   return 'result.Location';
+  // }
 
-  private async deleteAvatarFromS3(fileUrl: string): Promise<void> {
-    try {
-      const key = this.extractS3KeyFromUrl(fileUrl);
-      if (key) {
-        // TODO: Implement S3 delete when configured
-        Logger.log(`S3 delete pending for key: ${key}`);
-      }
-    } catch (error) {
-      Logger.error('Error al eliminar archivo de S3:', error);
-    }
-  }
+  // private async deleteAvatarFromS3(fileUrl: string): Promise<void> {
+  //   try {
+  //     const key = this.extractS3KeyFromUrl(fileUrl);
+  //     if (key) {
+  //       // TODO: Implement S3 delete when configured
+  //       Logger.log(`S3 delete pending for key: ${key}`);
+  //     }
+  //   } catch (error) {
+  //     Logger.error('Error al eliminar archivo de S3:', error);
+  //   }
+  // }
 
   private extractS3KeyFromUrl(url: string): string | null {
     // Ejemplo: https://bucket.s3.region.amazonaws.com/avatars/avatar-123.jpg
@@ -148,7 +148,7 @@ export class UsuariosService {
       const avatarUrl = await this.processAvatarUpload(file);
 
       // 3. Encriptar contraseña
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await hash(password, 10);
 
       // 4. Preparar datos para creación
       const dataInput: Prisma.UsuarioCreateInput = {
@@ -198,7 +198,7 @@ export class UsuariosService {
       // Cleanup: eliminar avatar si hubo error
       if (file) {
         try {
-          const fileName = path.basename(file.originalname);
+          const fileName = basename(file.originalname);
           await this.deleteAvatarFile(fileName);
         } catch (cleanupError) {
           Logger.error('Error al limpiar archivo de avatar:', cleanupError);
@@ -320,7 +320,7 @@ export class UsuariosService {
 
         // Eliminar avatar anterior si existe y se está reemplazando
         if (existingUsuario.avatar && newAvatarUrl) {
-          const oldFileName = path.basename(existingUsuario.avatar);
+          const oldFileName = basename(existingUsuario.avatar);
           await this.deleteAvatarFile(oldFileName);
         }
       }
@@ -335,7 +335,7 @@ export class UsuariosService {
 
       // Encriptar la contraseña si se proporciona
       if (password) {
-        updateData.password = await bcrypt.hash(password, 10);
+        updateData.password = await hash(password, 10);
       }
 
       // Actualizar roles si se proporcionan
@@ -366,7 +366,7 @@ export class UsuariosService {
       // Cleanup: eliminar nuevo avatar si hubo error
       if (file) {
         try {
-          const fileName = path.basename(file.originalname);
+          const fileName = basename(file.originalname);
           await this.deleteAvatarFile(fileName);
         } catch (cleanupError) {
           Logger.error('Error al limpiar archivo de avatar:', cleanupError);
@@ -377,7 +377,7 @@ export class UsuariosService {
     }
   }
 
-  async remove(id: string) {
+  async delete(id: string) {
     // Verificar si el usuario tiene relaciones que impiden su eliminación
     const hasMessages = await this.prismaService.mensajeContacto.count({
       where: { usuarioId: id },
@@ -430,7 +430,7 @@ export class UsuariosService {
       return dataResponseError('Usuario no encontrado');
     }
 
-    const hashedPassword = await bcrypt.hash(nuevoPassword, 10);
+    const hashedPassword = await hash(nuevoPassword, 10);
 
     await this.prismaService.usuario.update({
       where: { id },

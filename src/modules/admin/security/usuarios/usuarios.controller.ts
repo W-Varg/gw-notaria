@@ -88,7 +88,7 @@ export class UsuariosController {
   @ApiResponse({ status: 200, type: () => ResponseUsuarioType })
   @ApiDescription('Eliminar un usuario por ID', [PermisoEnum.USUARIOS_ELIMINAR])
   remove(@Param('id') id: string) {
-    return this.usuariosService.remove(id);
+    return this.usuariosService.delete(id);
   }
 
   @Post(':id/change-password')

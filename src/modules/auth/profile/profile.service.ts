@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/global/database/prisma.service';
 import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
-import * as bcrypt from 'bcrypt';
-import * as crypto from 'crypto';
-import * as QRCode from 'qrcode';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { extname, join } from 'node:path';
+import { randomBytes } from 'node:crypto';
+import { compare, hash } from 'bcrypt';
+import { toDataURL } from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import { authenticator } from 'otplib';
 import { ChangePasswordInput, Enable2FAInput, Disable2FAInput } from '../dto/auth.input';
@@ -84,16 +84,16 @@ export class ProfileService {
 
   private async saveAvatar(file: Express.Multer.File): Promise<string> {
     try {
-      const fileExtension = path.extname(file.originalname);
+      const fileExtension = extname(file.originalname);
       const fileName = `avatar-${uuidv4()}${fileExtension}`;
       // si no existe la ruta uploadPath crear entonces
-      if (!fs.existsSync(this.uploadPath)) {
-        fs.mkdirSync(this.uploadPath, { recursive: true });
+      if (!existsSync(this.uploadPath)) {
+        mkdirSync(this.uploadPath, { recursive: true });
       }
-      const filePath = path.join(this.uploadPath, fileName);
+      const filePath = join(this.uploadPath, fileName);
 
       // Guardar archivo
-      fs.writeFileSync(filePath, file.buffer);
+      writeFileSync(filePath, file.buffer);
 
       // Retornar URL relativa
       return `/storage/avatars/${fileName}`;
@@ -151,7 +151,7 @@ export class ProfileService {
       return dataResponseError('Usuario no encontrado');
     }
 
-    const isValid = await bcrypt.compare(inputDto.password, user.password);
+    const isValid = await compare(inputDto.password, user.password);
 
     if (!isValid) {
       return dataResponseError('Contraseña incorrecta');
@@ -311,13 +311,13 @@ export class ProfileService {
     }
 
     // Verificar la contraseña actual
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const isCurrentPasswordValid = await compare(currentPassword, user.password);
     if (!isCurrentPasswordValid) {
       return dataResponseError('Contraseña actual incorrecta');
     }
 
     // Encriptar la nueva contraseña
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    const hashedNewPassword = await hash(newPassword, 10);
 
     // Actualizar la contraseña
     await this.prismaService.usuario.update({
@@ -340,7 +340,7 @@ export class ProfileService {
     if (user.emailVerificado) return dataResponseError('El email ya está verificado');
 
     // Generar token de verificación
-    const verifyToken = crypto.randomBytes(32).toString('hex');
+    const verifyToken = randomBytes(32).toString('hex');
 
     // Guardar el token
     await this.prismaService.configuracionSistema.upsert({
@@ -403,7 +403,7 @@ export class ProfileService {
     const otpauthUrl = authenticator.keyuri(user.email, 'TU-NOTARIA', secret);
 
     // Generar código QR como data URL
-    const qrCodeUrl = await QRCode.toDataURL(otpauthUrl);
+    const qrCodeUrl = await toDataURL(otpauthUrl);
 
     const setupData: TwoFactorSetup = {
       qrCodeUrl,
@@ -480,7 +480,7 @@ export class ProfileService {
     }
 
     // Verificar la contraseña
-    const isPasswordValid = await bcrypt.compare(inputDto.password, user.password);
+    const isPasswordValid = await compare(inputDto.password, user.password);
     if (!isPasswordValid) {
       return dataResponseError('Contraseña incorrecta');
     }
