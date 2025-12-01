@@ -33,11 +33,7 @@ async function main() {
   );
   await assignRolesToUsers(
     usuarios.vetUser.id,
-    roles.allRoles.find((r) => r.nombre === 'VETERINARIAN').id,
-  );
-  await assignRolesToUsers(
-    usuarios.groomerUser.id,
-    roles.allRoles.find((r) => r.nombre === 'GROOMER').id,
+    roles.allRoles.find((r) => r.nombre === 'EMPLOYEE').id,
   );
 
   // Asignar TODOS los roles al usuario admin (excepto el que ya tiene asignado)
@@ -78,10 +74,7 @@ async function createRoles() {
     { nombre: 'CLIENT', descripcion: 'Cliente del sistema' },
     { nombre: 'MANAGER', descripcion: 'Gerente de sucursal' },
     { nombre: 'EMPLOYEE', descripcion: 'Empleado general' },
-    { nombre: 'VETERINARIAN', descripcion: 'Veterinario' },
     { nombre: 'CLEANING_STAFF', descripcion: 'Personal de limpieza' },
-    { nombre: 'PET_TRAINER', descripcion: 'Entrenador de mascotas' },
-    { nombre: 'PET_SITTER', descripcion: 'Cuidador de mascotas' },
     { nombre: 'CONTENT_CREATOR', descripcion: 'Creador de contenido' },
   ];
 

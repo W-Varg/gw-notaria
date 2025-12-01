@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/global/database/prisma.service';
 import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
-import { authenticator } from 'otplib';
 import * as QRCode from 'qrcode';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { v4 as uuidv4 } from 'uuid';
+import { authenticator } from 'otplib';
 import { ChangePasswordInput, Enable2FAInput, Disable2FAInput } from '../dto/auth.input';
 import { UpdateProfileInput, VerifyPasswordInput, GetLoginHistoryInput } from './dto/profile.input';
 import { TwoFactorSetup } from '../auth.entity';
@@ -12,6 +15,8 @@ import { EmailService } from '../../../global/emails/email.service';
 
 @Injectable()
 export class ProfileService {
+  private readonly uploadPath = './storage/avatars';
+
   constructor(
     private readonly prismaService: PrismaService,
     private readonly emailService: EmailService,
@@ -77,13 +82,46 @@ export class ProfileService {
     );
   }
 
+  private async saveAvatar(file: Express.Multer.File): Promise<string> {
+    try {
+      const fileExtension = path.extname(file.originalname);
+      const fileName = `avatar-${uuidv4()}${fileExtension}`;
+      // si no existe la ruta uploadPath crear entonces
+      if (!fs.existsSync(this.uploadPath)) {
+        fs.mkdirSync(this.uploadPath, { recursive: true });
+      }
+      const filePath = path.join(this.uploadPath, fileName);
+
+      // Guardar archivo
+      fs.writeFileSync(filePath, file.buffer);
+
+      // Retornar URL relativa
+      return `/storage/avatars/${fileName}`;
+    } catch (error) {
+      Logger.error('Error al guardar archivo de avatar:', error);
+      throw new BadRequestException('Error al guardar el archivo de avatar');
+    }
+  }
+  private async processAvatarUpload(file?: Express.Multer.File): Promise<string | null> {
+    if (!file) return null;
+
+    try {
+      return await this.saveAvatar(file);
+    } catch (error) {
+      Logger.error('Error al guardar avatar:', error);
+      throw new BadRequestException('Error al procesar el archivo de avatar');
+    }
+  }
+
   /**
    * Actualizar avatar del usuario
    */
-  async updateAvatar(userId: string, avatarPath: string) {
+  async updateAvatar(userId: string, file?: Express.Multer.File) {
     const user = await this.prismaService.usuario.findUnique({
       where: { id: userId },
     });
+
+    const avatarPath = await this.processAvatarUpload(file);
 
     if (!user) {
       return dataResponseError('Usuario no encontrado');

@@ -1,12 +1,12 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { AuthUser, AuthResponse, UserProfile, TwoFactorSetup } from '../auth.entity';
+import { AuthUsuario, AuthResponse, UserProfile, TwoFactorSetup } from '../auth.entity';
 import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 class AuthRegisterData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: AuthUser })
-  data: AuthUser;
+  @ApiProperty({ type: AuthUsuario })
+  data: AuthUsuario;
 }
 
 export class ResponseRegisterType extends OmitType(ApiOkResponseDto, ['cache']) {

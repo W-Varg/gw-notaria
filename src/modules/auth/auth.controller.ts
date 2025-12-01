@@ -33,6 +33,7 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { GoogleAuthGuard } from 'src/common/guards/google-auth.guard';
 import { Prisma } from 'src/generated/prisma/client';
 import { dataResponseError } from 'src/common/dtos/response.dto';
+import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 
 @ApiTags('[auth] Autenticación')
 @Controller('auth')
@@ -60,9 +61,8 @@ export class AuthController {
   @BearerAuthPermision()
   @ApiDescription('Cerrar sesión', [])
   @ApiResponse({ status: 200, type: () => ResponseLogoutType })
-  async logout(@Req() req: any) {
-    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
-    return this.authService.logout(userId);
+  async logout(@AuthUser() session: IToken) {
+    return this.authService.logout(session.usuarioId);
   }
 
   @Post('refresh')
@@ -104,9 +104,8 @@ export class AuthController {
   @BearerAuthPermision()
   @ApiDescription('Reenviar código OTP por email', [])
   @ApiResponse({ status: 200, type: () => ResponseSendEmailLinkType })
-  async resendOTP(@Req() req: any) {
-    const userId = req.userHeader?.usuarioId?.toString() || 'temp-user-id';
-    return this.authService.resendOTP(userId);
+  async resendOTP(@AuthUser() session: IToken) {
+    return this.authService.resendOTP(session.usuarioId);
   }
 
   // ============================================

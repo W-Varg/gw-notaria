@@ -1,23 +1,14 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { decode } from 'jsonwebtoken';
-import {
-  ApiBadRequestError,
-  ApiUnauthorizedError,
-} from 'src/common/filters/global-exception.filter';
-
-function isTokenExpire(exp) {
-  const currentDate = new Date();
-  const expiryDate = new Date(exp * 1000);
-  return currentDate > expiryDate;
-}
+import { ApiUnauthorizedError } from 'src/common/filters/global-exception.filter';
 
 export interface IToken {
-  usuarioId?: number;
+  usuarioId: string;
   nombreCompleto: string;
-  estaActivo?: boolean;
+  estaActivo: boolean;
   // declaracion de variables para adjuntar la informacion de la sesion del token como ser el token() y client(informacion del cliente que consume(navegador) )
-  expireIn: number;
   token: string;
+  expireIn: number;
   client?: string;
 }
 
@@ -28,58 +19,6 @@ export interface TokenPayload {
     estaActivo: boolean;
   };
 }
-
-function GetDataOfJWT(request: Request): IToken {
-  try {
-    const textError = 'Error token';
-    // #region  verificando que exista un token en los header: Authorization
-    if (!request.headers['authorization'])
-      throw new ApiBadRequestError(
-        'debe enviar su token en los headers Authorization: bearer {{token}}',
-        401,
-      );
-
-    // #endregion
-    const token = request.headers['authorization'];
-
-    if (!token.includes('Bearer '))
-      throw new ApiBadRequestError(
-        'debe enviar el token con el header `Authorization: bearer {{token}}`.',
-        422,
-      );
-
-    const _token = token.split(' ')[1];
-    let tokenInformacion: IToken = {
-      nombreCompleto: null,
-      token,
-      expireIn: null,
-      client: null,
-    };
-    try {
-      const result = getTokenInformacion(_token);
-      tokenInformacion = result.tokenInformacion;
-
-      tokenInformacion.client = request.headers['user-agent'];
-      if (isTokenExpire(tokenInformacion.expireIn)) {
-        throw new ApiUnauthorizedError('el token expiró');
-      }
-      if (tokenInformacion.estaActivo === false) {
-        throw new ApiUnauthorizedError('Usuario inactivo');
-      }
-    } catch (e) {
-      throw new ApiUnauthorizedError('el token no es valido/expiro', textError);
-    }
-    return tokenInformacion;
-  } catch (e) {
-    throw e;
-  }
-}
-
-export const GetToken = createParamDecorator((_, ctx: ExecutionContext): IToken => {
-  const request = ctx.switchToHttp().getRequest();
-  const info = GetDataOfJWT(request);
-  return info;
-});
 
 /**
  * Retrieves token information from the provided token.
@@ -117,7 +56,9 @@ export const getTokenInformacion = (token): { tokenInformacion: IToken; tokenV1:
   }
 };
 
-export const AuthUser = createParamDecorator((data: unknown, context: ExecutionContext): IToken => {
-  const request = context.switchToHttp().getRequest();
-  return request.userHeader ?? undefined;
-});
+export const AuthUser = createParamDecorator(
+  (data: unknown, context: ExecutionContext): IToken => {
+    const request = context.switchToHttp().getRequest();
+    return request.userHeader ?? undefined;
+  },
+);

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class AuthUser {
+export class AuthUsuario {
   @ApiProperty({
     type: String,
     description: 'ID único del usuario',
@@ -63,6 +63,13 @@ export class AuthUser {
     example: true,
   })
   emailVerificado?: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    description: 'Estado de autenticación de dos factores',
+    example: true,
+  })
+  twoFactorEnabled?: boolean;
 
   @ApiProperty({
     type: Date,

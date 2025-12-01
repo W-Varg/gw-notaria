@@ -17,7 +17,7 @@ import {
   Verify2FAInput,
   Disable2FAInput,
 } from './dto/auth.input';
-import { AuthResponse, UserProfile, TwoFactorSetup, GoogleUserData, AuthUser } from './auth.entity';
+import { AuthResponse, UserProfile, TwoFactorSetup, GoogleUserData, AuthUsuario } from './auth.entity';
 import { TokenService } from '../../common/guards/token-auth.service';
 import { EmailService } from '../../global/emails/email.service';
 import { Usuario as UserModel } from '../../generated/prisma/client';

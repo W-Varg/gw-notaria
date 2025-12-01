@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { OmitType } from '@nestjs/swagger';
 import { ApiOkResponseDto } from 'src/common/dtos/response.dto';
 import { ResponseStructDTO } from 'src/common/dtos/response.dto';
-import { AuthUser, UserProfile, TwoFactorSetup } from '../../auth.entity';
+import { AuthUsuario, UserProfile, TwoFactorSetup } from '../../auth.entity';
 
 /**
  * Response para actualización de perfil
@@ -174,8 +174,8 @@ export class ResponseResendOTPType {
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 class UserData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: AuthUser })
-  data: AuthUser;
+  @ApiProperty({ type: AuthUsuario })
+  data: AuthUsuario;
 }
 
 export class ResponseUserType extends OmitType(ApiOkResponseDto, ['cache']) {
