@@ -1,11 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/global/database/prisma.service';
 import { dataResponseError, dataResponseSuccess, ResponseDTO } from 'src/common/dtos/response.dto';
-import * as bcrypt from 'bcrypt';
-import * as crypto from 'crypto';
+import { randomBytes } from 'node:crypto';
+import { compare, hash } from 'bcrypt';
 import { authenticator } from 'otplib';
-import * as QRCode from 'qrcode';
+import { toDataURL } from 'qrcode';
 import { parseUserAgent } from 'src/helpers/user-agent.helper';
+import dayjs from 'dayjs';
 import {
   RegistrarUserInput,
   LoginUserInput,
@@ -18,16 +19,11 @@ import {
   Verify2FAInput,
   Disable2FAInput,
 } from './dto/auth.input';
-import {
-  AuthResponse,
-  UserProfile,
-  TwoFactorSetup,
-  GoogleUserData,
-  AuthUsuario,
-} from './auth.entity';
+import { AuthResponse, UserProfile, TwoFactorSetup, GoogleUserData } from './auth.entity';
 import { TokenService } from '../../common/guards/token-auth.service';
 import { EmailService } from '../../global/emails/email.service';
 import { Usuario as UserModel } from '../../generated/prisma/client';
+import { TokenTemporalTipoEnum, TokenTemporalClaveEnum } from 'src/enums';
 
 @Injectable()
 export class AuthService {
@@ -80,8 +76,7 @@ export class AuthService {
       const parsedUA = parseUserAgent(userAgent);
 
       // Calcular fecha de expiración (30 días por defecto)
-      const fechaExpiracion = new Date();
-      fechaExpiracion.setDate(fechaExpiracion.getDate() + 30);
+      const fechaExpiracion = dayjs().add(30, 'day').toDate();
 
       await this.prismaService.sesion.create({
         data: {
@@ -94,11 +89,104 @@ export class AuthService {
           ubicacion: null, // Podría integrarse con un servicio de geolocalización
           estaActiva: true,
           fechaExpiracion,
-          ultimaActividad: new Date(),
+          ultimaActividad: dayjs().toDate(),
         },
       });
     } catch (error) {
       Logger.error('Error al crear sesión:', error);
+    }
+  }
+
+  /**
+   * Verifica si un dispositivo es de confianza y está activo
+   */
+  private async verificarDispositivoConfianza(
+    usuarioId: string,
+    deviceFingerprint?: string,
+  ): Promise<boolean> {
+    if (!deviceFingerprint) {
+      return false;
+    }
+
+    try {
+      const dispositivo = await this.prismaService.dispositivoConfianza.findFirst({
+        where: {
+          usuarioId,
+          deviceFingerprint,
+          estaActivo: true,
+          fechaExpiracion: {
+            gt: dayjs().toDate(), // Mayor que la fecha actual (no expirado)
+          },
+        },
+      });
+
+      if (dispositivo) {
+        // Actualizar último uso
+        await this.prismaService.dispositivoConfianza.update({
+          where: { id: dispositivo.id },
+          data: { ultimoUso: dayjs().toDate() },
+        });
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      Logger.error('Error al verificar dispositivo de confianza:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Registra un nuevo dispositivo de confianza
+   */
+  private async registrarDispositivoConfianza(
+    usuarioId: string,
+    deviceFingerprint: string,
+    userAgent?: string,
+  ) {
+    try {
+      const parsedUA = parseUserAgent(userAgent);
+
+      // Calcular fecha de expiración (30 días)
+      const fechaExpiracion = dayjs().add(30, 'day').toDate();
+
+      // Verificar si ya existe el dispositivo
+      const existingDevice = await this.prismaService.dispositivoConfianza.findFirst({
+        where: {
+          usuarioId,
+          deviceFingerprint,
+        },
+      });
+
+      if (existingDevice) {
+        // Actualizar dispositivo existente
+        await this.prismaService.dispositivoConfianza.update({
+          where: { id: existingDevice.id },
+          data: {
+            estaActivo: true,
+            fechaExpiracion,
+            ultimoUso: dayjs().toDate(),
+            userAgent: userAgent || existingDevice.userAgent,
+            navegador: parsedUA.navegador || existingDevice.navegador,
+            sistemaOperativo: parsedUA.dispositivo || existingDevice.sistemaOperativo,
+          },
+        });
+      } else {
+        // Crear nuevo dispositivo
+        await this.prismaService.dispositivoConfianza.create({
+          data: {
+            usuarioId,
+            deviceFingerprint,
+            deviceName: parsedUA.navegador || 'Dispositivo desconocido',
+            userAgent: userAgent || 'Unknown',
+            navegador: parsedUA.navegador,
+            sistemaOperativo: parsedUA.dispositivo,
+            fechaExpiracion,
+          },
+        });
+      }
+    } catch (error) {
+      Logger.error('Error al registrar dispositivo de confianza:', error);
     }
   }
 
@@ -116,7 +204,7 @@ export class AuthService {
     }
 
     // Encriptar la contraseña
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hash(password, 10);
 
     // Crear el usuario (inactivo hasta que verifique el email)
     const user = await this.prismaService.usuario.create({
@@ -136,21 +224,28 @@ export class AuthService {
     });
 
     // Generar token de verificación
-    const verifyToken = crypto.randomBytes(32).toString('hex');
+    const verifyToken = randomBytes(32).toString('hex');
+    const expirationTime = dayjs().add(24, 'hour').toDate(); // 24 horas
 
     // Guardar el token de verificación
-    await this.prismaService.configuracionSistema.upsert({
-      where: { clave: `verify_token_${user.id}` },
+    await this.prismaService.tokenTemporal.upsert({
+      where: {
+        usuarioId_tipo: {
+          usuarioId: user.id,
+          tipo: TokenTemporalTipoEnum.VERIFICACION_EMAIL,
+        },
+      },
       update: {
+        clave: TokenTemporalClaveEnum.VERIFY_TOKEN,
         valor: verifyToken,
-        tipo: 'texto',
-        descripcion: 'Token de verificación de email',
+        fechaExpiracion: expirationTime,
       },
       create: {
-        clave: `verify_token_${user.id}`,
+        clave: TokenTemporalClaveEnum.VERIFY_TOKEN,
         valor: verifyToken,
-        tipo: 'texto',
-        descripcion: 'Token de verificación de email',
+        tipo: TokenTemporalTipoEnum.VERIFICACION_EMAIL,
+        usuarioId: user.id,
+        fechaExpiracion: expirationTime,
       },
     });
 
@@ -200,7 +295,7 @@ export class AuthService {
     }
 
     // Verificar contraseña
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await compare(password, user.password);
     if (!isPasswordValid) {
       // Registrar intento fallido
       await this.registrarHistorialLogin(
@@ -229,14 +324,58 @@ export class AuthService {
 
     // Verificar que el usuario esté activo
     if (!user.estaActivo) {
-      await this.registrarHistorialLogin(
-        user.id,
-        false,
-        userAgent,
-        ipAddress,
-        'Usuario inactivo',
-      );
+      await this.registrarHistorialLogin(user.id, false, userAgent, ipAddress, 'Usuario inactivo');
       return dataResponseError('Tu cuenta se encuentra inactiva. Contacta al administrador.');
+    }
+
+    // Verificar si es un dispositivo de confianza
+    const isDispositivoConfianza = await this.verificarDispositivoConfianza(
+      user.id,
+      inputDto.deviceFingerprint,
+    );
+
+    // Si es dispositivo de confianza, completar login sin OTP
+    if (isDispositivoConfianza) {
+      const tokens = await this.tokenService.generateTokens(user);
+
+      // Registrar historial de login exitoso
+      await this.registrarHistorialLogin(user.id, true, userAgent, ipAddress);
+
+      // Crear sesión activa
+      await this.crearSesion(user.id, tokens.refreshToken, userAgent, ipAddress);
+
+      // Construir perfil de usuario
+      const userProfile: UserProfile = {
+        usuarioId: user.id,
+        email: user.email,
+        nombre: user.nombre,
+        apellidos: user.apellidos,
+        estaActivo: user.estaActivo,
+        emailVerificado: user.emailVerificado,
+        telefono: user.telefono || null,
+        direccion: user.direccion || null,
+        avatar: user.avatar || null,
+        twoFactorEnabled: user.twoFactorEnabled,
+      };
+
+      // Extraer permisos únicos
+      const permissions = new Set<string>();
+      user.roles.forEach((userRole) => {
+        userRole.rol.rolPermisos.forEach((rolPermiso) => {
+          permissions.add(rolPermiso.permiso.nombre);
+        });
+      });
+
+      // Construir respuesta de autenticación
+      const response: AuthResponse = {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: userProfile,
+        permissions: Array.from(permissions),
+        roles: user.roles.map((userRole) => userRole.rol.nombre),
+      };
+
+      return dataResponseSuccess<AuthResponse>({ data: response });
     }
 
     // Si el usuario tiene 2FA habilitado (Google Authenticator)
@@ -270,20 +409,28 @@ export class AuthService {
       // Generar código OTP de 6 dígitos
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-      // Guardar OTP en configuración del sistema con expiración de 10 minutos
-      const expirationTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
-      await this.prismaService.configuracionSistema.upsert({
-        where: { clave: `otp_email_${user.id}` },
+      // Guardar OTP con expiración de 10 minutos
+      const expirationTime = dayjs().add(10, 'minute').toDate(); // 10 minutos
+      await this.prismaService.tokenTemporal.upsert({
+        where: {
+          usuarioId_tipo: {
+            usuarioId: user.id,
+            tipo: TokenTemporalTipoEnum.OTP_LOGIN,
+          },
+        },
         update: {
-          valor: JSON.stringify({ code: otpCode, expiresAt: expirationTime.toISOString() }),
-          tipo: 'json',
-          descripcion: 'OTP temporal para login por email',
+          clave: TokenTemporalClaveEnum.OTP_EMAIL,
+          valor: otpCode,
+          metadatos: { expiresAt: dayjs(expirationTime).toISOString() },
+          fechaExpiracion: expirationTime,
         },
         create: {
-          clave: `otp_email_${user.id}`,
-          valor: JSON.stringify({ code: otpCode, expiresAt: expirationTime.toISOString() }),
-          tipo: 'json',
-          descripcion: 'OTP temporal para login por email',
+          clave: TokenTemporalClaveEnum.OTP_EMAIL,
+          valor: otpCode,
+          tipo: TokenTemporalTipoEnum.OTP_LOGIN,
+          usuarioId: user.id,
+          metadatos: { expiresAt: dayjs(expirationTime).toISOString() },
+          fechaExpiracion: expirationTime,
         },
       });
 
@@ -528,13 +675,13 @@ export class AuthService {
     }
 
     // Verificar la contraseña actual
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const isCurrentPasswordValid = await compare(currentPassword, user.password);
     if (!isCurrentPasswordValid) {
       return dataResponseError('Contraseña actual incorrecta');
     }
 
     // Encriptar la nueva contraseña
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    const hashedNewPassword = await hash(newPassword, 10);
 
     // Actualizar la contraseña
     await this.prismaService.usuario.update({
@@ -561,22 +708,28 @@ export class AuthService {
     }
 
     // Generar token de reset
-    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetToken = randomBytes(32).toString('hex');
+    const expirationTime = dayjs().add(1, 'hour').toDate(); // 1 hora
 
-    // Guardar el token (en un sistema real, usarías una tabla separada)
-    // Por simplicidad, usaremos un campo en la configuración del sistema
-    await this.prismaService.configuracionSistema.upsert({
-      where: { clave: `reset_token_${user.id}` },
+    // Guardar el token
+    await this.prismaService.tokenTemporal.upsert({
+      where: {
+        usuarioId_tipo: {
+          usuarioId: user.id,
+          tipo: TokenTemporalTipoEnum.RESET_PASSWORD,
+        },
+      },
       update: {
+        clave: TokenTemporalClaveEnum.RESET_TOKEN,
         valor: resetToken,
-        tipo: 'texto',
-        descripcion: 'Token de reset de contraseña',
+        fechaExpiracion: expirationTime,
       },
       create: {
-        clave: `reset_token_${user.id}`,
+        clave: TokenTemporalClaveEnum.RESET_TOKEN,
         valor: resetToken,
-        tipo: 'texto',
-        descripcion: 'Token de reset de contraseña',
+        tipo: TokenTemporalTipoEnum.RESET_PASSWORD,
+        usuarioId: user.id,
+        fechaExpiracion: expirationTime,
       },
     });
 
@@ -591,11 +744,12 @@ export class AuthService {
   async resetPassword(inputDto: ResetPasswordInput) {
     const { token, newPassword } = inputDto;
 
-    // Buscar el token en la configuración del sistema
-    const tokenConfig = await this.prismaService.configuracionSistema.findFirst({
+    // Buscar el token
+    const tokenConfig = await this.prismaService.tokenTemporal.findFirst({
       where: {
-        clave: { startsWith: 'reset_token_' },
+        tipo: TokenTemporalTipoEnum.RESET_PASSWORD,
         valor: token,
+        fechaExpiracion: { gte: dayjs().toDate() },
       },
     });
 
@@ -603,11 +757,11 @@ export class AuthService {
       return dataResponseError('Token de reset inválido o expirado');
     }
 
-    // Extraer el ID del usuario del clave
-    const userId = tokenConfig.clave.replace('reset_token_', '');
+    // Extraer el ID del usuario
+    const userId = tokenConfig.usuarioId;
 
     // Encriptar la nueva contraseña
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    const hashedNewPassword = await hash(newPassword, 10);
 
     // Actualizar la contraseña
     await this.prismaService.usuario.update({
@@ -616,7 +770,7 @@ export class AuthService {
     });
 
     // Eliminar el token usado
-    await this.prismaService.configuracionSistema.delete({
+    await this.prismaService.tokenTemporal.delete({
       where: { id: tokenConfig.id },
     });
 
@@ -626,11 +780,12 @@ export class AuthService {
   async verifyEmail(inputDto: VerifyEmailInput) {
     const { token } = inputDto;
 
-    // Buscar el token en la configuración del sistema
-    const tokenConfig = await this.prismaService.configuracionSistema.findFirst({
+    // Buscar el token
+    const tokenConfig = await this.prismaService.tokenTemporal.findFirst({
       where: {
-        clave: { startsWith: 'verify_token_' },
+        tipo: TokenTemporalTipoEnum.VERIFICACION_EMAIL,
         valor: token,
+        fechaExpiracion: { gte: dayjs().toDate() },
       },
     });
 
@@ -638,8 +793,8 @@ export class AuthService {
       return dataResponseError('Token de verificación inválido o expirado');
     }
 
-    // Extraer el ID del usuario del clave
-    const userId = tokenConfig.clave.replace('verify_token_', '');
+    // Extraer el ID del usuario
+    const userId = tokenConfig.usuarioId;
 
     // Obtener datos del usuario
     const user = await this.prismaService.usuario.findUnique({
@@ -654,7 +809,7 @@ export class AuthService {
     });
 
     // Eliminar el token usado
-    await this.prismaService.configuracionSistema.delete({
+    await this.prismaService.tokenTemporal.delete({
       where: { id: tokenConfig.id },
     });
 
@@ -675,21 +830,28 @@ export class AuthService {
     if (user.emailVerificado) return dataResponseError('El email ya está verificado');
 
     // Generar token de verificación
-    const verifyToken = crypto.randomBytes(32).toString('hex');
+    const verifyToken = randomBytes(32).toString('hex');
+    const expirationTime = dayjs().add(24, 'hour').toDate(); // 24 horas
 
     // Guardar el token
-    await this.prismaService.configuracionSistema.upsert({
-      where: { clave: `verify_token_${user.id}` },
+    await this.prismaService.tokenTemporal.upsert({
+      where: {
+        usuarioId_tipo: {
+          usuarioId: user.id,
+          tipo: TokenTemporalTipoEnum.VERIFICACION_EMAIL,
+        },
+      },
       update: {
+        clave: TokenTemporalClaveEnum.VERIFY_TOKEN,
         valor: verifyToken,
-        tipo: 'texto',
-        descripcion: 'Token de verificación de email',
+        fechaExpiracion: expirationTime,
       },
       create: {
-        clave: `verify_token_${user.id}`,
+        clave: TokenTemporalClaveEnum.VERIFY_TOKEN,
         valor: verifyToken,
-        tipo: 'texto',
-        descripcion: 'Token de verificación de email',
+        tipo: TokenTemporalTipoEnum.VERIFICACION_EMAIL,
+        usuarioId: user.id,
+        fechaExpiracion: expirationTime,
       },
     });
 
@@ -777,7 +939,7 @@ export class AuthService {
     const otpauthUrl = authenticator.keyuri(user.email, 'TU-NOTARIA', secret);
 
     // Generar código QR como data URL
-    const qrCodeUrl = await QRCode.toDataURL(otpauthUrl);
+    const qrCodeUrl = await toDataURL(otpauthUrl);
 
     const setupData: TwoFactorSetup = {
       qrCodeUrl,
@@ -889,38 +1051,36 @@ export class AuthService {
     // Si no tiene 2FA habilitado, validar OTP por email
     else if (!user.twoFactorEnabled) {
       // Buscar el OTP guardado
-      const otpConfig = await this.prismaService.configuracionSistema.findUnique({
-        where: { clave: `otp_email_${user.id}` },
+      const otpConfig = await this.prismaService.tokenTemporal.findUnique({
+        where: {
+          usuarioId_tipo: {
+            usuarioId: user.id,
+            tipo: TokenTemporalTipoEnum.OTP_LOGIN,
+          },
+        },
       });
 
       if (!otpConfig) {
         return dataResponseError('Código OTP no encontrado o expirado');
       }
 
-      try {
-        const otpData = JSON.parse(otpConfig.valor);
-        const expiresAt = new Date(otpData.expiresAt);
+      // Verificar si el código expiró
+      if (dayjs().isAfter(otpConfig.fechaExpiracion)) {
+        // Eliminar OTP expirado
+        await this.prismaService.tokenTemporal.delete({
+          where: { id: otpConfig.id },
+        });
+        return dataResponseError('El código OTP ha expirado. Solicita uno nuevo.');
+      }
 
-        // Verificar si el código expiró
-        if (new Date() > expiresAt) {
-          // Eliminar OTP expirado
-          await this.prismaService.configuracionSistema.delete({
-            where: { id: otpConfig.id },
-          });
-          return dataResponseError('El código OTP ha expirado. Solicita uno nuevo.');
-        }
+      // Verificar que el código coincida
+      isValid = otpConfig.valor === code;
 
-        // Verificar que el código coincida
-        isValid = otpData.code === code;
-
-        // Si es válido, eliminar el OTP usado
-        if (isValid) {
-          await this.prismaService.configuracionSistema.delete({
-            where: { id: otpConfig.id },
-          });
-        }
-      } catch (error) {
-        return dataResponseError('Error al validar el código OTP');
+      // Si es válido, eliminar el OTP usado
+      if (isValid) {
+        await this.prismaService.tokenTemporal.delete({
+          where: { id: otpConfig.id },
+        });
       }
     } else {
       return dataResponseError('Método de verificación no válido');
@@ -936,6 +1096,11 @@ export class AuthService {
         'Código 2FA inválido',
       );
       return dataResponseError('Código de verificación inválido');
+    }
+
+    // Si el usuario solicitó confiar en este dispositivo, registrarlo
+    if (inputDto.trustDevice && inputDto.deviceFingerprint) {
+      await this.registrarDispositivoConfianza(user.id, inputDto.deviceFingerprint, userAgent);
     }
 
     const tokens = await this.tokenService.generateTokens(user);
@@ -998,7 +1163,7 @@ export class AuthService {
     }
 
     // Verificar la contraseña
-    const isPasswordValid = await bcrypt.compare(inputDto.password, user.password);
+    const isPasswordValid = await compare(inputDto.password, user.password);
     if (!isPasswordValid) {
       return dataResponseError('Contraseña incorrecta');
     }
@@ -1046,8 +1211,8 @@ export class AuthService {
       if (user) return user;
 
       // 2. Si no existe, crear el usuario
-      const randomPassword = crypto.randomBytes(32).toString('hex');
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      const randomPassword = randomBytes(32).toString('hex');
+      const hashedPassword = await hash(randomPassword, 10);
 
       return this.prismaService.usuario.create({
         data: {
@@ -1127,7 +1292,12 @@ export class AuthService {
       );
 
       // Crear sesión activa
-      await this.crearSesion(fullUser.id, tokens.refreshToken, userAgent || 'Google OAuth', ipAddress || 'unknown');
+      await this.crearSesion(
+        fullUser.id,
+        tokens.refreshToken,
+        userAgent || 'Google OAuth',
+        ipAddress || 'unknown',
+      );
 
       // Construir perfil de usuario
       const userProfile: UserProfile = {
@@ -1196,21 +1366,29 @@ export class AuthService {
 
     // Generar nuevo código OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expirationTime = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+    const expirationTime = dayjs().add(10, 'minute').toDate(); // 10 minutos
 
-    // Guardar OTP en configuración del sistema
-    await this.prismaService.configuracionSistema.upsert({
-      where: { clave: `otp_email_${user.id}` },
+    // Guardar OTP
+    await this.prismaService.tokenTemporal.upsert({
+      where: {
+        usuarioId_tipo: {
+          usuarioId: user.id,
+          tipo: TokenTemporalTipoEnum.OTP_LOGIN,
+        },
+      },
       update: {
-        valor: JSON.stringify({ code: otpCode, expiresAt: expirationTime.toISOString() }),
-        tipo: 'json',
-        descripcion: 'OTP temporal para login por email',
+        clave: TokenTemporalClaveEnum.OTP_EMAIL,
+        valor: otpCode,
+        metadatos: { expiresAt: dayjs(expirationTime).toISOString() },
+        fechaExpiracion: expirationTime,
       },
       create: {
-        clave: `otp_email_${user.id}`,
-        valor: JSON.stringify({ code: otpCode, expiresAt: expirationTime.toISOString() }),
-        tipo: 'json',
-        descripcion: 'OTP temporal para login por email',
+        clave: TokenTemporalClaveEnum.OTP_EMAIL,
+        valor: otpCode,
+        tipo: TokenTemporalTipoEnum.OTP_LOGIN,
+        usuarioId: user.id,
+        metadatos: { expiresAt: dayjs(expirationTime).toISOString() },
+        fechaExpiracion: expirationTime,
       },
     });
 

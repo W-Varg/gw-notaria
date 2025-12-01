@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from 'src/global/database/prisma.service';
+import { TokenTemporalTipoEnum } from 'src/enums';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class UserCleanupService {
@@ -16,8 +18,7 @@ export class UserCleanupService {
 
     try {
       // Calcular la fecha límite (24 horas atrás)
-      const twentyFourHoursAgo = new Date();
-      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+      const twentyFourHoursAgo = dayjs().subtract(24, 'hour').toDate();
 
       // Buscar usuarios no verificados creados hace más de 24 horas
       const unverifiedUsers = await this.prismaService.usuario.findMany({
@@ -34,13 +35,11 @@ export class UserCleanupService {
 
       // Eliminar tokens de verificación asociados
       const userIds = unverifiedUsers.map((user) => user.id);
-      const tokenKeys = userIds.map((id) => `verify_token_${id}`);
 
-      await this.prismaService.configuracionSistema.deleteMany({
+      await this.prismaService.tokenTemporal.deleteMany({
         where: {
-          clave: {
-            in: tokenKeys,
-          },
+          tipo: TokenTemporalTipoEnum.VERIFICACION_EMAIL,
+          usuarioId: { in: userIds },
         },
       });
 
@@ -58,7 +57,7 @@ export class UserCleanupService {
       // Log de cada usuario eliminado (para auditoría)
       unverifiedUsers.forEach((user) => {
         Logger.debug(
-          `Usuario eliminado: ${user.email} (Creado: ${user.fechaCreacion.toISOString()})`,
+          `Usuario eliminado: ${user.email} (Creado: ${dayjs(user.fechaCreacion).toISOString()})`,
         );
       });
     } catch (error) {
@@ -73,8 +72,7 @@ export class UserCleanupService {
   async executeCleanupManually(): Promise<{ deleted: number; message: string }> {
     Logger.log('Ejecución manual de limpieza de usuarios no verificados');
 
-    const twentyFourHoursAgo = new Date();
-    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+    const twentyFourHoursAgo = dayjs().subtract(24, 'hour').toDate();
 
     const unverifiedUsers = await this.prismaService.usuario.findMany({
       where: {
@@ -96,13 +94,11 @@ export class UserCleanupService {
     }
 
     const userIds = unverifiedUsers.map((user) => user.id);
-    const tokenKeys = userIds.map((id) => `verify_token_${id}`);
 
-    await this.prismaService.configuracionSistema.deleteMany({
+    await this.prismaService.tokenTemporal.deleteMany({
       where: {
-        clave: {
-          in: tokenKeys,
-        },
+        tipo: TokenTemporalTipoEnum.VERIFICACION_EMAIL,
+        usuarioId: { in: userIds },
       },
     });
 

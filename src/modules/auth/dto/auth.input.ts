@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import {
   IsDefined,
   IsEmail,
@@ -8,6 +8,7 @@ import {
   MinLength,
   MaxLength,
   Matches,
+  IsBoolean,
 } from 'class-validator';
 import { DtoPipePlainToClassOptions } from 'src/common/decorators/dto.decorator';
 
@@ -126,6 +127,23 @@ export class LoginUserInput {
     example: '192.168.1.1',
   })
   ipAddress?: string;
+
+  @Expose()
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  @ApiPropertyOptional({ description: 'Marcar este dispositivo como de confianza' })
+  trustDevice?: boolean;
+
+  @Expose()
+  @Type(() => String)
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional({
+    description: 'Fingerprint único del dispositivo',
+    example: 'a1b2c3d4e5f6g7h8i9j0',
+  })
+  deviceFingerprint?: string;
 }
 
 export class ChangePasswordInput {
@@ -380,6 +398,25 @@ export class Verify2FAInput {
     example: '192.168.1.1',
   })
   ipAddress?: string;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({
+    type: Boolean,
+    description: 'Marcar este dispositivo como de confianza',
+    example: true,
+  })
+  trustDevice?: boolean;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Fingerprint único del dispositivo',
+    example: 'a1b2c3d4e5f6g7h8i9j0',
+  })
+  deviceFingerprint?: string;
 }
 
 export class Disable2FAInput {

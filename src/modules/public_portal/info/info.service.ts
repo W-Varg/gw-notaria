@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
-import { PromocionesActivasDto, FAQsDto } from './dto/info.input.dto';
+import { dataResponseSuccess } from 'src/common/dtos/response.dto';
+import { FAQsDto } from './dto/info.input.dto';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class InfoService {
@@ -9,7 +10,7 @@ export class InfoService {
 
   async getPoliticas() {
     // Obtener políticas desde configuración del sistema
-    const configuraciones = await this.prismaService.configuracionSistema.findMany({
+    const configuraciones = await this.prismaService.configuracionAplicacion.findMany({
       where: {
         clave: {
           in: [
@@ -129,7 +130,7 @@ export class InfoService {
       estadisticas: {
         clientesSatisfechos: 10000,
         productosVendidos: 50000,
-        anosExperiencia: new Date().getFullYear() - 2020,
+        anosExperiencia: dayjs().year() - 2020,
         sucursales: 5,
       },
     };
@@ -168,7 +169,7 @@ export class InfoService {
       estadisticas: {
         clientesSatisfechos: 10000,
         productosVendidos: 50000,
-        anosExperiencia: new Date().getFullYear() - 2020,
+        anosExperiencia: dayjs().year() - 2020,
         sucursales: 5,
       },
     };

@@ -14,6 +14,8 @@ import { TwoFactorSetup } from '../auth.entity';
 import { EmailService } from '../../../global/emails/email.service';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { TokenTemporalTipoEnum, TokenTemporalClaveEnum } from 'src/enums';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class ProfileService {
@@ -336,20 +338,27 @@ export class ProfileService {
 
     // Generar token de verificación
     const verifyToken = randomBytes(32).toString('hex');
+    const expirationTime = dayjs().add(24, 'hour').toDate(); // 24 horas
 
     // Guardar el token
-    await this.prismaService.configuracionSistema.upsert({
-      where: { clave: `verify_token_${user.id}` },
+    await this.prismaService.tokenTemporal.upsert({
+      where: {
+        usuarioId_tipo: {
+          usuarioId: user.id,
+          tipo: TokenTemporalTipoEnum.VERIFICACION_EMAIL,
+        },
+      },
       update: {
+        clave: TokenTemporalClaveEnum.VERIFY_TOKEN,
         valor: verifyToken,
-        tipo: 'texto',
-        descripcion: 'Token de verificación de email',
+        fechaExpiracion: expirationTime,
       },
       create: {
-        clave: `verify_token_${user.id}`,
+        clave: TokenTemporalClaveEnum.VERIFY_TOKEN,
         valor: verifyToken,
-        tipo: 'texto',
-        descripcion: 'Token de verificación de email',
+        tipo: TokenTemporalTipoEnum.VERIFICACION_EMAIL,
+        usuarioId: user.id,
+        fechaExpiracion: expirationTime,
       },
     });
 

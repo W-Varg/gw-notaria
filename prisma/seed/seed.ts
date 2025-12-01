@@ -48,7 +48,8 @@ async function main() {
   // Crear tipos de productos
   await createTiposProducto();
 
-  // Crear información de tienda
+  // Crear configuraciones de aplicación
+  await createConfiguracionAplicacion();
 
   // Crear productos ficticios
   const categorias = await prisma.categoria.findMany();
@@ -65,6 +66,8 @@ async function clearDatabase() {
   await prisma.permiso.deleteMany();
   await prisma.usuarioRol.deleteMany();
   await prisma.rol.deleteMany();
+  await prisma.tokenTemporal.deleteMany();
+  await prisma.configuracionAplicacion.deleteMany();
   await prisma.usuario.deleteMany();
 }
 
@@ -241,6 +244,190 @@ async function createTiposProducto() {
   }
 
   return tiposCreados;
+}
+
+async function createConfiguracionAplicacion() {
+  const configuraciones = [
+    // Configuraciones del sistema
+    {
+      clave: 'sistema_mantenimiento',
+      valor: 'false',
+      tipo: 'booleano',
+      categoria: 'sistema',
+      descripcion: 'Indica si el sistema está en modo mantenimiento',
+      esEditable: true,
+    },
+    {
+      clave: 'sistema_tema_color',
+      valor: '#3498db',
+      tipo: 'texto',
+      categoria: 'apariencia',
+      descripcion: 'Color principal del tema del sistema',
+      esEditable: true,
+    },
+    {
+      clave: 'sistema_nombre',
+      valor: 'Notaría Digital',
+      tipo: 'texto',
+      categoria: 'sistema',
+      descripcion: 'Nombre de la aplicación',
+      esEditable: true,
+    },
+    {
+      clave: 'sistema_version',
+      valor: '1.0.0',
+      tipo: 'texto',
+      categoria: 'sistema',
+      descripcion: 'Versión actual del sistema',
+      esEditable: false,
+    },
+
+    // Políticas de negocio
+    {
+      clave: 'politica_terminos',
+      valor: '<h1>Términos y Condiciones</h1><p>Texto de términos y condiciones...</p>',
+      tipo: 'html',
+      categoria: 'politicas',
+      descripcion: 'Términos y condiciones del sistema',
+      esEditable: true,
+    },
+    {
+      clave: 'politica_privacidad',
+      valor: '<h1>Política de Privacidad</h1><p>Texto de política de privacidad...</p>',
+      tipo: 'html',
+      categoria: 'politicas',
+      descripcion: 'Política de privacidad del sistema',
+      esEditable: true,
+    },
+    {
+      clave: 'politica_devoluciones',
+      valor: '<h1>Política de Devoluciones</h1><p>Texto de política de devoluciones...</p>',
+      tipo: 'html',
+      categoria: 'politicas',
+      descripcion: 'Política de devoluciones',
+      esEditable: true,
+    },
+    {
+      clave: 'politica_envios',
+      valor: '<h1>Política de Envíos</h1><p>Texto de política de envíos...</p>',
+      tipo: 'html',
+      categoria: 'politicas',
+      descripcion: 'Política de envíos',
+      esEditable: true,
+    },
+
+    // Configuraciones de email
+    {
+      clave: 'email_remitente',
+      valor: 'no-reply@notariadigital.com',
+      tipo: 'texto',
+      categoria: 'emails',
+      descripcion: 'Correo electrónico del remitente',
+      esEditable: true,
+    },
+    {
+      clave: 'email_bienvenida_asunto',
+      valor: '¡Bienvenido a Notaría Digital!',
+      tipo: 'texto',
+      categoria: 'emails',
+      descripcion: 'Asunto del correo de bienvenida',
+      esEditable: true,
+    },
+    {
+      clave: 'email_bienvenida_cuerpo',
+      valor: '<p>Hola {nombre}, gracias por registrarte en nuestra plataforma...</p>',
+      tipo: 'html',
+      categoria: 'emails',
+      descripcion: 'Cuerpo del correo de bienvenida',
+      esEditable: true,
+    },
+
+    // Configuraciones de seguridad
+    {
+      clave: 'seguridad_max_intentos_login',
+      valor: '5',
+      tipo: 'numero',
+      categoria: 'seguridad',
+      descripcion: 'Máximo número de intentos de inicio de sesión fallidos',
+      esEditable: true,
+    },
+    {
+      clave: 'seguridad_bloqueo_tiempo',
+      valor: '15',
+      tipo: 'numero',
+      categoria: 'seguridad',
+      descripcion: 'Tiempo de bloqueo en minutos tras intentos fallidos',
+      esEditable: true,
+    },
+
+    // Configuraciones de apariencia
+    {
+      clave: 'apariencia_logo',
+      valor: '/assets/logo.png',
+      tipo: 'texto',
+      categoria: 'apariencia',
+      descripcion: 'URL del logo del sistema',
+      esEditable: true,
+    },
+    {
+      clave: 'apariencia_favicon',
+      valor: '/assets/favicon.ico',
+      tipo: 'texto',
+      categoria: 'apariencia',
+      descripcion: 'URL del favicon del sistema',
+      esEditable: true,
+    },
+
+    // Configuraciones de contacto/negocio
+    {
+      clave: 'contacto_email',
+      valor: 'soporte@notariadigital.com',
+      tipo: 'texto',
+      categoria: 'negocio',
+      descripcion: 'Correo de contacto del sistema',
+      esEditable: true,
+    },
+    {
+      clave: 'contacto_telefono',
+      valor: '+591 76543210',
+      tipo: 'texto',
+      categoria: 'negocio',
+      descripcion: 'Teléfono de contacto del sistema',
+      esEditable: true,
+    },
+
+    // Configuraciones de horarios
+    {
+      clave: 'horario_lunes_viernes',
+      valor: '08:00-18:00',
+      tipo: 'texto',
+      categoria: 'negocio',
+      descripcion: 'Horario de atención de lunes a viernes',
+      esEditable: true,
+    },
+    {
+      clave: 'horario_sabado',
+      valor: '09:00-13:00',
+      tipo: 'texto',
+      categoria: 'negocio',
+      descripcion: 'Horario de atención los sábados',
+      esEditable: true,
+    },
+    {
+      clave: 'horario_domingo',
+      valor: 'Cerrado',
+      tipo: 'texto',
+      categoria: 'negocio',
+      descripcion: 'Horario de atención los domingos',
+      esEditable: true,
+    },
+  ];
+
+  await prisma.configuracionAplicacion.createMany({
+    data: configuraciones,
+  });
+
+  console.info(`Created ${configuraciones.length} configuraciones de aplicación`);
 }
 
 main()

@@ -56,9 +56,7 @@ export const getTokenInformacion = (token): { tokenInformacion: IToken; tokenV1:
   }
 };
 
-export const AuthUser = createParamDecorator(
-  (data: unknown, context: ExecutionContext): IToken => {
-    const request = context.switchToHttp().getRequest();
-    return request.userHeader ?? undefined;
-  },
-);
+export const AuthUser = createParamDecorator((data: unknown, context: ExecutionContext): IToken => {
+  const request = context.switchToHttp().getRequest();
+  return request.userHeader ?? undefined;
+});

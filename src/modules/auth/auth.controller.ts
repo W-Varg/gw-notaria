@@ -57,17 +57,17 @@ export class AuthController {
   async login(@Body() inputDto: LoginUserInput, @Headers() headers: Record<string, string>) {
     // Obtener IP real del cliente considerando proxies/load balancers
     const ipAddress = getClientIp(headers);
-    
+
     // Si no se envió userAgent desde el cliente, intentar obtenerlo del header
     if (!inputDto.userAgent && headers['user-agent']) {
       inputDto.userAgent = headers['user-agent'];
     }
-    
+
     // Si no se envió ipAddress desde el cliente, usar la obtenida de headers
     if (!inputDto.ipAddress) {
       inputDto.ipAddress = ipAddress;
     }
-    
+
     return this.authService.login(inputDto);
   }
 
@@ -113,17 +113,17 @@ export class AuthController {
   async verify2FA(@Body() inputDto: Verify2FAInput, @Headers() headers: Record<string, string>) {
     // Obtener IP real del cliente considerando proxies/load balancers
     const ipAddress = getClientIp(headers);
-    
+
     // Si no se envió userAgent desde el cliente, intentar obtenerlo del header
     if (!inputDto.userAgent && headers['user-agent']) {
       inputDto.userAgent = headers['user-agent'];
     }
-    
+
     // Si no se envió ipAddress desde el cliente, usar la obtenida de headers
     if (!inputDto.ipAddress) {
       inputDto.ipAddress = ipAddress;
     }
-    
+
     return this.authService.verify2FA(inputDto);
   }
 

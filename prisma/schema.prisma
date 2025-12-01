@@ -10,7 +10,6 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
-
 // }
 
 // /// https://github.com/kimjbstar/prisma-class-generator
@@ -171,6 +170,8 @@ model Usuario {
   roles                     UsuarioRol[]
   sesiones                  Sesion[]
   historialLogins           HistorialLogin[]
+  dispositivosConfianza     DispositivoConfianza[]
+  tokensTemporales          TokenTemporal[]
   // Relaciones de negocio
   mensajesContacto          MensajeContacto[]
   // Relación con empleado
@@ -230,6 +231,59 @@ model HistorialLogin {
   usuario      Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@map("auth_historial_login")
+}
+
+model DispositivoConfianza {
+  id                String   @id @default(cuid())
+  usuarioId         String
+  deviceFingerprint String   @db.VarChar(255)
+  deviceName        String?  @db.VarChar(255)
+  userAgent         String?  @db.VarChar(500)
+  navegador         String?  @db.VarChar(100)
+  sistemaOperativo  String?  @db.VarChar(100)
+  estaActivo        Boolean  @default(true)
+  fechaCreacion     DateTime @default(now())
+  fechaExpiracion   DateTime
+  ultimoUso         DateTime @default(now())
+  // Relaciones
+  usuario           Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, deviceFingerprint])
+  @@map("auth_dispositivos_confianza")
+}
+
+model TokenTemporal {
+  id              String   @id @default(cuid())
+  clave           String // "verify_token", "reset_token", "otp_email", "2fa_secret"
+  valor           String   @db.Text
+  tipo            String // "verificacion_email", "reset_password", "otp_login", "2fa_setup"
+  usuarioId       String
+  metadatos       Json? // Para datos como { expiresAt, code, attempts }
+  fechaExpiracion DateTime
+  fechaCreacion   DateTime @default(now())
+  // Relaciones
+  usuario         Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, tipo])
+  @@index([usuarioId])
+  @@index([fechaExpiracion])
+  @@index([tipo])
+  @@map("_tokens_temporales")
+}
+
+model ConfiguracionAplicacion {
+  id                 String   @id @default(cuid())
+  clave              String   @unique
+  valor              String   @db.Text
+  tipo               String   @default("texto") // "texto", "numero", "booleano", "json", "html"
+  categoria          String   @default("general") // "sistema", "negocio", "politicas", "emails", "apariencia", "seguridad"
+  descripcion        String?
+  esEditable         Boolean  @default(true)
+  fechaCreacion      DateTime @default(now())
+  fechaActualizacion DateTime @updatedAt
+
+  @@index([categoria])
+  @@map("_configuracion_aplicacion")
 }
 
 // ============================================
@@ -308,20 +362,6 @@ model MensajeContacto {
 // MÓDULO DE CONFIGURACIÓN DEL SISTEMA
 // ============================================
 
-model ConfiguracionSistema {
-  id                 String   @id @default(cuid())
-  clave              String   @unique
-  valor              String
-  tipo               String   @default("texto") // "texto", "numero", "booleano", "json"
-  descripcion        String?
-  fechaActualizacion DateTime @updatedAt
-
-  @@map("_configuracion_sistema")
-}
-
-// ============================================
-// MÓDULO DEL MODELO DEL NEGOCIO
-// ============================================
 // ============================================================================
 // BANKING
 // ============================================================================
