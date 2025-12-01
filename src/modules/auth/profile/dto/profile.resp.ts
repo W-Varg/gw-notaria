@@ -2,40 +2,35 @@ import { ApiProperty } from '@nestjs/swagger';
 import { OmitType } from '@nestjs/swagger';
 import { ApiOkResponseDto } from 'src/common/dtos/response.dto';
 import { ResponseStructDTO } from 'src/common/dtos/response.dto';
-import { AuthUsuario, UserProfile, TwoFactorSetup } from '../../auth.entity';
+import { AuthUsuario, TwoFactorSetup } from '../../auth.entity';
 
-/**
- * Response para actualización de perfil
- */
-export class ResponseUpdateProfileType {
-  @ApiProperty({ example: false })
-  error: boolean;
+/* ------------------------------------------------------------------------------------------------------------------ */
 
-  @ApiProperty({ example: 'Perfil actualizado exitosamente' })
-  message: string;
-
-  @ApiProperty({ example: { usuarioId: 'cuid123', nombre: 'Juan', apellidos: 'Pérez' } })
-  data: any;
+class UpdateProfileData extends OmitType(ResponseStructDTO, ['pagination']) {
+  @ApiProperty({ type: AuthUsuario })
+  data: AuthUsuario;
 }
 
-/**
- * Response para verificación de contraseña
- */
-export class ResponseVerifyPasswordType {
-  @ApiProperty({ example: false })
-  error: boolean;
+export class ResponseUpdateProfileType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: UpdateProfileData })
+  declare response: UpdateProfileData;
+}
 
-  @ApiProperty({ example: 'Contraseña válida' })
-  message: string;
+/* ------------------------------------------------------------------------------------------------------------------ */
 
-  @ApiProperty({ example: true })
+class VerifyPasswordData extends OmitType(ResponseStructDTO, ['pagination']) {
+  @ApiProperty({ type: Boolean })
   data: boolean;
 }
 
-/**
- * Response para sesiones activas
- */
-export class SessionResponse {
+export class ResponseVerifyPasswordType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: VerifyPasswordData })
+  declare response: VerifyPasswordData;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+export class SesionEntity {
   @ApiProperty()
   id: string;
 
@@ -61,21 +56,21 @@ export class SessionResponse {
   ultimaActividad: Date;
 }
 
-export class ResponseSessionsType {
-  @ApiProperty({ example: false })
-  error: boolean;
+/* ------------------------------------------------------------------------------------------------------------------ */
 
-  @ApiProperty({ example: 'Sesiones obtenidas exitosamente' })
-  message: string;
-
-  @ApiProperty({ type: [SessionResponse] })
-  data: SessionResponse[];
+class SesionesData extends OmitType(ResponseStructDTO, ['validationErrors']) {
+  @ApiProperty({ type: [SesionEntity] })
+  data?: SesionEntity[];
 }
 
-/**
- * Response para historial de login
- */
-class LoginHistoryResponse {
+export class ResponseSessionsType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: SesionesData })
+  declare response: SesionesData;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+class LoginHistoryEntity {
   @ApiProperty()
   id: string;
 
@@ -101,74 +96,50 @@ class LoginHistoryResponse {
   fechaIntento: Date;
 }
 
-export class PaginatedLoginHistoryResponse {
-  @ApiProperty({ type: [LoginHistoryResponse] })
-  items: LoginHistoryResponse[];
-
-  @ApiProperty()
-  total: number;
-
-  @ApiProperty()
-  page: number;
-
-  @ApiProperty()
-  limit: number;
-
-  @ApiProperty()
-  totalPages: number;
+class PaginatedLoginHistoryData extends OmitType(ResponseStructDTO, ['validationErrors']) {
+  @ApiProperty({ type: [LoginHistoryEntity] })
+  data?: LoginHistoryEntity[];
 }
 
-export class ResponseLoginHistoryType {
-  @ApiProperty({ example: false })
-  error: boolean;
-
-  @ApiProperty({ example: 'Historial obtenido exitosamente' })
-  message: string;
-
-  @ApiProperty({ type: PaginatedLoginHistoryResponse })
-  data: PaginatedLoginHistoryResponse;
+export class ResponseLoginHistoryType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: PaginatedLoginHistoryData })
+  declare response: PaginatedLoginHistoryData;
 }
 
-/**
- * Response para avatar upload
- */
-export class ResponseAvatarType {
-  @ApiProperty({ example: false })
-  error: boolean;
+/* ------------------------------------------------------------------------------------------------------------------ */
 
-  @ApiProperty({ example: 'Avatar actualizado exitosamente' })
-  message: string;
-
-  @ApiProperty({ example: { avatarUrl: '/storage/avatars/user123.jpg' } })
-  data: { avatarUrl: string };
-}
-
-/**
- * Response para eliminación de sesión
- */
-export class ResponseDeleteSessionType {
-  @ApiProperty({ example: false })
-  error: boolean;
-
-  @ApiProperty({ example: 'Sesión cerrada exitosamente' })
-  message: string;
-
-  @ApiProperty({ example: 'Sesión cerrada' })
+class AvatarData extends OmitType(ResponseStructDTO, ['pagination']) {
+  @ApiProperty({ type: String })
   data: string;
 }
 
-/**
- * Response para OTP reenviado
- */
-export class ResponseResendOTPType {
-  @ApiProperty({ example: false })
-  error: boolean;
+export class ResponseAvatarType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: AvatarData })
+  declare response: AvatarData;
+}
 
-  @ApiProperty({ example: 'Código OTP reenviado exitosamente' })
-  message: string;
+/* ------------------------------------------------------------------------------------------------------------------ */
 
-  @ApiProperty({ example: 'OTP enviado' })
+class DeleteSessionData extends OmitType(ResponseStructDTO, ['pagination']) {
+  @ApiProperty({ type: String })
   data: string;
+}
+
+export class ResponseDeleteSessionType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: DeleteSessionData })
+  declare response: DeleteSessionData;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+class ResendOTPData extends OmitType(ResponseStructDTO, ['pagination']) {
+  @ApiProperty({ type: String })
+  data: string;
+}
+
+export class ResponseResendOTPType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: ResendOTPData })
+  declare response: ResendOTPData;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */

@@ -106,6 +106,26 @@ export class LoginUserInput {
     example: 'Cambiar123@',
   })
   password: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({
+    type: String,
+    description: 'User Agent del navegador',
+    example: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  })
+  userAgent?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Dirección IP del cliente',
+    example: '192.168.1.1',
+  })
+  ipAddress?: string;
 }
 
 export class ChangePasswordInput {
@@ -340,6 +360,26 @@ export class Verify2FAInput {
     example: '123456',
   })
   code: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({
+    type: String,
+    description: 'User Agent del navegador',
+    example: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  })
+  userAgent?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Dirección IP del cliente',
+    example: '192.168.1.1',
+  })
+  ipAddress?: string;
 }
 
 export class Disable2FAInput {

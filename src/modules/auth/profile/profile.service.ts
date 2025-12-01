@@ -9,9 +9,11 @@ import { toDataURL } from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import { authenticator } from 'otplib';
 import { ChangePasswordInput, Enable2FAInput, Disable2FAInput } from '../dto/auth.input';
-import { UpdateProfileInput, VerifyPasswordInput, GetLoginHistoryInput } from './dto/profile.input';
+import { UpdateProfileInput, VerifyPasswordInput } from './dto/profile.input';
 import { TwoFactorSetup } from '../auth.entity';
 import { EmailService } from '../../../global/emails/email.service';
+import { paginationParamsFormat } from 'src/helpers/prisma.helper';
+import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 
 @Injectable()
 export class ProfileService {
@@ -217,10 +219,8 @@ export class ProfileService {
   /**
    * Obtener historial de login con paginación
    */
-  async getLoginHistory(userId: string, inputDto: GetLoginHistoryInput) {
-    const page = inputDto.page || 1;
-    const limit = inputDto.limit || 10;
-    const skip = (page - 1) * limit;
+  async getLoginHistory(userId: string, query: ListFindAllQueryDto) {
+    const { skip, take, orderBy, pagination } = paginationParamsFormat(query);
 
     const [items, total] = await Promise.all([
       this.prismaService.historialLogin.findMany({
@@ -237,23 +237,18 @@ export class ProfileService {
         },
         orderBy: { fechaIntento: 'desc' },
         skip,
-        take: limit,
+        take,
       }),
       this.prismaService.historialLogin.count({
         where: { usuarioId: userId },
       }),
     ]);
 
-    const totalPages = Math.ceil(total / limit);
+    if (pagination && total !== undefined) pagination.total = total;
 
-    return dataResponseSuccess({
-      data: {
-        items,
-        total,
-        page,
-        limit,
-        totalPages,
-      },
+    return dataResponseSuccess<any[]>({
+      data: items,
+      pagination,
     });
   }
 

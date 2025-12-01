@@ -47,25 +47,3 @@ export class ResendOTPInput {
   @IsString()
   userId: string;
 }
-
-/**
- * DTO para obtener historial de login con paginación
- */
-export class GetLoginHistoryInput {
-  @ApiProperty({ description: 'Página actual', example: 1, required: false, default: 1 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  page?: number = 1;
-
-  @ApiProperty({
-    description: 'Cantidad de resultados por página',
-    example: 10,
-    required: false,
-    default: 10,
-  })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  limit?: number = 10;
-}

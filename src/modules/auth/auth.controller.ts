@@ -1,7 +1,8 @@
-import { Controller, Post, Body, Get, Query, Res, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Res, UseGuards, Req, Headers } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
+import { getClientIp } from 'src/helpers/user-agent.helper';
 import {
   RegistrarUserInput,
   LoginUserInput,
@@ -53,7 +54,20 @@ export class AuthController {
   @Post('login')
   @ApiDescription('Iniciar sesión', [])
   @ApiResponse({ status: 200, type: () => ResponseAuthType })
-  async login(@Body() inputDto: LoginUserInput) {
+  async login(@Body() inputDto: LoginUserInput, @Headers() headers: Record<string, string>) {
+    // Obtener IP real del cliente considerando proxies/load balancers
+    const ipAddress = getClientIp(headers);
+    
+    // Si no se envió userAgent desde el cliente, intentar obtenerlo del header
+    if (!inputDto.userAgent && headers['user-agent']) {
+      inputDto.userAgent = headers['user-agent'];
+    }
+    
+    // Si no se envió ipAddress desde el cliente, usar la obtenida de headers
+    if (!inputDto.ipAddress) {
+      inputDto.ipAddress = ipAddress;
+    }
+    
     return this.authService.login(inputDto);
   }
 
@@ -96,7 +110,20 @@ export class AuthController {
   @Post('2fa/verify')
   @ApiDescription('Verificar código 2FA durante el login', [])
   @ApiResponse({ status: 200, type: () => ResponseAuthType })
-  async verify2FA(@Body() inputDto: Verify2FAInput) {
+  async verify2FA(@Body() inputDto: Verify2FAInput, @Headers() headers: Record<string, string>) {
+    // Obtener IP real del cliente considerando proxies/load balancers
+    const ipAddress = getClientIp(headers);
+    
+    // Si no se envió userAgent desde el cliente, intentar obtenerlo del header
+    if (!inputDto.userAgent && headers['user-agent']) {
+      inputDto.userAgent = headers['user-agent'];
+    }
+    
+    // Si no se envió ipAddress desde el cliente, usar la obtenida de headers
+    if (!inputDto.ipAddress) {
+      inputDto.ipAddress = ipAddress;
+    }
+    
     return this.authService.verify2FA(inputDto);
   }
 
@@ -195,7 +222,11 @@ export class AuthController {
       );
     }
 
-    const result = await this.authService.googleCallback(req.user as Prisma.UsuarioModel);
+    const result = await this.authService.googleCallback(
+      req.user as Prisma.UsuarioModel,
+      req.headers['user-agent'] || 'Google OAuth',
+      getClientIp(req.headers) || 'unknown',
+    );
 
     if (result.error) {
       const errorResponse = dataResponseError<null>(result.message || 'Error de autenticación');

@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { authenticator } from 'otplib';
 import * as QRCode from 'qrcode';
+import { parseUserAgent } from 'src/helpers/user-agent.helper';
 import {
   RegistrarUserInput,
   LoginUserInput,
@@ -17,7 +18,13 @@ import {
   Verify2FAInput,
   Disable2FAInput,
 } from './dto/auth.input';
-import { AuthResponse, UserProfile, TwoFactorSetup, GoogleUserData, AuthUsuario } from './auth.entity';
+import {
+  AuthResponse,
+  UserProfile,
+  TwoFactorSetup,
+  GoogleUserData,
+  AuthUsuario,
+} from './auth.entity';
 import { TokenService } from '../../common/guards/token-auth.service';
 import { EmailService } from '../../global/emails/email.service';
 import { Usuario as UserModel } from '../../generated/prisma/client';
@@ -29,6 +36,71 @@ export class AuthService {
     private readonly tokenService: TokenService,
     private readonly emailService: EmailService,
   ) {}
+
+  /**
+   * Registra un intento de login en el historial
+   */
+  private async registrarHistorialLogin(
+    usuarioId: string,
+    exitoso: boolean,
+    userAgent?: string,
+    ipAddress?: string,
+    motivoFallo?: string,
+  ) {
+    try {
+      const parsedUA = parseUserAgent(userAgent);
+
+      await this.prismaService.historialLogin.create({
+        data: {
+          usuarioId,
+          exitoso,
+          ipAddress: ipAddress || 'Unknown',
+          userAgent: userAgent || 'Unknown',
+          dispositivo: parsedUA.dispositivo,
+          navegador: parsedUA.navegador,
+          ubicacion: null, // Podría integrarse con un servicio de geolocalización
+          motivoFallo: motivoFallo || null,
+        },
+      });
+    } catch (error) {
+      Logger.error('Error al registrar historial de login:', error);
+    }
+  }
+
+  /**
+   * Crea o actualiza una sesión activa para el usuario
+   */
+  private async crearSesion(
+    usuarioId: string,
+    refreshToken: string,
+    userAgent?: string,
+    ipAddress?: string,
+  ) {
+    try {
+      const parsedUA = parseUserAgent(userAgent);
+
+      // Calcular fecha de expiración (30 días por defecto)
+      const fechaExpiracion = new Date();
+      fechaExpiracion.setDate(fechaExpiracion.getDate() + 30);
+
+      await this.prismaService.sesion.create({
+        data: {
+          usuarioId,
+          refreshToken,
+          userAgent: userAgent || 'Unknown',
+          ipAddress: ipAddress || 'Unknown',
+          dispositivo: parsedUA.dispositivo,
+          navegador: parsedUA.navegador,
+          ubicacion: null, // Podría integrarse con un servicio de geolocalización
+          estaActiva: true,
+          fechaExpiracion,
+          ultimaActividad: new Date(),
+        },
+      });
+    } catch (error) {
+      Logger.error('Error al crear sesión:', error);
+    }
+  }
 
   async registerUser(inputDto: RegistrarUserInput) {
     const { email, password, ...userData } = inputDto;
@@ -89,7 +161,7 @@ export class AuthService {
   }
 
   async login(inputDto: LoginUserInput) {
-    const { email, password } = inputDto;
+    const { email, password, userAgent, ipAddress } = inputDto;
 
     // Buscar usuario por email con todas las relaciones necesarias
     const user = await this.prismaService.usuario.findUnique({
@@ -130,11 +202,26 @@ export class AuthService {
     // Verificar contraseña
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      // Registrar intento fallido
+      await this.registrarHistorialLogin(
+        user.id,
+        false,
+        userAgent,
+        ipAddress,
+        'Contraseña incorrecta',
+      );
       return dataResponseError('Credenciales inválidas');
     }
 
     // Verificar que el email esté verificado
     if (!user.emailVerificado) {
+      await this.registrarHistorialLogin(
+        user.id,
+        false,
+        userAgent,
+        ipAddress,
+        'Email no verificado',
+      );
       return dataResponseError(
         'Debes verificar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.',
       );
@@ -142,6 +229,13 @@ export class AuthService {
 
     // Verificar que el usuario esté activo
     if (!user.estaActivo) {
+      await this.registrarHistorialLogin(
+        user.id,
+        false,
+        userAgent,
+        ipAddress,
+        'Usuario inactivo',
+      );
       return dataResponseError('Tu cuenta se encuentra inactiva. Contacta al administrador.');
     }
 
@@ -221,6 +315,12 @@ export class AuthService {
     }
 
     const tokens = await this.tokenService.generateTokens(user);
+
+    // Registrar historial de login exitoso
+    await this.registrarHistorialLogin(user.id, true, userAgent, ipAddress);
+
+    // Crear sesión activa
+    await this.crearSesion(user.id, tokens.refreshToken, userAgent, ipAddress);
 
     // Construir perfil de usuario
     const userProfile: UserProfile = {
@@ -740,7 +840,7 @@ export class AuthService {
    * Verifica el código 2FA durante el login
    */
   async verify2FA(inputDto: Verify2FAInput) {
-    const { userId, code } = inputDto;
+    const { userId, code, userAgent, ipAddress } = inputDto;
 
     const user = await this.prismaService.usuario.findUnique({
       where: { id: userId },
@@ -827,10 +927,24 @@ export class AuthService {
     }
 
     if (!isValid) {
+      // Registrar intento fallido de 2FA
+      await this.registrarHistorialLogin(
+        user.id,
+        false,
+        userAgent,
+        ipAddress,
+        'Código 2FA inválido',
+      );
       return dataResponseError('Código de verificación inválido');
     }
 
     const tokens = await this.tokenService.generateTokens(user);
+
+    // Registrar historial de login exitoso
+    await this.registrarHistorialLogin(user.id, true, userAgent, ipAddress);
+
+    // Crear sesión activa
+    await this.crearSesion(user.id, tokens.refreshToken, userAgent, ipAddress);
 
     // Construir perfil de usuario
     const userProfile: UserProfile = {
@@ -959,6 +1073,8 @@ export class AuthService {
    */
   async googleCallback(
     user: UserModel,
+    userAgent?: string,
+    ipAddress?: string,
   ): Promise<ResponseDTO<{ accessToken: string; refreshToken: string }>> {
     try {
       if (!user.estaActivo) {
@@ -1001,6 +1117,17 @@ export class AuthService {
 
       // Generar tokens
       const tokens = await this.tokenService.generateTokens(fullUser);
+
+      // Registrar historial de login exitoso (Google OAuth)
+      await this.registrarHistorialLogin(
+        fullUser.id,
+        true,
+        userAgent || 'Google OAuth',
+        ipAddress || 'unknown',
+      );
+
+      // Crear sesión activa
+      await this.crearSesion(fullUser.id, tokens.refreshToken, userAgent || 'Google OAuth', ipAddress || 'unknown');
 
       // Construir perfil de usuario
       const userProfile: UserProfile = {
