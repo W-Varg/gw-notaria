@@ -16,18 +16,13 @@ export const printRequestUrl = (host: ArgumentsHost, status: number) => {
   }
 };
 
-// Usa una expresión regular para limpiar los dobles slash excepto después de http(s)
-const cleanDoubleSlashes = (url) => {
-  return url.replace(/([^:])\/\/+/g, '$1/');
-};
-
 /**
  * Print Axios request information to the console.
  *
  * @param {ArgumentsHost} host - the arguments host object
  * @return {void}
  */
-export const printAxiosRequest = (host: ArgumentsHost) => {
+const printAxiosRequest = (host: ArgumentsHost) => {
   const request = host.switchToHttp().getRequest();
 
   // Acceder a las propiedades relevantes de la solicitud (request)

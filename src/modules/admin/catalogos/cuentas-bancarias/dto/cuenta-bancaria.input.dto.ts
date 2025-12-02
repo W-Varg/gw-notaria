@@ -58,7 +58,7 @@ class CuentaBancariaWhereInput {
   tipoCuenta?: StringFilter;
 }
 
-export class CuentaBancariaSelectInput {
+class CuentaBancariaSelectInput {
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
   @IsBoolean()

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { getTokenInformacion, IToken } from '../decorators/token.decorator';
+import { getTokenInformacion, IToken, TokenPayload } from '../decorators/token.decorator';
 
 @Injectable()
 export class TokenService {
@@ -84,7 +84,7 @@ export class TokenService {
     nombre: string;
     estaActivo: boolean;
   }): Promise<{ accessToken: string; refreshToken: string }> {
-    const payload = {
+    const payload: TokenPayload = {
       sub: {
         usuarioId: user.id,
         nombreCompleto: user.nombre, // Valor por defecto

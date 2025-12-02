@@ -1,7 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { OmitType } from '@nestjs/swagger';
-import { ApiOkResponseDto } from 'src/common/dtos/response.dto';
-import { ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { OmitType, ApiProperty } from '@nestjs/swagger';
+import { ResponseStructDTO, ApiOkResponseDto } from 'src/common/dtos/response.dto';
 import { AuthUsuario, TwoFactorSetup } from '../../auth.entity';
 
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -30,7 +28,7 @@ export class ResponseVerifyPasswordType extends OmitType(ApiOkResponseDto, ['cac
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-export class SesionEntity {
+class SesionEntity {
   @ApiProperty()
   id: string;
 
@@ -132,26 +130,14 @@ export class ResponseDeleteSessionType extends OmitType(ApiOkResponseDto, ['cach
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-class ResendOTPData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: String })
-  data: string;
-}
-
-export class ResponseResendOTPType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: ResendOTPData })
-  declare response: ResendOTPData;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-class UserData extends OmitType(ResponseStructDTO, ['pagination']) {
+class ProfileData extends OmitType(ResponseStructDTO, ['pagination']) {
   @ApiProperty({ type: AuthUsuario })
   data: AuthUsuario;
 }
 
-export class ResponseUserType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: UserData })
-  declare response: UserData;
+export class ResponseProfileType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: ProfileData })
+  declare response: ProfileData;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */

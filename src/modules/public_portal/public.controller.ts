@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { PublicService } from './public.service';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { ApiResponse } from '@nestjs/swagger';

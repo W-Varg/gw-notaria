@@ -79,7 +79,7 @@ export class CreateUsuarioDto {
   @IsArray()
   @IsNumber({}, { each: true, message: 'Cada roleId debe ser un número' })
   @ApiPropertyOptional({ description: 'Array de IDs de roles', example: '[1,2]', type: [Number] })
-  @Transform(({ value }) => value?.map((id: any) => Number(id)))
+  @Transform(({ value }) => value?.map((id: number) => id * 1))
   @Expose()
   rolesIds?: number[];
 
@@ -245,19 +245,4 @@ export class ResetPasswordDto {
   @MinLength(6)
   @ApiProperty({ type: String })
   nuevoPassword: string;
-}
-
-export class UpdatePasswordDto {
-  @Expose()
-  @IsDefined()
-  @IsString()
-  @ApiProperty({ type: String })
-  passwordActual: string;
-
-  @Expose()
-  @IsDefined()
-  @IsString()
-  @MinLength(6)
-  @ApiProperty({ type: String })
-  nuevaPassword: string;
 }

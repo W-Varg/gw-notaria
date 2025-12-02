@@ -19,7 +19,7 @@ import {
   Verify2FAInput,
   Disable2FAInput,
 } from './dto/auth.input';
-import { AuthResponse, UserProfile, TwoFactorSetup, GoogleUserData } from './auth.entity';
+import { AuthResponse, AuthUsuario, TwoFactorSetup, GoogleUserData } from './auth.entity';
 import { TokenService } from '../../common/guards/token-auth.service';
 import { EmailService } from '../../global/emails/email.service';
 import { Usuario as UserModel } from '../../generated/prisma/client';
@@ -345,8 +345,8 @@ export class AuthService {
       await this.crearSesion(user.id, tokens.refreshToken, userAgent, ipAddress);
 
       // Construir perfil de usuario
-      const userProfile: UserProfile = {
-        usuarioId: user.id,
+      const userProfile: AuthUsuario = {
+        id: user.id,
         email: user.email,
         nombre: user.nombre,
         apellidos: user.apellidos,
@@ -384,7 +384,7 @@ export class AuthService {
         accessToken: '',
         refreshToken: '',
         user: {
-          usuarioId: user.id,
+          id: user.id,
           email: user.email,
           nombre: user.nombre,
           apellidos: user.apellidos,
@@ -441,7 +441,7 @@ export class AuthService {
         accessToken: '',
         refreshToken: '',
         user: {
-          usuarioId: user.id,
+          id: user.id,
           email: user.email,
           nombre: user.nombre,
           apellidos: user.apellidos,
@@ -470,8 +470,8 @@ export class AuthService {
     await this.crearSesion(user.id, tokens.refreshToken, userAgent, ipAddress);
 
     // Construir perfil de usuario
-    const userProfile: UserProfile = {
-      usuarioId: user.id,
+    const userProfile: AuthUsuario = {
+      id: user.id,
       email: user.email,
       nombre: user.nombre,
       apellidos: user.apellidos,
@@ -552,8 +552,8 @@ export class AuthService {
       const tokens = await this.tokenService.generateTokens(user);
 
       // Construir perfil de usuario
-      const userProfile: UserProfile = {
-        usuarioId: user.id,
+      const userProfile: AuthUsuario = {
+        id: user.id,
         email: user.email,
         nombre: user.nombre,
         apellidos: user.apellidos,
@@ -1112,8 +1112,8 @@ export class AuthService {
     await this.crearSesion(user.id, tokens.refreshToken, userAgent, ipAddress);
 
     // Construir perfil de usuario
-    const userProfile: UserProfile = {
-      usuarioId: user.id,
+    const userProfile: AuthUsuario = {
+      id: user.id,
       email: user.email,
       nombre: user.nombre,
       apellidos: user.apellidos,
@@ -1300,8 +1300,8 @@ export class AuthService {
       );
 
       // Construir perfil de usuario
-      const userProfile: UserProfile = {
-        usuarioId: fullUser.id,
+      const userProfile: AuthUsuario = {
+        id: fullUser.id,
         email: fullUser.email,
         nombre: fullUser.nombre,
         apellidos: fullUser.apellidos,

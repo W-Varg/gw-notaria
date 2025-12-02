@@ -1,11 +1,7 @@
-import { ApiProperty, PickType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { isNumber } from 'class-validator';
 
-export class PaginationStructDTO {
-  // @ApiProperty({ description: 'Total de registros' })
-  // from?: number;
-
+class PaginationStructDTO {
   @ApiProperty({ description: 'Total de registros' })
   @Expose()
   total?: number;
@@ -63,12 +59,12 @@ export class ApiOkResponseDto {
   cache?: boolean;
 }
 
-export interface IResponse {
+type IResponse = {
   error: boolean;
   message: string;
   response: any;
   status: number;
-}
+};
 
 interface IResponseDTOBody<T> {
   data?: T;
@@ -76,7 +72,7 @@ interface IResponseDTOBody<T> {
     total: number;
     page: number;
     size: number;
-    from?: number; // FIXME: se debe obligar a que venga este campo si es paginacion, no es opcional
+    from: number;
   };
   validationErrors?: ValidationErrorsType<T>;
   suggestions?: SuggestionsType<T>;
@@ -98,13 +94,9 @@ export type IResponseDTO<T> = {
  */
 export type ResponseDTO<T> = {
   error: boolean;
-
   message: string;
-
   response: IResponseDTOBody<T>;
-
   status: number;
-
   cache?: boolean;
 };
 
@@ -145,7 +137,7 @@ export const dataResponseSuccess = <T>(
 /**
  * @param response,
  * @param param1, optional data, this methos have values default
- * @returns Data default of Type IResponse
+ * @returns Data default of Type
  */
 export const dataResponseError = <T>(
   message = 'ocurrio un error',

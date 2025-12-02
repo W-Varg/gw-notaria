@@ -43,7 +43,7 @@ export class InfoService {
     return titulos[clave] || 'Política';
   }
 
-  async getFAQs(input: FAQsDto) {
+  getFAQs(input: FAQsDto) {
     const { categoria, limit = 20 } = input;
 
     // Por ahora retornamos datos mock ya que no hay tabla de FAQs
@@ -98,7 +98,7 @@ export class InfoService {
     });
   }
 
-  async getSobreNosotros() {
+  getSobreNosotros() {
     // Información estática de la empresa
     // NOTA: mover a configuración del sistema en el futuro
     const informacion = {
@@ -175,7 +175,7 @@ export class InfoService {
     };
 
     // Obtener información de contacto de la tienda
-    const informacionTienda = await this.obtenerParaPublico();
+    const informacionTienda = this.obtenerParaPublico();
 
     // Datos por defecto si no existe información de tienda
     const datosTiendaDefault = {
@@ -206,7 +206,7 @@ export class InfoService {
     return dataResponseSuccess({ data: informacionCompleta });
   }
 
-  async obtenerParaPublico() {
+  obtenerParaPublico() {
     // Retornar datos por defecto
     const datosDefault = {
       nombre: 'PetStore - Tu Tienda de Mascotas',

@@ -283,11 +283,11 @@ export class ProfileService {
 
     // Extraer todos los permisos únicos
     const permissions = new Set<string>();
-    user.roles.forEach((userRole) => {
-      userRole.rol.rolPermisos.forEach((rolPermiso) => {
+    for (const userRole of user.roles) {
+      for (const rolPermiso of userRole.rol.rolPermisos) {
         permissions.add(rolPermiso.permiso.nombre);
-      });
-    });
+      }
+    }
 
     return dataResponseSuccess({ data: Array.from(permissions) });
   }

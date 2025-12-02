@@ -1,21 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class HorariosSucursal {
-  @ApiProperty({ type: String })
-  sucursalId: string;
-
-  @ApiProperty({ type: String })
-  nombreSucursal: string;
-
-  @ApiProperty({ type: Array })
-  horarios: {
-    diaSemana: string;
-    horaApertura: string;
-    horaCierre: string;
-    estaActivo: boolean;
-  }[];
-}
-
 export class PoliticaTienda {
   @ApiProperty({ type: String })
   tipo: string; // 'terminos', 'privacidad', 'devoluciones', 'envios'
@@ -28,38 +12,6 @@ export class PoliticaTienda {
 
   @ApiProperty({ type: Date })
   fechaActualizacion: Date;
-}
-
-export class PromocionActiva {
-  @ApiProperty({ type: String })
-  id: string;
-
-  @ApiProperty({ type: String })
-  titulo: string;
-
-  @ApiProperty({ type: String })
-  descripcion: string;
-
-  @ApiPropertyOptional({ type: String })
-  imagen?: string;
-
-  @ApiProperty({ type: String })
-  tipo: string; // 'descuento', 'oferta', '2x1', etc.
-
-  @ApiPropertyOptional({ type: Number })
-  descuento?: number;
-
-  @ApiProperty({ type: Date })
-  fechaInicio: Date;
-
-  @ApiProperty({ type: Date })
-  fechaFin: Date;
-
-  @ApiPropertyOptional({ type: Array })
-  productos?: string[];
-
-  @ApiPropertyOptional({ type: Array })
-  categorias?: string[];
 }
 
 export class PreguntaFrecuente {

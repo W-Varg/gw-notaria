@@ -4,7 +4,7 @@ import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { PermisoEnum } from 'src/enums/permisos.enum';
-import { PermisoWhereInput, ListPermisosArgsDto, UpdatePermisoActivoDto } from './dto/permisos.dto';
+import { ListPermisosArgsDto, UpdatePermisoActivoDto } from './dto/permisos.dto';
 import {
   ResponseMessageType,
   ResponsePermisosType,

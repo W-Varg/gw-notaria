@@ -1,22 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import {
-  HorariosSucursal,
-  PoliticaTienda,
-  PromocionActiva,
-  PreguntaFrecuente,
-  InformacionCompletaTienda,
-} from '../info.entity';
+import { PoliticaTienda, PreguntaFrecuente, InformacionCompletaTienda } from '../info.entity';
 import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
-
-class HorariosData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: HorariosSucursal })
-  data: HorariosSucursal;
-}
-
-export class ResponseHorariosType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: HorariosData })
-  declare response: HorariosData;
-}
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
@@ -28,18 +12,6 @@ class PoliticasData {
 export class ResponsePoliticasType extends OmitType(ApiOkResponseDto, ['cache']) {
   @ApiProperty({ type: PoliticasData })
   declare response: PoliticasData;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-class PromocionesData {
-  @ApiProperty({ type: [PromocionActiva] })
-  data?: PromocionActiva[];
-}
-
-export class ResponsePromocionesType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: PromocionesData })
-  declare response: PromocionesData;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */

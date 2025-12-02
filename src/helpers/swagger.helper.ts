@@ -21,7 +21,7 @@ export interface IPackageJson {
  * @param name
  * @returns
  */
-export const nameParsePresentation = (name: string): string => {
+const nameParsePresentation = (name: string): string => {
   return name.toUpperCase().replace(/-/g, ' ');
 };
 

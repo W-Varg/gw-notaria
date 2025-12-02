@@ -1,12 +1,10 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { InfoService } from './info.service';
-import { PromocionesActivasDto, FAQsDto } from './dto/info.input.dto';
+import { FAQsDto } from './dto/info.input.dto';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
-  ResponseHorariosType,
   ResponsePoliticasType,
-  ResponsePromocionesType,
   ResponseFAQsType,
   ResponseInformacionCompletaType,
 } from './dto/info.response';

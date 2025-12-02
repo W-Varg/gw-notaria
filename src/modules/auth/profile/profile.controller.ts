@@ -17,15 +17,13 @@ import { ApiResponse, ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { ChangePasswordInput, Enable2FAInput, Disable2FAInput } from '../dto/auth.input';
 import { UpdateProfileInput, VerifyPasswordInput } from './dto/profile.input';
 import {
-  ResponseUserType,
+  ResponseProfileType,
   ResponsePermissionsType,
   ResponseChangePasswordType,
   ResponseSendVerificationLinkType,
   Response2FASetupType,
   Response2FAStatusType,
   ResponseMessage2FAType,
-} from './dto/profile.resp';
-import {
   ResponseUpdateProfileType,
   ResponseVerifyPasswordType,
   ResponseSessionsType,
@@ -34,19 +32,19 @@ import {
   ResponseDeleteSessionType,
 } from './dto/profile.resp';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
+import { BearerAuthToken } from 'src/common/decorators/authorization.decorator';
 import { IToken, AuthUser } from 'src/common/decorators/token.decorator';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 
 @ApiTags('[profile] Perfil de Usuario')
 @Controller('auth/profile')
-@BearerAuthPermision()
+@BearerAuthToken()
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
   @Get('me')
   @ApiDescription('Obtener información del usuario autenticado')
-  @ApiResponse({ status: 200, type: () => ResponseUserType })
+  @ApiResponse({ status: 200, type: () => ResponseProfileType })
   async me(@AuthUser() session: IToken) {
     return this.profileService.me(session.usuarioId);
   }

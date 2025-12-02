@@ -30,7 +30,7 @@ import {
   ResponseSendResetPasswordEmailType,
   ResponseRegisterType,
 } from './dto/auth.resp';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
+import { BearerAuthToken } from 'src/common/decorators/authorization.decorator';
 import { GoogleAuthGuard } from 'src/common/guards/google-auth.guard';
 import { Prisma } from 'src/generated/prisma/client';
 import { dataResponseError } from 'src/common/dtos/response.dto';
@@ -72,7 +72,7 @@ export class AuthController {
   }
 
   @Post('logout')
-  @BearerAuthPermision()
+  @BearerAuthToken()
   @ApiDescription('Cerrar sesión', [])
   @ApiResponse({ status: 200, type: () => ResponseLogoutType })
   async logout(@AuthUser() session: IToken) {
@@ -128,7 +128,7 @@ export class AuthController {
   }
 
   @Post('resend-otp')
-  @BearerAuthPermision()
+  @BearerAuthToken()
   @ApiDescription('Reenviar código OTP por email', [])
   @ApiResponse({ status: 200, type: () => ResponseSendEmailLinkType })
   async resendOTP(@AuthUser() session: IToken) {
@@ -188,7 +188,9 @@ export class AuthController {
   @Get('google')
   @UseGuards(GoogleAuthGuard)
   @ApiDescription('Iniciar autenticación con Google', [])
-  async googleAuth() {}
+  async googleAuth() {
+    // El google.strategy maneja la redirección a Google, no es necesario implementar nada aquí
+  }
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)

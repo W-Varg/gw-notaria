@@ -1,4 +1,4 @@
-import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { ApiOkResponseDto } from 'src/common/dtos/response.dto';
 import { Categoria } from 'src/modules/admin/catalogos/categorias/categoria.entity';
 import { ResponseTipoProductoType } from 'src/modules/admin/catalogos/tipos-producto/dto/tipos-producto.response';

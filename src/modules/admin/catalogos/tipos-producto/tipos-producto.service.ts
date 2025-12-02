@@ -41,7 +41,7 @@ export class TiposProductoService {
     if (pagination) {
       return dataResponseSuccess({
         data: list,
-        pagination: { total, page: query.page || 1, size: query.size || 10 },
+        pagination: { ...pagination, total },
       });
     }
     return dataResponseSuccess({ data: list });
@@ -67,10 +67,7 @@ export class TiposProductoService {
     ]);
 
     if (pagination) {
-      return dataResponseSuccess({
-        data: list,
-        pagination: { total, page: inputDto.page || 1, size: inputDto.size || 10 },
-      });
+      return dataResponseSuccess({ data: list, pagination: { ...pagination, total } });
     }
     return dataResponseSuccess({ data: list });
   }

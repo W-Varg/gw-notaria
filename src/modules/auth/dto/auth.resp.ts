@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { AuthUsuario, AuthResponse, UserProfile, TwoFactorSetup } from '../auth.entity';
+import { AuthUsuario, AuthResponse } from '../auth.entity';
 import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
 
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -23,42 +23,6 @@ class AuthData extends OmitType(ResponseStructDTO, ['pagination']) {
 export class ResponseAuthType extends OmitType(ApiOkResponseDto, ['cache']) {
   @ApiProperty({ type: AuthData })
   declare response: AuthData;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-class ProfileData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: UserProfile })
-  data: UserProfile;
-}
-
-export class ResponseProfileType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: ProfileData })
-  declare response: ProfileData;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-class RolesData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: [String] })
-  data: string[];
-}
-
-export class ResponseRolesType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: RolesData })
-  declare response: RolesData;
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-class MessageData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: String })
-  data: string;
-}
-
-export class ResponseMessageType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: MessageData })
-  declare response: MessageData;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */

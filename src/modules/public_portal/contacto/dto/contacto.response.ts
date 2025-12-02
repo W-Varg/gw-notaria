@@ -1,62 +1,18 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsBoolean, IsString } from 'class-validator';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { MensajeEnviadoEntity, InformacionContactoEntity } from '../entities/contacto.entity';
+import { MensajeEnviadoEntity } from '../entities/contacto.entity';
+import { ApiOkResponseDto } from 'src/common/dtos/response.dto';
 
-export class ResponseMensajeDataType {
+class ResponseMensajeDataType {
   @ApiProperty({ type: () => MensajeEnviadoEntity })
   @Type(() => MensajeEnviadoEntity)
   @Expose()
   data: MensajeEnviadoEntity;
 }
 
-export class ResponseContactoDataType {
-  @ApiProperty({ type: () => InformacionContactoEntity })
-  @Type(() => InformacionContactoEntity)
-  @Expose()
-  data: InformacionContactoEntity;
-}
-
-export class ResponseMensajeType {
-  @ApiProperty()
-  @IsBoolean()
-  @Expose()
-  error: boolean;
-
-  @ApiProperty()
-  @IsString()
-  @Expose()
-  message: string;
-
+export class ResponseMensajeType extends OmitType(ApiOkResponseDto, ['cache']) {
   @ApiProperty({ type: () => ResponseMensajeDataType })
   @Type(() => ResponseMensajeDataType)
   @Expose()
   response: ResponseMensajeDataType;
-
-  @ApiProperty()
-  @IsNumber()
-  @Expose()
-  status: number;
-}
-
-export class ResponseContactoType {
-  @ApiProperty()
-  @IsBoolean()
-  @Expose()
-  error: boolean;
-
-  @ApiProperty()
-  @IsString()
-  @Expose()
-  message: string;
-
-  @ApiProperty({ type: () => ResponseContactoDataType })
-  @Type(() => ResponseContactoDataType)
-  @Expose()
-  response: ResponseContactoDataType;
-
-  @ApiProperty()
-  @IsNumber()
-  @Expose()
-  status: number;
 }

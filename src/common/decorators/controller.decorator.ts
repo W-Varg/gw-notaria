@@ -1,21 +1,6 @@
-import {
-  SetMetadata,
-  Type,
-  UseGuards,
-  UseInterceptors,
-  Version,
-  applyDecorators,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiOperation,
-  ApiQuery,
-  ApiResponse,
-} from '@nestjs/swagger';
+import { Type, Version, applyDecorators } from '@nestjs/common';
+import { ApiBody, ApiConsumes, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OperationObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import { TokenAuthGuard } from '../guards/token-auth.guard';
 type ApiOperationOptions = Omit<Partial<OperationObject>, 'description' | 'summary'>;
 
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -25,7 +10,7 @@ type ApiOperationOptions = Omit<Partial<OperationObject>, 'description' | 'summa
 const genCustomApiOperationContent = (
   summary: string,
   permissions: string[] = [],
-  options: ApiOperationOptions,
+  options?: ApiOperationOptions,
 ) => ({
   summary,
   description:

@@ -14,7 +14,7 @@ export interface IToken {
 
 export interface TokenPayload {
   sub: {
-    usuarioId: number;
+    usuarioId: string;
     nombreCompleto: string;
     estaActivo: boolean;
   };

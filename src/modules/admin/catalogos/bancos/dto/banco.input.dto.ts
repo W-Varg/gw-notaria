@@ -32,7 +32,7 @@ class BancoWhereInput {
   nombre?: StringFilter;
 }
 
-export class BancoSelectInput {
+class BancoSelectInput {
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
   @IsBoolean()

@@ -34,38 +34,3 @@ export class MensajeEnviadoEntity {
   @Expose()
   estado: string;
 }
-
-export class InformacionContactoEntity {
-  @ApiProperty({ description: 'Teléfonos de contacto', example: ['+1234567890', '+0987654321'] })
-  @Expose()
-  telefonos: string[];
-
-  @ApiProperty({ description: 'Email de contacto principal', example: 'contacto@petstore.com' })
-  @Expose()
-  email: string;
-
-  @ApiProperty({ description: 'Dirección física principal', example: 'Av. Principal 123, Ciudad' })
-  @Expose()
-  direccion: string;
-
-  @ApiProperty({
-    description: 'Horarios de atención',
-    example: { lunes_viernes: '9:00-18:00', sabado: '9:00-15:00' },
-  })
-  @Expose()
-  horarios: Record<string, string>;
-
-  @ApiProperty({
-    description: 'Enlaces a redes sociales',
-    example: { facebook: '@petstore', instagram: '@petstore_oficial' },
-  })
-  @Expose()
-  redesSociales: Record<string, string>;
-
-  @ApiProperty({
-    description: 'Información adicional',
-    example: 'Contamos con servicio de entrega a domicilio',
-  })
-  @Expose()
-  informacionAdicional?: string;
-}

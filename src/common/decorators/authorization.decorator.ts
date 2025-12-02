@@ -19,5 +19,5 @@ export const BearerAuthPermision = (permissions: string[] = [], options?: Valida
 /*                                                 security decorators                                                */
 /* ------------------------------------------------------------------------------------------------------------------ */
 export const BearerAuthToken = () => {
-  return applyDecorators(UseGuards(TokenAuthGuard), ApiBearerAuth());
+  return applyDecorators(ApiBearerAuth(), UseGuards(TokenAuthGuard));
 };
