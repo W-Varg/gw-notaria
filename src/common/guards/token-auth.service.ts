@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { getTokenInformacion, IToken, TokenPayload } from '../decorators/token.decorator';
+import { IToken, TokenPayload } from '../decorators/token.decorator';
 
 @Injectable()
 export class TokenService {
@@ -13,13 +13,57 @@ export class TokenService {
   ) {}
 
   /**
+   * Método privado que extrae información del token JWT
+   * Maneja tanto tokens v1 (array en sub) como tokens actuales
+   * @param token - Token JWT a decodificar
+   * @returns Objeto con tokenInformacion y flag tokenV1
+   */
+  private getTokenInformacion(token: string): { tokenInformacion: IToken } {
+    try {
+      // Decodificar sin verificar (solo para extraer información)
+      const decoded = this.jwtService.decode(token) as any;
+      let tokenV1 = false;
+
+      if (decoded == null) {
+        throw new UnauthorizedException('Sesión inválida');
+      }
+
+      const tokenInformacion: IToken = {
+        usuarioId: null,
+        nombreCompleto: null,
+        estaActivo: null,
+        token: token,
+        expireIn: decoded['exp'],
+      };
+
+      if (decoded['sub']) {
+        let item: any = decoded['sub'];
+
+        // Compatibilidad con tokens v1 (array)
+        if (Array.isArray(item)) {
+          item = item.reverse().shift();
+          tokenV1 = true;
+        }
+
+        tokenInformacion.usuarioId = item['usuarioId'];
+        tokenInformacion.nombreCompleto = item['nombreCompleto'] ?? null;
+        tokenInformacion.estaActivo = item['estaActivo'] ?? false;
+      }
+
+      return { tokenInformacion };
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  /**
    * Decodifica un token JWT y retorna la información del usuario
    * @param token - Token JWT a decodificar
    * @returns IToken - Información del token decodificado
    */
   decodeToken(token: string): IToken {
     try {
-      const { tokenInformacion } = getTokenInformacion(token);
+      const { tokenInformacion } = this.getTokenInformacion(token);
       return tokenInformacion;
     } catch (error) {
       throw error;

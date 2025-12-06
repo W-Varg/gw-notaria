@@ -7,13 +7,13 @@ import { AuthService } from 'src/modules/auth/auth.service';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private readonly googleConfiguration: ConfigService,
+    private readonly configService: ConfigService,
     private readonly authService: AuthService,
   ) {
     super({
-      clientID: googleConfiguration.get('googleClientId'),
-      clientSecret: googleConfiguration.get('googleClientSecret'),
-      callbackURL: googleConfiguration.get('googleRedirectUri'),
+      clientID: configService.get('googleClientId'),
+      clientSecret: configService.get('googleClientSecret'),
+      callbackURL: configService.get('googleRedirectUri'),
       scope: ['openid', 'email', 'profile'],
     });
   }

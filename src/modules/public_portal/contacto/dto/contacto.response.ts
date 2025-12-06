@@ -1,6 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { MensajeEnviadoEntity } from '../entities/contacto.entity';
+import { MensajeEnviadoEntity } from '../contacto.entity';
 import { ApiOkResponseDto } from 'src/common/dtos/response.dto';
 
 class ResponseMensajeDataType {
