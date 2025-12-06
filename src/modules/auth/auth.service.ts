@@ -662,36 +662,6 @@ export class AuthService {
     return dataResponseSuccess({ data: Array.from(permissions) });
   }
 
-  async changePassword(userId: string, inputDto: ChangePasswordInput) {
-    const { currentPassword, newPassword } = inputDto;
-
-    // Buscar el usuario
-    const user = await this.prismaService.usuario.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      return dataResponseError('Usuario no encontrado');
-    }
-
-    // Verificar la contraseña actual
-    const isCurrentPasswordValid = await compare(currentPassword, user.password);
-    if (!isCurrentPasswordValid) {
-      return dataResponseError('Contraseña actual incorrecta');
-    }
-
-    // Encriptar la nueva contraseña
-    const hashedNewPassword = await hash(newPassword, 10);
-
-    // Actualizar la contraseña
-    await this.prismaService.usuario.update({
-      where: { id: userId },
-      data: { password: hashedNewPassword },
-    });
-
-    return dataResponseSuccess({ data: 'Contraseña actualizada exitosamente' });
-  }
-
   async forgotPassword(inputDto: ForgotPasswordInput) {
     const { email } = inputDto;
 
@@ -821,46 +791,6 @@ export class AuthService {
     return dataResponseSuccess({ data: 'Email verificado exitosamente' });
   }
 
-  async sendVerificationLink(userId: string) {
-    const user = await this.prismaService.usuario.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) return dataResponseError('Usuario no encontrado');
-    if (user.emailVerificado) return dataResponseError('El email ya está verificado');
-
-    // Generar token de verificación
-    const verifyToken = randomBytes(32).toString('hex');
-    const expirationTime = dayjs().add(24, 'hour').toDate(); // 24 horas
-
-    // Guardar el token
-    await this.prismaService.tokenTemporal.upsert({
-      where: {
-        usuarioId_tipo: {
-          usuarioId: user.id,
-          tipo: TokenTemporalTipoEnum.VERIFICACION_EMAIL,
-        },
-      },
-      update: {
-        clave: TokenTemporalClaveEnum.VERIFY_TOKEN,
-        valor: verifyToken,
-        fechaExpiracion: expirationTime,
-      },
-      create: {
-        clave: TokenTemporalClaveEnum.VERIFY_TOKEN,
-        valor: verifyToken,
-        tipo: TokenTemporalTipoEnum.VERIFICACION_EMAIL,
-        usuarioId: user.id,
-        fechaExpiracion: expirationTime,
-      },
-    });
-
-    // Enviar email de verificación usando EmailService
-    await this.emailService.sendVerificationEmail(user.email, user.nombre, verifyToken);
-
-    return dataResponseSuccess({ data: 'Enlace de verificación enviado' });
-  }
-
   async sendResetPasswordLink(email: string) {
     return this.forgotPassword({ email });
   }
@@ -898,104 +828,6 @@ export class AuthService {
 
   async sendForgotPasswordEmail(email: string, token: string) {
     return this.sendResetPasswordEmail(email, token);
-  }
-
-  // ============================================
-  // Métodos para Two-Factor Authentication (2FA)
-  // ============================================
-
-  /**
-   * Genera el secreto y código QR para configurar 2FA
-   */
-  async setup2FA(userId: string) {
-    const user = await this.prismaService.usuario.findUnique({
-      where: { id: userId },
-      select: { email: true, nombre: true, apellidos: true, twoFactorEnabled: true },
-    });
-
-    if (!user) {
-      return dataResponseError('Usuario no encontrado');
-    }
-
-    if (user.twoFactorEnabled) {
-      return dataResponseError(
-        '2FA ya está habilitado. Desactívalo primero si deseas reconfigurarlo.',
-      );
-    }
-
-    // Generar secreto TOTP
-    const secret = authenticator.generateSecret();
-
-    // Guardar temporalmente el secreto (sin habilitar 2FA aún)
-    await this.prismaService.usuario.update({
-      where: { id: userId },
-      data: { twoFactorSecret: secret },
-    });
-
-    // Crear el nombre de la aplicación para Google Authenticator
-    const appName = `TU-NOTARIA (${user.email})`;
-
-    // Generar la URL otpauth para el QR
-    const otpauthUrl = authenticator.keyuri(user.email, 'TU-NOTARIA', secret);
-
-    // Generar código QR como data URL
-    const qrCodeUrl = await toDataURL(otpauthUrl);
-
-    const setupData: TwoFactorSetup = {
-      qrCodeUrl,
-      secret,
-      appName,
-    };
-
-    return dataResponseSuccess<TwoFactorSetup>({ data: setupData });
-  }
-
-  /**
-   * Habilita 2FA después de verificar el código
-   */
-  async enable2FA(userId: string, inputDto: Enable2FAInput) {
-    const user = await this.prismaService.usuario.findUnique({
-      where: { id: userId },
-      select: {
-        email: true,
-        nombre: true,
-        twoFactorSecret: true,
-        twoFactorEnabled: true,
-      },
-    });
-
-    if (!user) {
-      return dataResponseError('Usuario no encontrado');
-    }
-
-    if (user.twoFactorEnabled) {
-      return dataResponseError('2FA ya está habilitado');
-    }
-
-    if (!user.twoFactorSecret) {
-      return dataResponseError('Primero debes configurar 2FA usando /auth/2fa/setup');
-    }
-
-    // Verificar el código TOTP
-    const isValid = authenticator.verify({
-      token: inputDto.code,
-      secret: user.twoFactorSecret,
-    });
-
-    if (!isValid) {
-      return dataResponseError('Código de verificación inválido');
-    }
-
-    // Habilitar 2FA
-    await this.prismaService.usuario.update({
-      where: { id: userId },
-      data: { twoFactorEnabled: true },
-    });
-
-    // Enviar email de confirmación de 2FA
-    await this.emailService.send2FASetupEmail(user.email, user.nombre);
-
-    return dataResponseSuccess<string>({ data: '2FA habilitado exitosamente' });
   }
 
   /**
@@ -1143,57 +975,6 @@ export class AuthService {
     };
 
     return dataResponseSuccess<AuthResponse>({ data: response });
-  }
-
-  /**
-   * Desactiva 2FA después de verificar la contraseña
-   */
-  async disable2FA(userId: string, inputDto: Disable2FAInput) {
-    const user = await this.prismaService.usuario.findUnique({
-      where: { id: userId },
-      select: { password: true, twoFactorEnabled: true },
-    });
-
-    if (!user) {
-      return dataResponseError('Usuario no encontrado');
-    }
-
-    if (!user.twoFactorEnabled) {
-      return dataResponseError('2FA no está habilitado');
-    }
-
-    // Verificar la contraseña
-    const isPasswordValid = await compare(inputDto.password, user.password);
-    if (!isPasswordValid) {
-      return dataResponseError('Contraseña incorrecta');
-    }
-
-    // Desactivar 2FA y eliminar el secreto
-    await this.prismaService.usuario.update({
-      where: { id: userId },
-      data: {
-        twoFactorEnabled: false,
-        twoFactorSecret: null,
-      },
-    });
-
-    return dataResponseSuccess<string>({ data: '2FA deshabilitado exitosamente' });
-  }
-
-  /**
-   * Obtiene el estado de 2FA del usuario
-   */
-  async get2FAStatus(userId: string) {
-    const user = await this.prismaService.usuario.findUnique({
-      where: { id: userId },
-      select: { twoFactorEnabled: true },
-    });
-
-    if (!user) {
-      return dataResponseError('Usuario no encontrado');
-    }
-
-    return dataResponseSuccess<boolean>({ data: user.twoFactorEnabled });
   }
 
   /**

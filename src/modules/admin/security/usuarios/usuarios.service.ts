@@ -11,141 +11,40 @@ import { Prisma } from 'src/generated/prisma/client';
 import { Usuario } from './usuario.entity';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
-import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
-import { basename, extname, join } from 'node:path';
-import { v4 as uuidv4 } from 'uuid';
+import { basename } from 'node:path';
 import { hash } from 'bcrypt';
 import { AuthService } from 'src/modules/auth/auth.service';
+import { ProfileService } from 'src/modules/auth/profile/profile.service';
+import { FileStorageService } from 'src/global/services/file-storage.service';
+import { UserValidationService } from 'src/global/services/user-validation.service';
 
 @Injectable()
 export class UsuariosService {
-  private readonly uploadPath = './storage/avatars';
-
   constructor(
     private readonly prismaService: PrismaService,
     private readonly authService: AuthService,
+    private readonly profileService: ProfileService,
+    private readonly fileStorageService: FileStorageService,
+    private readonly userValidationService: UserValidationService,
   ) {}
-
-  private async saveAvatar(file: Express.Multer.File): Promise<string> {
-    try {
-      const fileExtension = extname(file.originalname);
-      const fileName = `avatar-${uuidv4()}${fileExtension}`;
-      // si no existe la ruta uploadPath crear entonces
-      if (!existsSync(this.uploadPath)) {
-        mkdirSync(this.uploadPath, { recursive: true });
-      }
-      const filePath = join(this.uploadPath, fileName);
-
-      // Guardar archivo
-      writeFileSync(filePath, file.buffer);
-
-      // Retornar URL relativa
-      return `/storage/avatars/${fileName}`;
-    } catch (error) {
-      Logger.error('Error al guardar archivo de avatar:', error);
-      throw new BadRequestException('Error al guardar el archivo de avatar');
-    }
-  }
-
-  private async deleteAvatarFile(fileName: string): Promise<void> {
-    try {
-      const filePath = join(this.uploadPath, fileName);
-      if (existsSync(filePath)) {
-        unlinkSync(filePath);
-      }
-    } catch (error) {
-      console.error('Error al eliminar archivo de avatar:', error);
-    }
-  }
-
-  // private async uploadToS3(file: Express.Multer.File): Promise<string> {
-  //   const fileName = `avatars/avatar-${uuidv4()}${extname(file.originalname)}`;
-
-  //   const uploadParams = {
-  //     Bucket: process.env.AWS_S3_BUCKET,
-  //     Key: fileName,
-  //     Body: file.buffer,
-  //     ContentType: file.mimetype,
-  //   };
-
-  //   // TODO: Implement S3 upload when configured
-  //   return 'result.Location';
-  // }
-
-  // private async deleteAvatarFromS3(fileUrl: string): Promise<void> {
-  //   try {
-  //     const key = this.extractS3KeyFromUrl(fileUrl);
-  //     if (key) {
-  //       // TODO: Implement S3 delete when configured
-  //       Logger.log(`S3 delete pending for key: ${key}`);
-  //     }
-  //   } catch (error) {
-  //     Logger.error('Error al eliminar archivo de S3:', error);
-  //   }
-  // }
-
-  private extractS3KeyFromUrl(url: string): string | null {
-    // Ejemplo: https://bucket.s3.region.amazonaws.com/avatars/avatar-123.jpg
-    // Extraer: avatars/avatar-123.jpg
-    try {
-      const urlParts = url.split('/');
-      const keyIndex = urlParts.findIndex((part) => part.includes('.amazonaws.com'));
-      if (keyIndex !== -1 && keyIndex < urlParts.length - 1) {
-        return urlParts.slice(keyIndex + 1).join('/');
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  }
-
-  private async validateEmailUniqueness(email: string): Promise<boolean> {
-    const existingUsuario = await this.prismaService.usuario.findUnique({
-      where: { email },
-      select: { id: true },
-    });
-    return !existingUsuario;
-  }
-
-  private async validateRolesExist(rolesIds: number[]): Promise<boolean> {
-    if (!rolesIds || rolesIds.length === 0) return true;
-
-    const rolesExist = await this.prismaService.rol.findMany({
-      where: { id: { in: rolesIds } },
-      select: { id: true },
-    });
-
-    return rolesExist.length === rolesIds.length;
-  }
-
-  private async processAvatarUpload(file?: Express.Multer.File): Promise<string | null> {
-    if (!file) return null;
-
-    try {
-      return await this.saveAvatar(file);
-    } catch (error) {
-      Logger.error('Error al guardar avatar:', error);
-      throw new BadRequestException('Error al procesar el archivo de avatar');
-    }
-  }
 
   async create(inputDto: CreateUsuarioDto, file?: Express.Multer.File) {
     try {
       const { rolesIds, password, ...usuarioData } = inputDto;
 
-      // 1. Validaciones
-      const isEmailUnique = await this.validateEmailUniqueness(usuarioData.email);
+      // 1. Validaciones usando UserValidationService
+      const isEmailUnique = await this.userValidationService.isEmailUnique(usuarioData.email);
       if (!isEmailUnique) {
         return dataResponseError('El email ya está registrado');
       }
 
-      const areRolesValid = await this.validateRolesExist(rolesIds);
+      const areRolesValid = await this.userValidationService.doRolesExist(rolesIds);
       if (!areRolesValid) {
         return dataResponseError('Uno o más roles no existen');
       }
 
-      // 2. Procesar avatar
-      const avatarUrl = await this.processAvatarUpload(file);
+      // 2. Procesar avatar usando FileStorageService
+      const avatarUrl = await this.fileStorageService.processAvatarUpload(file);
 
       // 3. Encriptar contraseña
       const hashedPassword = await hash(password, 10);
@@ -195,11 +94,11 @@ export class UsuariosService {
     } catch (error) {
       Logger.error('Error al crear usuario:', error);
 
-      // Cleanup: eliminar avatar si hubo error
-      if (file) {
+      // Cleanup: eliminar avatar si hubo error usando FileStorageService
+      if (file && error instanceof Error) {
         try {
           const fileName = basename(file.originalname);
-          await this.deleteAvatarFile(fileName);
+          await this.fileStorageService.deleteAvatar(fileName);
         } catch (cleanupError) {
           Logger.error('Error al limpiar archivo de avatar:', cleanupError);
         }
@@ -286,42 +185,31 @@ export class UsuariosService {
 
       const { rolesIds, password, ...usuarioData } = updateUsuarioDto;
 
-      // Verificar que el email no esté en uso por otro usuario
+      // Verificar que el email no esté en uso por otro usuario usando UserValidationService
       if (usuarioData.email) {
-        const emailExists = await this.prismaService.usuario.findFirst({
-          where: {
-            email: usuarioData.email,
-            id: { not: id },
-          },
-          select: { id: true },
-        });
-
-        if (emailExists) {
+        const isEmailUnique = await this.userValidationService.isEmailUnique(usuarioData.email, id);
+        if (!isEmailUnique) {
           return dataResponseError('El email ya está en uso por otro usuario');
         }
       }
 
-      // Verificar que los roles existan si se proporcionan
+      // Verificar que los roles existan si se proporcionan usando UserValidationService
       if (rolesIds && rolesIds.length > 0) {
-        const rolesExist = await this.prismaService.rol.findMany({
-          where: { id: { in: rolesIds } },
-          select: { id: true },
-        });
-
-        if (rolesExist.length !== rolesIds.length) {
+        const areRolesValid = await this.userValidationService.doRolesExist(rolesIds);
+        if (!areRolesValid) {
           return dataResponseError('No existen los roles indicados');
         }
       }
 
-      // Procesar nuevo avatar si se proporciona
+      // Procesar nuevo avatar si se proporciona usando FileStorageService
       let newAvatarUrl: string | null = null;
       if (file) {
-        newAvatarUrl = await this.processAvatarUpload(file);
+        newAvatarUrl = await this.fileStorageService.processAvatarUpload(file);
 
         // Eliminar avatar anterior si existe y se está reemplazando
         if (existingUsuario.avatar && newAvatarUrl) {
           const oldFileName = basename(existingUsuario.avatar);
-          await this.deleteAvatarFile(oldFileName);
+          await this.fileStorageService.deleteAvatar(oldFileName);
         }
       }
 
@@ -363,11 +251,11 @@ export class UsuariosService {
     } catch (error) {
       Logger.error('Error al actualizar usuario:', error);
 
-      // Cleanup: eliminar nuevo avatar si hubo error
-      if (file) {
+      // Cleanup: eliminar nuevo avatar si hubo error usando FileStorageService
+      if (file && error instanceof Error) {
         try {
           const fileName = basename(file.originalname);
-          await this.deleteAvatarFile(fileName);
+          await this.fileStorageService.deleteAvatar(fileName);
         } catch (cleanupError) {
           Logger.error('Error al limpiar archivo de avatar:', cleanupError);
         }
@@ -475,8 +363,8 @@ export class UsuariosService {
       return dataResponseError('El email ya está verificado');
     }
 
-    // Usar el servicio de autenticación para enviar el código de verificación
-    const result = await this.authService.sendVerificationLink(id);
+    // Usar el servicio de perfil para enviar el código de verificación
+    const result = await this.profileService.sendVerificationLink(id);
 
     return result;
   }

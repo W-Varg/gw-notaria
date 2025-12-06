@@ -1,12 +1,8 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/global/database/prisma.service';
 import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { extname, join } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { compare, hash } from 'bcrypt';
-import { toDataURL } from 'qrcode';
-import { v4 as uuidv4 } from 'uuid';
 import { authenticator } from 'otplib';
 import { ChangePasswordInput, Enable2FAInput, Disable2FAInput } from '../dto/auth.input';
 import { UpdateProfileInput, VerifyPasswordInput } from './dto/profile.input';
@@ -15,15 +11,19 @@ import { EmailService } from '../../../global/emails/email.service';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { TokenTemporalTipoEnum, TokenTemporalClaveEnum } from 'src/enums';
+import { FileStorageService } from 'src/global/services/file-storage.service';
+import { QrCodeService } from 'src/global/services/qr-code.service';
+import { UserValidationService } from 'src/global/services/user-validation.service';
 import dayjs from 'dayjs';
 
 @Injectable()
 export class ProfileService {
-  private readonly uploadPath = './storage/avatars';
-
   constructor(
     private readonly prismaService: PrismaService,
     private readonly emailService: EmailService,
+    private readonly fileStorageService: FileStorageService,
+    private readonly qrCodeService: QrCodeService,
+    private readonly userValidationService: UserValidationService,
   ) {}
 
   /**
@@ -86,37 +86,6 @@ export class ProfileService {
     );
   }
 
-  private async saveAvatar(file: Express.Multer.File): Promise<string> {
-    try {
-      const fileExtension = extname(file.originalname);
-      const fileName = `avatar-${uuidv4()}${fileExtension}`;
-      // si no existe la ruta uploadPath crear entonces
-      if (!existsSync(this.uploadPath)) {
-        mkdirSync(this.uploadPath, { recursive: true });
-      }
-      const filePath = join(this.uploadPath, fileName);
-
-      // Guardar archivo
-      writeFileSync(filePath, file.buffer);
-
-      // Retornar URL relativa
-      return `/storage/avatars/${fileName}`;
-    } catch (error) {
-      Logger.error('Error al guardar archivo de avatar:', error);
-      throw new BadRequestException('Error al guardar el archivo de avatar');
-    }
-  }
-  private async processAvatarUpload(file?: Express.Multer.File): Promise<string | null> {
-    if (!file) return null;
-
-    try {
-      return await this.saveAvatar(file);
-    } catch (error) {
-      Logger.error('Error al guardar avatar:', error);
-      throw new BadRequestException('Error al procesar el archivo de avatar');
-    }
-  }
-
   /**
    * Actualizar avatar del usuario
    */
@@ -125,11 +94,11 @@ export class ProfileService {
       where: { id: userId },
     });
 
-    const avatarPath = await this.processAvatarUpload(file);
-
     if (!user) {
       return dataResponseError('Usuario no encontrado');
     }
+
+    const avatarPath = await this.fileStorageService.processAvatarUpload(file);
 
     await this.prismaService.usuario.update({
       where: { id: userId },
@@ -258,38 +227,15 @@ export class ProfileService {
    * Obtener permisos del usuario autenticado
    */
   async permissions(userId: string) {
-    const user = await this.prismaService.usuario.findUnique({
-      where: { id: userId },
-      include: {
-        roles: {
-          include: {
-            rol: {
-              include: {
-                rolPermisos: {
-                  include: {
-                    permiso: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    const user = await this.userValidationService.getUserWithRelations(userId);
 
     if (!user) {
       return dataResponseError('Usuario no encontrado');
     }
 
-    // Extraer todos los permisos únicos
-    const permissions = new Set<string>();
-    for (const userRole of user.roles) {
-      for (const rolPermiso of userRole.rol.rolPermisos) {
-        permissions.add(rolPermiso.permiso.nombre);
-      }
-    }
+    const permissions = this.userValidationService.extractUniquePermissions(user.roles);
 
-    return dataResponseSuccess({ data: Array.from(permissions) });
+    return dataResponseSuccess({ data: permissions });
   }
 
   /**
@@ -403,11 +349,8 @@ export class ProfileService {
     // Crear el nombre de la aplicación para Google Authenticator
     const appName = `TU-NOTARIA (${user.email})`;
 
-    // Generar la URL otpauth para el QR
-    const otpauthUrl = authenticator.keyuri(user.email, 'TU-NOTARIA', secret);
-
-    // Generar código QR como data URL
-    const qrCodeUrl = await toDataURL(otpauthUrl);
+    // Generar código QR usando el servicio compartido
+    const qrCodeUrl = await this.qrCodeService.generate2FAQrCode(user.email, 'TU-NOTARIA', secret);
 
     const setupData: TwoFactorSetup = {
       qrCodeUrl,
