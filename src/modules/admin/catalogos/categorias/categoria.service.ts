@@ -43,7 +43,6 @@ export class CategoriaService {
         skip,
         take,
         orderBy,
-        include: { productos: true },
       }),
       pagination ? this.prismaService.categoria.count() : undefined,
     ]);
@@ -71,7 +70,6 @@ export class CategoriaService {
         skip,
         take,
         orderBy,
-        include: { productos: true },
       }),
       this.prismaService.categoria.count({ where: whereInput }),
     ]);
@@ -85,7 +83,6 @@ export class CategoriaService {
   async findOne(id: string) {
     const item = await this.prismaService.categoria.findUnique({
       where: { id },
-      include: { productos: true },
     });
     if (!item) return dataResponseError('Categoría no encontrada');
     return dataResponseSuccess<Categoria>({ data: item });
@@ -116,13 +113,13 @@ export class CategoriaService {
 
   async remove(id: string) {
     // query de categoria, y verificar si existe al menos un producto asociado
-    const hasProducts = await this.prismaService.producto.count({
-      where: { categoriaId: id },
-    });
+    // const hasProducts = await this.prismaService.producto.count({
+    //   where: { categoriaId: id },
+    // });
 
-    if (hasProducts > 0) {
-      return dataResponseError('La categoría tiene productos asociados');
-    }
+    // if (hasProducts > 0) {
+    //   return dataResponseError('La categoría tiene productos asociados');
+    // }
     const exists = await this.prismaService.categoria.findUnique({
       where: { id },
       select: { id: true },

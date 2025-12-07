@@ -45,15 +45,8 @@ async function main() {
   // Crear categorías
   await createCategorias();
 
-  // Crear tipos de productos
-  await createTiposProducto();
-
   // Crear configuraciones de aplicación
   await createConfiguracionAplicacion();
-
-  // Crear productos ficticios
-  const categorias = await prisma.categoria.findMany();
-  const tiposProducto = await prisma.tipoProducto.findMany();
 
   console.info('Seeding finished');
 }
@@ -61,7 +54,6 @@ async function main() {
 async function clearDatabase() {
   // Eliminar registros en orden inverso a las dependencias
   await prisma.categoria.deleteMany();
-  await prisma.tipoProducto.deleteMany();
   await prisma.rolPermiso.deleteMany();
   await prisma.permiso.deleteMany();
   await prisma.usuarioRol.deleteMany();
@@ -224,26 +216,6 @@ async function createCategorias() {
   }
 
   return categoriasCreadas;
-}
-
-async function createTiposProducto() {
-  const tipos = [
-    { nombre: 'Perros' },
-    { nombre: 'Gatos' },
-    { nombre: 'Aves' },
-    { nombre: 'Peces' },
-  ];
-
-  const tiposCreados = [];
-
-  for (const tipo of tipos) {
-    const tipoCreado = await prisma.tipoProducto.create({
-      data: tipo,
-    });
-    tiposCreados.push(tipoCreado);
-  }
-
-  return tiposCreados;
 }
 
 async function createConfiguracionAplicacion() {

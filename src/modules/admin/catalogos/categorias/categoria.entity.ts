@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Producto } from '../productos/producto.entity';
 
 export class Categoria {
   @ApiProperty({ type: String })
@@ -24,7 +23,4 @@ export class Categoria {
   fechaActualizacion: Date;
 }
 
-export class CategoriaDetail extends Categoria {
-  @ApiProperty({ isArray: true, type: () => Producto })
-  productos: Producto[];
-}
+export class CategoriaDetail extends Categoria {}

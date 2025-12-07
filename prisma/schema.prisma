@@ -287,7 +287,7 @@ model ConfiguracionAplicacion {
 }
 
 // ============================================
-// MÓDULO DE PRODUCTOS Y CATEGORÍAS
+// MÓDULO DE CATEGORÍAS
 // ============================================
 
 model Categoria {
@@ -299,40 +299,7 @@ model Categoria {
   fechaCreacion      DateTime @default(now())
   fechaActualizacion DateTime @updatedAt
 
-  // Relaciones
-  productos Producto[]
-
   @@map("cat_categorias")
-}
-
-model TipoProducto {
-  id        String     @id @default(cuid())
-  nombre    String     @unique
-  productos Producto[]
-
-  @@map("cat_tipos_producto")
-}
-
-model Producto {
-  id                 String       @id @default(cuid())
-  nombre             String
-  descripcion        String?      @db.VarChar(500)
-  precio             Float
-  peso               Float // peso en gramos
-  // unidad             String           @default("gramos") // "gramos", "kg", "unidad"
-  unidad             UnidadMedida
-  stock              Int          @default(0)
-  codigoSKU          String       @unique
-  estaActivo         Boolean      @default(true)
-  fechaCreacion      DateTime     @default(now())
-  fechaActualizacion DateTime     @updatedAt
-  tipoProductoId     String
-  // Relaciones
-  categoriaId        String
-  categoria          Categoria    @relation(fields: [categoriaId], references: [id])
-  tipo               TipoProducto @relation(fields: [tipoProductoId], references: [id])
-
-  @@map("prod_productos")
 }
 
 // ============================================

@@ -15,7 +15,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ProfileService } from './profile.service';
 import { ApiResponse, ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { ChangePasswordInput, Enable2FAInput, Disable2FAInput } from '../dto/auth.input';
-import { UpdateProfileInput, VerifyPasswordInput } from './dto/profile.input';
+import { UpdateProfileInput, VerifyPasswordInput, ListHistorialLoginArgsDto } from './dto/profile.input';
 import {
   ResponseProfileType,
   ResponsePermissionsType,
@@ -34,7 +34,6 @@ import {
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { BearerAuthToken } from 'src/common/decorators/authorization.decorator';
 import { IToken, AuthUser } from 'src/common/decorators/token.decorator';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 
 @ApiTags('[profile] Perfil de Usuario')
 @Controller('auth/profile')
@@ -103,11 +102,11 @@ export class ProfileController {
     return this.profileService.closeAllSessions(session.usuarioId);
   }
 
-  @Get('login-history')
+  @Post('login-history')
   @ApiDescription('Obtener historial de login', [])
   @ApiResponse({ status: 200, type: () => ResponseLoginHistoryType })
-  async getLoginHistory(@AuthUser() session: IToken, @Query() queryDto: ListFindAllQueryDto) {
-    return this.profileService.getLoginHistory(session.usuarioId, queryDto);
+  async loginHistory(@AuthUser() session: IToken, @Body() inputDto: ListHistorialLoginArgsDto) {
+    return this.profileService.getLoginHistory(session.usuarioId, inputDto);
   }
 
   @Patch('change-password')

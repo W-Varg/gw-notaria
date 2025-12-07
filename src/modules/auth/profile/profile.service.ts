@@ -5,11 +5,10 @@ import { randomBytes } from 'node:crypto';
 import { compare, hash } from 'bcrypt';
 import { authenticator } from 'otplib';
 import { ChangePasswordInput, Enable2FAInput, Disable2FAInput } from '../dto/auth.input';
-import { UpdateProfileInput, VerifyPasswordInput } from './dto/profile.input';
+import { UpdateProfileInput, VerifyPasswordInput, ListHistorialLoginArgsDto } from './dto/profile.input';
 import { TwoFactorSetup } from '../auth.entity';
 import { EmailService } from '../../../global/emails/email.service';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { TokenTemporalTipoEnum, TokenTemporalClaveEnum } from 'src/enums';
 import { FileStorageService } from 'src/global/services/file-storage.service';
 import { QrCodeService } from 'src/global/services/qr-code.service';
@@ -188,30 +187,37 @@ export class ProfileService {
   }
 
   /**
-   * Obtener historial de login con paginación
+   * Obtener historial de login con paginación y filtros
    */
-  async getLoginHistory(userId: string, query: ListFindAllQueryDto) {
+  async getLoginHistory(userId: string, query: ListHistorialLoginArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(query);
+
+    // Construir el where combinando el userId con los filtros del where input
+    const whereCondition = {
+      usuarioId: userId,
+      ...(query.where || {}),
+    };
 
     const [items, total] = await Promise.all([
       this.prismaService.historialLogin.findMany({
-        where: { usuarioId: userId },
-        select: {
+        where: whereCondition,
+        select: query.select || {
           id: true,
           exitoso: true,
           ipAddress: true,
+          userAgent: true,
           dispositivo: true,
           navegador: true,
           ubicacion: true,
           motivoFallo: true,
           fechaIntento: true,
         },
-        orderBy: { fechaIntento: 'desc' },
+        orderBy: orderBy || { fechaIntento: 'desc' },
         skip,
         take,
       }),
       this.prismaService.historialLogin.count({
-        where: { usuarioId: userId },
+        where: whereCondition,
       }),
     ]);
 

@@ -26,16 +26,6 @@ export class PublicService {
     });
   }
 
-  getTiposProductos(): Promise<{ id: string; nombre: string }[]> {
-    return this.prisma.tipoProducto.findMany({
-      select: {
-        id: true,
-        nombre: true,
-      },
-      orderBy: { nombre: 'asc' },
-    });
-  }
-
   /* ---------------------------------------------------------------------------------------------------------------- */
   /*                                                     Contacto                                                     */
   /* ---------------------------------------------------------------------------------------------------------------- */

@@ -4,7 +4,6 @@ import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   CategoriasTypePublic,
-  TiposProductosTypePublic,
   ResponseMensajeType,
   ResponsePoliticasType,
   ResponseFAQsType,
@@ -28,14 +27,6 @@ export class PublicController {
   @ApiResponse({ status: 200, type: () => CategoriasTypePublic })
   async getCategorias() {
     return this.publicService.getCategorias();
-  }
-
-  @Get('tipos-productos')
-  @UseCache({ ttl: 15 * 60, keyPrefix: 'tipos-productos' }) // Cache for 15 minutes
-  @ApiDescription('Obtener tipos de productos disponibles')
-  @ApiResponse({ status: 200, type: () => TiposProductosTypePublic })
-  async getTiposProductos() {
-    return this.publicService.getTiposProductos();
   }
 
   /* ---------------------------------------------------------------------------------------------------------------- */
