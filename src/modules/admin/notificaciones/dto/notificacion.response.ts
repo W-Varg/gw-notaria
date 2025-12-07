@@ -1,71 +1,42 @@
-import { Expose } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { Notificacion } from '../notificacion.entity';
 
-// ==================== BASE RESPONSE ====================
-export class ResponseNotificacionType {
-  @Expose()
-  @ApiProperty({ type: String })
-  status: string;
-
-  @Expose()
-  @ApiProperty({ type: String })
-  message: string;
-
-  @Expose()
-  @ApiProperty()
-  data?: any;
+// Respuesta individual
+class NotificacionData extends OmitType(ResponseStructDTO, ['pagination']) {
+  @ApiProperty({ type: Notificacion })
+  data: Notificacion;
 }
 
-// ==================== DETAIL RESPONSE ====================
-export class ResponseNotificacionDetailType {
-  @Expose()
-  @ApiProperty({ type: String })
-  status: string;
-
-  @Expose()
-  @ApiProperty({ type: String })
-  message: string;
-
-  @Expose()
-  @ApiProperty()
-  data?: any;
+export class ResponseNotificacionType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: NotificacionData })
+  declare response: NotificacionData;
 }
 
-// ==================== PAGINATED RESPONSE ====================
-export class PaginateNotificacionesType {
-  @Expose()
-  @ApiProperty({ type: String })
-  status: string;
-
-  @Expose()
-  @ApiProperty({ type: String })
-  message: string;
-
-  @Expose()
-  @ApiProperty({
-    type: 'object',
-    properties: {
-      count: { type: 'number' },
-      next: { type: 'string', nullable: true },
-      previous: { type: 'string', nullable: true },
-      results: { type: 'array', items: { type: 'object' } },
-    },
-  })
-  data?: {
-    count: number;
-    next: string | null;
-    previous: string | null;
-    results: any[];
-  };
+// Respuesta detallada (con relaciones)
+export class ResponseNotificacionDetailType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: NotificacionData })
+  declare response: NotificacionData;
 }
 
-// ==================== DELETE RESPONSE ====================
-export class ResponseDeleteNotificacionType {
-  @Expose()
-  @ApiProperty({ type: String })
-  status: string;
+// Respuesta lista simple
+class NotificacionesData {
+  @ApiProperty({ type: [Notificacion] })
+  data?: Notificacion[];
+}
 
-  @Expose()
-  @ApiProperty({ type: String })
-  message: string;
+export class ResponseNotificacionesType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: NotificacionesData })
+  declare response: NotificacionesData;
+}
+
+// Respuesta lista paginada
+class PaginateNotificacionesData extends OmitType(ResponseStructDTO, ['validationErrors']) {
+  @ApiProperty({ type: [Notificacion] })
+  data?: Notificacion[];
+}
+
+export class PaginateNotificacionesType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: PaginateNotificacionesData })
+  declare response: PaginateNotificacionesData;
 }

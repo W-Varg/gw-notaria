@@ -50,6 +50,9 @@ async function main() {
   // Crear categorías
   await createCategorias(adminUserId);
 
+  // Crear estados de trámite
+  await createEstadosTramite(adminUserId);
+
   // Crear configuraciones de aplicación
   await createConfiguracionAplicacion(adminUserId);
 
@@ -62,6 +65,7 @@ async function main() {
 async function clearDatabase() {
   // Eliminar registros en orden inverso a las dependencias
   await prisma.categoria.deleteMany();
+  await prisma.estadoTramite.deleteMany();
   await prisma.rolPermiso.deleteMany();
   await prisma.permiso.deleteMany();
   await prisma.usuarioRol.deleteMany();
@@ -224,6 +228,87 @@ async function createCategorias(userId: string) {
   }
 
   return categoriasCreadas;
+}
+
+async function createEstadosTramite(userId: string) {
+  const estadosTramite = [
+    {
+      nombre: 'Recibido',
+      descripcion: 'El trámite ha sido recibido y está en espera de revisión',
+      colorHex: '#3498db',
+      orden: 1,
+      estaActivo: true,
+      userCreateId: userId,
+    },
+    {
+      nombre: 'En Revisión',
+      descripcion: 'El trámite está siendo revisado por el personal',
+      colorHex: '#f39c12',
+      orden: 2,
+      estaActivo: true,
+      userCreateId: userId,
+    },
+    {
+      nombre: 'Observado',
+      descripcion: 'El trámite tiene observaciones que deben ser corregidas',
+      colorHex: '#e74c3c',
+      orden: 3,
+      estaActivo: true,
+      userCreateId: userId,
+    },
+    {
+      nombre: 'En Proceso',
+      descripcion: 'El trámite está siendo procesado',
+      colorHex: '#9b59b6',
+      orden: 4,
+      estaActivo: true,
+      userCreateId: userId,
+    },
+    {
+      nombre: 'Pendiente de Firma',
+      descripcion: 'El trámite está listo y pendiente de firma',
+      colorHex: '#e67e22',
+      orden: 5,
+      estaActivo: true,
+      userCreateId: userId,
+    },
+    {
+      nombre: 'Finalizado',
+      descripcion: 'El trámite ha sido completado exitosamente',
+      colorHex: '#27ae60',
+      orden: 6,
+      estaActivo: true,
+      userCreateId: userId,
+    },
+    {
+      nombre: 'Cancelado',
+      descripcion: 'El trámite ha sido cancelado',
+      colorHex: '#95a5a6',
+      orden: 7,
+      estaActivo: true,
+      userCreateId: userId,
+    },
+    {
+      nombre: 'Rechazado',
+      descripcion: 'El trámite ha sido rechazado',
+      colorHex: '#c0392b',
+      orden: 8,
+      estaActivo: true,
+      userCreateId: userId,
+    },
+  ];
+
+  const estadosCreados = [];
+
+  for (const estado of estadosTramite) {
+    const estadoCreado = await prisma.estadoTramite.create({
+      data: estado,
+    });
+    estadosCreados.push(estadoCreado);
+  }
+
+  console.info(`Created ${estadosCreados.length} estados de trámite`);
+  return estadosCreados;
 }
 
 async function createConfiguracionAplicacion(userId: string) {

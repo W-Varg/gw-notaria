@@ -24,10 +24,10 @@ generator client {
 
 // /// https://github.com/unlight/prisma-nestjs-graphql
 
-generator nestgraphql {
-  provider = "node node_modules/prisma-nestjs-graphql"
-  output   = "../src/generated/graphql-nestjs"
-}
+// generator nestgraphql {
+//   provider = "node node_modules/prisma-nestjs-graphql"
+//   output   = "../src/generated/graphql-nestjs"
+// }
 
 // /// https://github.com/vegardit/prisma-generator-nestjs-dto
 
@@ -439,12 +439,13 @@ model CuentaBancaria {
 
 model TipoDocumento {
   id                 Int      @id @default(autoincrement())
-  nombre             String   @db.VarChar(100)
+  nombre             String   @unique @db.VarChar(100)
   precioBase         Decimal  @default(0.00) @db.Decimal(10, 2)
   userCreateId       String
   userUpdateId       String?
   fechaCreacion      DateTime @default(now())
   fechaActualizacion DateTime @updatedAt
+  estaActivo         Boolean? @default(true)
 
   plantillasDocumento PlantillaDocumento[]
   servicios           Servicio[]
@@ -470,14 +471,16 @@ model PlantillaDocumento {
 }
 
 model EstadoTramite {
-  id                 Int      @id @default(autoincrement())
-  nombre             String   @db.VarChar(50)
-  colorHex           String?  @db.VarChar(10)
-  userCreateId       String
-  userUpdateId       String?
-  fechaCreacion      DateTime @default(now())
-  fechaActualizacion DateTime @updatedAt
-
+  id                       String                     @id @default(cuid())
+  nombre                   String                     @unique @db.VarChar(100)
+  descripcion              String?
+  colorHex                 String?                    @db.VarChar(7)
+  orden                    Int                        @default(0)
+  estaActivo               Boolean                    @default(true)
+  userCreateId             String
+  userUpdateId             String?
+  fechaCreacion            DateTime                   @default(now())
+  fechaActualizacion       DateTime                   @updatedAt
   historialEstadosServicio HistorialEstadosServicio[]
 
   @@map("estados_tramite")
@@ -576,7 +579,7 @@ model HistorialEstadosServicio {
   id          Int      @id @default(autoincrement())
   usuarioId   String?
   servicioId  Int
-  estadoId    Int
+  estadoId    String
   fechaCambio DateTime @default(now()) @db.Timestamptz()
   comentario  String?  @db.VarChar(255)
 

@@ -8,6 +8,9 @@ import {
 } from './dto/notificacion.input.dto';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { IToken } from 'src/common/decorators/token.decorator';
+import { dataResponseError, dataResponseSuccess } from 'src/common/dtos';
+import { Notificacion } from './notificacion.entity';
+import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 
 @Injectable()
 export class NotificacionService {
@@ -28,11 +31,32 @@ export class NotificacionService {
       },
     });
 
-    return notificacion;
+    return dataResponseSuccess<Notificacion>({ data: notificacion });
   }
 
-  // ==================== FIND ALL (PAGINATED) ====================
-  async findAll(listArgs: ListNotificacionArgsDto) {
+  // ==================== FIND ALL (SIMPLE) ====================
+  async findAll(query: ListFindAllQueryDto) {
+    const { skip, take, orderBy, pagination } = paginationParamsFormat(query);
+
+    const [list, total] = await Promise.all([
+      this.prisma.notificacion.findMany({
+        skip,
+        take,
+        orderBy: orderBy || { fechaCreacion: 'desc' },
+      }),
+      pagination ? this.prisma.notificacion.count() : undefined,
+    ]);
+
+    if (pagination && total !== undefined) pagination.total = total;
+
+    return dataResponseSuccess<Notificacion[]>({
+      data: list,
+      pagination,
+    });
+  }
+
+  // ==================== FIND ALL (PAGINATED WITH FILTERS) ====================
+  async filter(listArgs: ListNotificacionArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(listArgs, true);
     const { usuarioId, titulo, mensaje, tipo, leida, icono, ruta, fechaCreacion } =
       listArgs.where || {};
@@ -47,27 +71,25 @@ export class NotificacionService {
     if (ruta) whereInput.ruta = ruta;
     if (fechaCreacion) whereInput.fechaCreacion = fechaCreacion;
 
-    const [notificaciones, total] = await Promise.all([
+    const [list, total] = await Promise.all([
       this.prisma.notificacion.findMany({
         where: whereInput,
         skip,
         take,
         orderBy: orderBy || { fechaCreacion: 'desc' },
       }),
-      this.prisma.notificacion.count({
-        where: whereInput,
-      }),
+      this.prisma.notificacion.count({ where: whereInput }),
     ]);
 
-    return {
-      count: total,
-      results: notificaciones,
-    };
+    return dataResponseSuccess<Notificacion[]>({
+      data: list,
+      pagination: { ...pagination, total },
+    });
   }
 
   // ==================== FIND ONE ====================
   async findOne(id: string) {
-    const notificacion = await this.prisma.notificacion.findUnique({
+    const item = await this.prisma.notificacion.findUnique({
       where: { id },
       include: {
         usuario: {
@@ -80,17 +102,12 @@ export class NotificacionService {
       },
     });
 
-    if (!notificacion) {
-      throw new NotFoundException(`Notificación con ID "${id}" no encontrada`);
-    }
-
-    return notificacion;
+    if (!item) return dataResponseError('registro no encontrado');
+    return dataResponseSuccess<Notificacion>({ data: item });
   }
 
   // ==================== UPDATE ====================
   async update(id: string, updateDto: UpdateNotificacionDto, session: IToken) {
-    await this.findOne(id); // Verifica existencia
-
     const notificacion = await this.prisma.notificacion.update({
       where: { id },
       data: {
@@ -104,18 +121,16 @@ export class NotificacionService {
       },
     });
 
-    return notificacion;
+    return dataResponseSuccess<Notificacion>({ data: notificacion });
   }
 
   // ==================== REMOVE ====================
   async remove(id: string) {
-    await this.findOne(id); // Verifica existencia
-
-    await this.prisma.notificacion.delete({
+    const result = await this.prisma.notificacion.delete({
       where: { id },
     });
 
-    return { message: 'Notificación eliminada correctamente' };
+    return dataResponseSuccess<Notificacion>({ data: result });
   }
 
   // ==================== CUSTOM METHODS ====================
@@ -132,16 +147,13 @@ export class NotificacionService {
       },
     });
 
-    return notificaciones;
+    return dataResponseSuccess<Notificacion[]>({ data: notificaciones });
   }
 
   // Contar notificaciones no leídas
   async countUnreadByUser(usuarioId: string) {
     const count = await this.prisma.notificacion.count({
-      where: {
-        usuarioId,
-        leida: false,
-      },
+      where: { usuarioId, leida: false },
     });
 
     return { count };
@@ -149,14 +161,15 @@ export class NotificacionService {
 
   // Marcar como leída
   async markAsRead(id: string) {
-    const notificacion = await this.findOne(id);
-
-    await this.prisma.notificacion.update({
+    const result = await this.prisma.notificacion.update({
       where: { id },
       data: { leida: true },
     });
 
-    return { message: 'Notificación marcada como leída' };
+    return dataResponseSuccess<Notificacion>(
+      { data: result },
+      { message: 'notificacion marcada como leida' },
+    );
   }
 
   // Marcar todas como leídas
@@ -171,10 +184,10 @@ export class NotificacionService {
       },
     });
 
-    return {
-      message: `${result.count} notificaciones marcadas como leídas`,
-      count: result.count,
-    };
+    return dataResponseSuccess(
+      { data: { count: result.count } },
+      { message: `${result.count} notificaciones marcadas como leídas` },
+    );
   }
 
   // Limpiar notificaciones leídas
@@ -186,9 +199,9 @@ export class NotificacionService {
       },
     });
 
-    return {
-      message: `${result.count} notificaciones eliminadas`,
-      count: result.count,
-    };
+    return dataResponseSuccess(
+      { data: { count: result.count } },
+      { message: `${result.count} notificaciones eliminadas` },
+    );
   }
 }

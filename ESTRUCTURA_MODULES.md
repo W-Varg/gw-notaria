@@ -42,8 +42,7 @@ Este archivo contiene todos los DTOs para las operaciones de entrada del módulo
 ### 1️⃣ CreateDto - DTO de Creación
 
 ```typescript
-export class Create[Nombre]Dto {
-  // Campos requeridos
+export class CreateCategoriaDto {
   @Expose()
   @IsDefined()
   @IsString()
@@ -52,7 +51,6 @@ export class Create[Nombre]Dto {
   @ApiProperty({ type: String })
   nombre: string;
 
-  // Campos opcionales
   @Expose()
   @IsOptional()
   @IsString()
@@ -69,13 +67,20 @@ export class Create[Nombre]Dto {
 ```
 
 **Decoradores importantes:**
-- `@Expose()`: Permite la serialización del campo
+- `@Expose()`: Permite la serialización del campo (siempre al inicio de cada propiedad)
 - `@IsDefined()`: Campo obligatorio
 - `@IsOptional()`: Campo opcional
 - `@IsString()`, `@IsBoolean()`, `@IsNumber()`: Validación de tipo
 - `@MinLength()`, `@MaxLength()`: Validación de longitud
 - `@ApiProperty()`: Documentación Swagger (requerido)
 - `@ApiPropertyOptional()`: Documentación Swagger (opcional)
+
+**Orden de decoradores:**
+1. `@Expose()` - Siempre primero
+2. Validación (`@IsDefined()` o `@IsOptional()`)
+3. Validaciones de tipo (`@IsString()`, `@IsBoolean()`, etc.)
+4. Validaciones específicas (`@MinLength()`, `@MaxLength()`, etc.)
+5. Swagger (`@ApiProperty()` o `@ApiPropertyOptional()`) - Siempre antes de la declaración
 
 ### 2️⃣ UpdateDto - DTO de Actualización
 
@@ -134,6 +139,12 @@ class [Nombre]WhereInput {
   fechaCreacion?: DateTimeFilter;
 }
 ```
+
+**Orden de decoradores en WhereInput:**
+1. `@Expose()` - Siempre primero
+2. `@ApiPropertyOptional({ type: TipoFiltro })` - Documentación Swagger
+3. `@IsOptional()` - Todos los filtros son opcionales
+4. `@Type(() => TipoFiltro)` - Transformación de tipo
 
 **Tipos de filtros disponibles:**
 - `StringFilter`: Para campos `string`
@@ -347,20 +358,42 @@ export class Paginate[Nombre]sType extends OmitType(ApiOkResponseDto, ['cache'])
 ### Estructura Básica
 
 ```typescript
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseInterceptors,
+} from '@nestjs/common';
+import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
+import { Audit } from 'src/common/decorators/audit.decorator';
+import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PermisoEnum } from 'src/enums/permisos.enum';
+import { TipoAccionEnum } from 'src/generated/prisma/enums';
 
 @ApiTags('[admin] [Nombre]s')
 @Controller('[nombre]s')
+@UseInterceptors(AuditInterceptor)
 export class [Nombre]Controller {
   constructor(private readonly [nombre]Service: [Nombre]Service) {}
 
   // Endpoints aquí...
 }
 ```
+
+**Decoradores importantes del controlador:**
+- `@ApiTags('[admin] [Nombre]s')`: Agrupa endpoints en Swagger
+- `@Controller('[nombre]s')`: Define la ruta base (en plural)
+- `@UseInterceptors(AuditInterceptor)`: Interceptor para auditoría automática
+- `@BearerAuthPermision([...])`: Valida permisos del usuario
+- `@Audit({...})`: Registra acciones en el log de auditoría (en endpoints que modifican datos)
 
 ### 1️⃣ Endpoint CREATE - `POST /`
 
@@ -369,10 +402,28 @@ export class [Nombre]Controller {
 @BearerAuthPermision([PermisoEnum.[NOMBRE]_CREAR])
 @ApiDescription('Crear un nuevo [nombre]', [PermisoEnum.[NOMBRE]_CREAR])
 @ApiResponse({ status: 200, type: () => Response[Nombre]Type })
-create(@Body() inputDto: Create[Nombre]Dto) {
-  return this.[nombre]Service.create(inputDto);
+@Audit({
+  accion: TipoAccionEnum.CREATE,
+  modulo: '[modulo]',
+  tabla: '[Nombre]',
+  descripcion: 'Crear nuevo [nombre]',
+})
+create(@Body() inputDto: Create[Nombre]Dto, @AuthUser() session: IToken) {
+  return this.[nombre]Service.create(inputDto, session);
 }
 ```
+
+**Decoradores:**
+- `@Post()`: Define método HTTP POST
+- `@BearerAuthPermision([...])`: Valida permiso de creación
+- `@ApiDescription(...)`: Documentación Swagger con descripción y permisos
+- `@ApiResponse({...})`: Define tipo de respuesta en Swagger
+- `@Audit({...})`: Registra la acción de creación en logs
+  - `accion`: Tipo de acción (CREATE, UPDATE, DELETE, etc.)
+  - `modulo`: Módulo al que pertenece (ej: 'catalogos', 'security')
+  - `tabla`: Nombre de la tabla/modelo
+  - `descripcion`: Descripción de la acción
+- `@AuthUser()`: Inyecta sesión del usuario autenticado
 
 **Retorna:** `Response[Nombre]Type` (registro individual)
 
@@ -427,8 +478,18 @@ findOne(@Param('id') id: string) {
 @BearerAuthPermision([PermisoEnum.[NOMBRE]_EDITAR])
 @ApiResponse({ status: 200, type: () => Response[Nombre]Type })
 @ApiDescription('Actualizar un [nombre] por ID', [PermisoEnum.[NOMBRE]_EDITAR])
-update(@Param('id') id: string, @Body() updateDto: Update[Nombre]Dto) {
-  return this.[nombre]Service.update(id, updateDto);
+@Audit({
+  accion: TipoAccionEnum.UPDATE,
+  modulo: '[modulo]',
+  tabla: '[Nombre]',
+  descripcion: 'Actualizar [nombre]',
+})
+update(
+  @Param('id') id: string,
+  @Body() updateDto: Update[Nombre]Dto,
+  @AuthUser() session: IToken,
+) {
+  return this.[nombre]Service.update(id, updateDto, session);
 }
 ```
 
@@ -441,6 +502,12 @@ update(@Param('id') id: string, @Body() updateDto: Update[Nombre]Dto) {
 @BearerAuthPermision([PermisoEnum.[NOMBRE]_ELIMINAR])
 @ApiResponse({ status: 200, type: () => Response[Nombre]Type })
 @ApiDescription('Eliminar un [nombre] por ID', [PermisoEnum.[NOMBRE]_ELIMINAR])
+@Audit({
+  accion: TipoAccionEnum.DELETE,
+  modulo: '[modulo]',
+  tabla: '[Nombre]',
+  descripcion: 'Eliminar [nombre]',
+})
 remove(@Param('id') id: string) {
   return this.[nombre]Service.remove(id);
 }
@@ -511,35 +578,67 @@ remove(@Param('id') id: string) {
 
 ---
 
-## 🎯 Ejemplos Completos
+## 🎯 Ejemplo Completo: Módulo de Categorías
 
-### Ejemplo 1: Módulo de Productos
+A continuación se muestra un ejemplo completo del módulo de Categorías siguiendo todos los estándares documentados:
+
+### categoria.input.dto.ts
 
 ```typescript
-// producto.input.dto.ts
-export class CreateProductoDto {
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { Expose, Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsDefined,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
+import { BaseFilterDto } from 'src/common/dtos/filters.dto';
+import { BoolFilter } from 'src/common/dtos/prisma/bool-filter.input';
+import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
+import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
+
+export class CreateCategoriaDto {
   @Expose()
   @IsDefined()
   @IsString()
+  @MinLength(3)
+  @MaxLength(100)
   @ApiProperty({ type: String })
   nombre: string;
 
   @Expose()
   @IsOptional()
-  @IsNumber()
-  @ApiPropertyOptional({ type: Number })
-  precio?: number;
+  @IsString()
+  @MaxLength(300)
+  @ApiPropertyOptional({ type: String })
+  descripcion?: string;
 
   @Expose()
   @IsOptional()
   @IsString()
   @ApiPropertyOptional({ type: String })
-  categoriaId?: string;
+  imagen?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  @ApiPropertyOptional({ type: Boolean })
+  estaActiva?: boolean;
 }
 
-export class UpdateProductoDto extends PartialType(CreateProductoDto) {}
+export class UpdateCategoriaDto extends PartialType(CreateCategoriaDto) {
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  @ApiPropertyOptional({ type: Boolean })
+  estaActivo?: boolean;
+}
 
-class ProductoWhereInput {
+class CategoriaWhereInput {
   @Expose()
   @ApiPropertyOptional({ type: StringFilter })
   @IsOptional()
@@ -547,57 +646,211 @@ class ProductoWhereInput {
   nombre?: StringFilter;
 
   @Expose()
-  @ApiPropertyOptional({ type: FloatFilter })
+  @ApiPropertyOptional({ type: StringNullableFilter })
   @IsOptional()
-  @Type(() => FloatFilter)
-  precio?: FloatFilter;
+  @Type(() => StringNullableFilter)
+  descripcion?: StringNullableFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: BoolFilter })
+  @IsOptional()
+  @Type(() => BoolFilter)
+  estaActiva?: BoolFilter;
 }
 
-export class ListProductoArgsDto extends BaseFilterDto {
+class CategoriaSelectInput {
   @Expose()
-  @ApiPropertyOptional({ type: ProductoWhereInput })
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  id?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  nombre?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  descripcion?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  imagen?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  estaActiva?: boolean;
+}
+
+export class ListCategoriaArgsDto extends BaseFilterDto {
+  @Expose()
+  @ApiPropertyOptional({ type: CategoriaWhereInput })
   @IsOptional()
   @ValidateNested()
-  @Type(() => ProductoWhereInput)
-  where?: ProductoWhereInput;
+  @Type(() => CategoriaWhereInput)
+  where?: CategoriaWhereInput;
+
+  @Expose()
+  @ApiPropertyOptional({ type: CategoriaSelectInput })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CategoriaSelectInput)
+  select?: CategoriaSelectInput;
 }
 ```
 
+### categoria.response.ts
+
 ```typescript
-// producto.response.ts
-class ProductoData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: Producto })
-  data: Producto;
+import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { Categoria } from '../categoria.entity';
+
+// Respuesta individual
+class CategoriaData extends OmitType(ResponseStructDTO, ['pagination']) {
+  @ApiProperty({ type: Categoria })
+  data: Categoria;
 }
 
-export class ResponseProductoType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: ProductoData })
-  declare response: ProductoData;
+export class ResponseCategoriaType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: CategoriaData })
+  declare response: CategoriaData;
 }
 
-class ProductosData {
-  @ApiProperty({ type: [Producto] })
-  data?: Producto[];
+// Respuesta detallada (con relaciones)
+export class ResponseCategoriaDetailType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: CategoriaData })
+  declare response: CategoriaData;
 }
 
-export class ResponseProductosType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: ProductosData })
-  declare response: ProductosData;
+// Respuesta lista simple
+class CategoriasData {
+  @ApiProperty({ type: [Categoria] })
+  data?: Categoria[];
 }
 
-class PaginateProductosData extends OmitType(ResponseStructDTO, ['validationErrors']) {
-  @ApiProperty({ type: [Producto] })
-  data?: Producto[];
+export class ResponseCategoriasType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: CategoriasData })
+  declare response: CategoriasData;
 }
 
-export class PaginateProductosType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: PaginateProductosData })
-  declare response: PaginateProductosData;
+// Respuesta lista paginada
+class PaginateCategoriasData extends OmitType(ResponseStructDTO, ['validationErrors']) {
+  @ApiProperty({ type: [Categoria] })
+  data?: Categoria[];
+}
+
+export class PaginateCategoriasType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: PaginateCategoriasData })
+  declare response: PaginateCategoriasData;
 }
 ```
 
-```typescript
-// producto.controller.ts
+### categoria.controller.ts
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseInterceptors,
+} from '@nestjs/common';
+import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
+import { ApiDescription } from 'src/common/decorators/controller.decorator';
+import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
+import { Audit } from 'src/common/decorators/audit.decorator';
+import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { PermisoEnum } from 'src/enums/permisos.enum';
+import { TipoAccionEnum } from 'src/generated/prisma/enums';
+
+@ApiTags('[admin] Categorías')
+@Controller('categorias')
+@UseInterceptors(AuditInterceptor)
+export class CategoriaController {
+  constructor(private readonly categoriaService: CategoriaService) {}
+
+  @Post()
+  @BearerAuthPermision([PermisoEnum.CATEGORIAS_CREAR])
+  @ApiDescription('Crear una nueva categoría', [PermisoEnum.CATEGORIAS_CREAR])
+  @ApiResponse({ status: 200, type: () => ResponseCategoriaType })
+  @Audit({
+    accion: TipoAccionEnum.CREATE,
+    modulo: 'catalogos',
+    tabla: 'Categoria',
+    descripcion: 'Crear nueva categoría',
+  })
+  create(@Body() inputDto: CreateCategoriaDto, @AuthUser() session: IToken) {
+    return this.categoriaService.create(inputDto, session);
+  }
+
+  @Get()
+  @BearerAuthPermision([PermisoEnum.CATEGORIAS_VER])
+  @ApiDescription('Listar todas las categorías', [PermisoEnum.CATEGORIAS_VER])
+  @ApiResponse({ type: ResponseCategoriasType })
+  findAll(@Query() query: ListFindAllQueryDto) {
+    return this.categoriaService.findAll(query);
+  }
+
+  @Post('list')
+  @BearerAuthPermision([PermisoEnum.CATEGORIAS_VER])
+  @ApiDescription('Servicio post con filtros y paginado de categorías', [
+    PermisoEnum.CATEGORIAS_VER,
+  ])
+  @ApiResponse({ status: 200, type: () => PaginateCategoriasType })
+  list(@Body() inputDto: ListCategoriaArgsDto) {
+    return this.categoriaService.filter(inputDto);
+  }
+
+  @Get(':id')
+  @BearerAuthPermision([PermisoEnum.CATEGORIAS_VER])
+  @ApiResponse({ status: 200, type: () => ResponseCategoriaDetailType })
+  @ApiDescription('Obtener una categoría por ID', [PermisoEnum.CATEGORIAS_VER])
+  findOne(@Param('id') id: string) {
+    return this.categoriaService.findOne(id);
+  }
+
+  @Patch(':id')
+  @BearerAuthPermision([PermisoEnum.CATEGORIAS_EDITAR])
+  @ApiResponse({ status: 200, type: () => ResponseCategoriaType })
+  @ApiDescription('Actualizar una categoría por ID', [PermisoEnum.CATEGORIAS_EDITAR])
+  @Audit({
+    accion: TipoAccionEnum.UPDATE,
+    modulo: 'catalogos',
+    tabla: 'Categoria',
+    descripcion: 'Actualizar categoría',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateCategoriaDto: UpdateCategoriaDto,
+    @AuthUser() session: IToken,
+  ) {
+    return this.categoriaService.update(id, updateCategoriaDto, session);
+  }
+
+  @Delete(':id')
+  @BearerAuthPermision([PermisoEnum.CATEGORIAS_ELIMINAR])
+  @ApiResponse({ status: 200, type: () => ResponseCategoriaType })
+  @ApiDescription('Eliminar una categoría por ID', [PermisoEnum.CATEGORIAS_ELIMINAR])
+  @Audit({
+    accion: TipoAccionEnum.DELETE,
+    modulo: 'catalogos',
+    tabla: 'Categoria',
+    descripcion: 'Eliminar categoría',
+  })
+  remove(@Param('id') id: string) {
+    return this.categoriaService.remove(id);
+  }
+}
+```
+
+---
 @ApiTags('[admin] Productos')
 @Controller('productos')
 export class ProductoController {
@@ -682,15 +935,22 @@ Al crear un nuevo módulo CRUD, asegúrate de:
 ### Controller (`[nombre].controller.ts`)
 - [ ] Tag `@ApiTags('[admin] [Nombre]s')`
 - [ ] Decorador `@Controller('[nombre]s')` con ruta en plural
-- [ ] Endpoint `POST /` con `Response[Nombre]Type`
+- [ ] Decorador `@UseInterceptors(AuditInterceptor)` a nivel de clase
+- [ ] Endpoint `POST /` con `Response[Nombre]Type` y `@Audit`
 - [ ] Endpoint `GET /` con `Response[Nombre]sType`
 - [ ] Endpoint `POST /list` con `Paginate[Nombre]sType`
 - [ ] Endpoint `GET /:id` con `Response[Nombre]DetailType`
-- [ ] Endpoint `PATCH /:id` con `Response[Nombre]Type`
-- [ ] Endpoint `DELETE /:id` con `Response[Nombre]Type`
+- [ ] Endpoint `PATCH /:id` con `Response[Nombre]Type` y `@Audit`
+- [ ] Endpoint `DELETE /:id` con `Response[Nombre]Type` y `@Audit`
 - [ ] Todos los endpoints con `@BearerAuthPermision`
 - [ ] Todos los endpoints con `@ApiDescription`
 - [ ] Todos los endpoints con `@ApiResponse`
+- [ ] Endpoints de creación/actualización con `@AuthUser() session: IToken`
+- [ ] Decorador `@Audit` en CREATE, UPDATE y DELETE con:
+  - `accion`: Tipo de acción (TipoAccionEnum)
+  - `modulo`: Nombre del módulo
+  - `tabla`: Nombre de la tabla/modelo
+  - `descripcion`: Descripción de la acción
 
 ### Permisos
 - [ ] Agregar permisos al enum `PermisoEnum`:
@@ -711,9 +971,13 @@ Al crear un nuevo módulo CRUD, asegúrate de:
 - **Decoradores**:
   - `src/common/decorators/controller.decorator.ts` → `@ApiDescription`
   - `src/common/decorators/authorization.decorator.ts` → `@BearerAuthPermision`
+  - `src/common/decorators/token.decorator.ts` → `@AuthUser`, `IToken`
+  - `src/common/decorators/audit.decorator.ts` → `@Audit`
+  - `src/common/interceptors/audit.interceptor.ts` → `AuditInterceptor`
 
 - **Enums**:
   - `src/enums/permisos.enum.ts` → `PermisoEnum`
+  - `src/generated/prisma/enums` → `TipoAccionEnum`
 
 ---
 
@@ -742,7 +1006,20 @@ Al crear un nuevo módulo CRUD, asegúrate de:
 
 8. **Validación**: Usa class-validator para validar todos los inputs del cliente.
 
----
+9. **Orden de Decoradores**: 
+   - Siempre comienza con `@Expose()`
+   - Luego validaciones (`@IsDefined()`, `@IsOptional()`)
+   - Después validaciones de tipo (`@IsString()`, etc.)
+   - Finalmente Swagger (`@ApiProperty()`)
 
-**Última actualización:** Diciembre 2025  
-**Versión:** 1.0.0
+10. **Auditoría**: 
+    - Usa `@UseInterceptors(AuditInterceptor)` a nivel de controlador
+    - Aplica `@Audit({...})` en endpoints que modifican datos (CREATE, UPDATE, DELETE)
+    - Inyecta `@AuthUser() session: IToken` en métodos que requieren rastreo de usuario
+
+11. **Sesión de Usuario**:
+    - Usa `@AuthUser() session: IToken` en lugar de `@Request() req`
+    - Pasa `session` al servicio para rastrear `userCreateId` y `userUpdateId`
+    - La sesión incluye: `usuarioId`, `nombreCompleto`, `estaActivo`, `token`, `expireIn`, `client`
+
+---
