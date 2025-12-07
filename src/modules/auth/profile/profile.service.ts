@@ -1,11 +1,15 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/global/database/prisma.service';
 import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
 import { randomBytes } from 'node:crypto';
 import { compare, hash } from 'bcrypt';
 import { authenticator } from 'otplib';
 import { ChangePasswordInput, Enable2FAInput, Disable2FAInput } from '../dto/auth.input';
-import { UpdateProfileInput, VerifyPasswordInput, ListHistorialLoginArgsDto } from './dto/profile.input';
+import {
+  UpdateProfileInput,
+  VerifyPasswordInput,
+  ListHistorialLoginArgsDto,
+} from './dto/profile.input';
 import { TwoFactorSetup } from '../auth.entity';
 import { EmailService } from '../../../global/emails/email.service';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';

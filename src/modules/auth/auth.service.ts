@@ -4,22 +4,18 @@ import { dataResponseError, dataResponseSuccess, ResponseDTO } from 'src/common/
 import { randomBytes } from 'node:crypto';
 import { compare, hash } from 'bcrypt';
 import { authenticator } from 'otplib';
-import { toDataURL } from 'qrcode';
 import { parseUserAgent } from 'src/helpers/user-agent.helper';
 import dayjs from 'dayjs';
 import {
   RegistrarUserInput,
   LoginUserInput,
-  ChangePasswordInput,
   ForgotPasswordInput,
   ResetPasswordInput,
   VerifyEmailInput,
   RefreshTokenInput,
-  Enable2FAInput,
   Verify2FAInput,
-  Disable2FAInput,
 } from './dto/auth.input';
-import { AuthResponse, AuthUsuario, TwoFactorSetup, GoogleUserData } from './auth.entity';
+import { AuthResponse, AuthUsuario, GoogleUserData } from './auth.entity';
 import { TokenService } from '../../common/guards/token-auth.service';
 import { EmailService } from '../../global/emails/email.service';
 import { Usuario as UserModel } from '../../generated/prisma/client';
@@ -408,6 +404,8 @@ export class AuthService {
     if (!user.twoFactorEnabled && user.emailVerificado) {
       // Generar código OTP de 6 dígitos
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+      console.log('execute', dayjs);
 
       // Guardar OTP con expiración de 10 minutos
       const expirationTime = dayjs().add(10, 'minute').toDate(); // 10 minutos
@@ -1080,38 +1078,9 @@ export class AuthService {
         ipAddress || 'unknown',
       );
 
-      // Construir perfil de usuario
-      const userProfile: AuthUsuario = {
-        id: fullUser.id,
-        email: fullUser.email,
-        nombre: fullUser.nombre,
-        apellidos: fullUser.apellidos,
-        estaActivo: fullUser.estaActivo,
-        emailVerificado: fullUser.emailVerificado,
-        telefono: fullUser.telefono || null,
-        direccion: fullUser.direccion || null,
-        avatar: fullUser.avatar || null,
-        twoFactorEnabled: fullUser.twoFactorEnabled,
-      };
-
-      // Extraer permisos únicos
-      const permissions = new Set<string>();
-      fullUser.roles.forEach((userRole) => {
-        userRole.rol.rolPermisos.forEach((rolPermiso) => {
-          permissions.add(rolPermiso.permiso.nombre);
-        });
+      return dataResponseSuccess({
+        data: { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
       });
-
-      // Construir respuesta completa de autenticación
-      const response: AuthResponse = {
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        user: userProfile,
-        permissions: Array.from(permissions),
-        roles: fullUser.roles.map((userRole) => userRole.rol.nombre),
-      };
-
-      return dataResponseSuccess({ data: response as any });
     } catch (error) {
       Logger.error(error, 'Error al procesar autenticación de Google');
       return dataResponseError('Error al procesar autenticación de Google');

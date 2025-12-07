@@ -6,7 +6,6 @@ import {
   Body,
   Delete,
   Param,
-  Query,
   Put,
   UseInterceptors,
   UploadedFile,
@@ -15,7 +14,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ProfileService } from './profile.service';
 import { ApiResponse, ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { ChangePasswordInput, Enable2FAInput, Disable2FAInput } from '../dto/auth.input';
-import { UpdateProfileInput, VerifyPasswordInput, ListHistorialLoginArgsDto } from './dto/profile.input';
+import {
+  UpdateProfileInput,
+  VerifyPasswordInput,
+  ListHistorialLoginArgsDto,
+} from './dto/profile.input';
 import {
   ResponseProfileType,
   ResponsePermissionsType,

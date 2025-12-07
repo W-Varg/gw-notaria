@@ -21,7 +21,7 @@ export class TokenService {
   private getTokenInformacion(token: string): { tokenInformacion: IToken } {
     try {
       // Decodificar sin verificar (solo para extraer información)
-      const decoded = this.jwtService.decode(token) as any;
+      const decoded = this.jwtService.decode(token);
       let tokenV1 = false;
 
       if (decoded == null) {
