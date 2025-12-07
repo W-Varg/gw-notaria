@@ -1,9 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseInterceptors,
+} from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { CreateRolDto, ListRoleArgsDto, UpdateRoleDto } from './dto/roles.input.dto';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { PermisoEnum } from 'src/enums/permisos.enum';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Audit } from 'src/common/decorators/audit.decorator';
+import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from 'src/generated/prisma/enums';
 import {
   PaginateRolesType,
   ResponseRolDetailType,
@@ -12,9 +25,11 @@ import {
 } from './dto/roles.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 
 @ApiTags('[auth] Roles')
 @Controller('roles')
+@UseInterceptors(AuditInterceptor)
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
@@ -22,8 +37,14 @@ export class RolesController {
   @BearerAuthPermision([PermisoEnum.ROLES_CREAR])
   @ApiDescription('Crear un nuevo rol', [PermisoEnum.ROLES_CREAR])
   @ApiResponse({ status: 200, type: () => ResponseRolType })
-  create(@Body() inputDto: CreateRolDto) {
-    return this.rolesService.create(inputDto);
+  @Audit({
+    accion: TipoAccionEnum.CREATE,
+    modulo: 'admin',
+    tabla: 'Rol',
+    descripcion: 'Creación de nuevo rol',
+  })
+  create(@Body() inputDto: CreateRolDto, @AuthUser() session: IToken) {
+    return this.rolesService.create(inputDto, session);
   }
 
   @Get()
@@ -54,14 +75,30 @@ export class RolesController {
   @BearerAuthPermision([PermisoEnum.ROLES_EDITAR])
   @ApiResponse({ status: 200, type: () => ResponseRolType })
   @ApiDescription('Actualizar un rol por ID', [PermisoEnum.ROLES_EDITAR])
-  update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {
-    return this.rolesService.update(+id, updateRoleDto);
+  @Audit({
+    accion: TipoAccionEnum.UPDATE,
+    modulo: 'admin',
+    tabla: 'Rol',
+    descripcion: 'Actualización de rol',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateRoleDto: UpdateRoleDto,
+    @AuthUser() session: IToken,
+  ) {
+    return this.rolesService.update(+id, updateRoleDto, session);
   }
 
   @Delete(':id')
   @BearerAuthPermision([PermisoEnum.ROLES_ELIMINAR])
   @ApiResponse({ status: 200, type: () => ResponseRolType })
   @ApiDescription('Eliminar un rol por ID', [PermisoEnum.ROLES_ELIMINAR])
+  @Audit({
+    accion: TipoAccionEnum.DELETE,
+    modulo: 'admin',
+    tabla: 'Rol',
+    descripcion: 'Eliminación de rol',
+  })
   remove(@Param('id') id: string) {
     return this.rolesService.remove(+id);
   }

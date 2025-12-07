@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FaqService } from './faq.service';
 import { CreateFaqDto, UpdateFaqDto, ListFaqArgsDto } from './dto/faq.input.dto';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
@@ -7,9 +17,14 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PaginateFaqsType, ResponseFaqType, ResponseFaqsType } from './dto/faq.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { Audit } from 'src/common/decorators/audit.decorator';
+import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 
 @ApiTags('[admin] FAQs')
 @Controller('faqs')
+@UseInterceptors(AuditInterceptor)
 export class FaqController {
   constructor(private readonly faqService: FaqService) {}
 
@@ -17,8 +32,9 @@ export class FaqController {
   @BearerAuthPermision([PermisoEnum.FAQS_CREAR])
   @ApiDescription('Crear una nueva FAQ', [PermisoEnum.FAQS_CREAR])
   @ApiResponse({ status: 200, type: () => ResponseFaqType })
-  create(@Body() inputDto: CreateFaqDto) {
-    return this.faqService.create(inputDto);
+  @Audit({ accion: TipoAccionEnum.CREATE, modulo: 'faqs', tabla: 'logs_audit_logs' })
+  create(@Body() inputDto: CreateFaqDto, @AuthUser() sesion: IToken) {
+    return this.faqService.create(inputDto, sesion);
   }
 
   @Get()
@@ -49,6 +65,7 @@ export class FaqController {
   @BearerAuthPermision([PermisoEnum.FAQS_EDITAR])
   @ApiResponse({ status: 200, type: () => ResponseFaqType })
   @ApiDescription('Actualizar una FAQ por ID', [PermisoEnum.FAQS_EDITAR])
+  @Audit({ accion: TipoAccionEnum.UPDATE, modulo: 'faqs', tabla: 'logs_audit_logs' })
   update(@Param('id') id: string, @Body() updateDto: UpdateFaqDto) {
     return this.faqService.update(id, updateDto);
   }
@@ -57,6 +74,7 @@ export class FaqController {
   @BearerAuthPermision([PermisoEnum.FAQS_ELIMINAR])
   @ApiResponse({ status: 200, type: () => ResponseFaqType })
   @ApiDescription('Eliminar una FAQ por ID', [PermisoEnum.FAQS_ELIMINAR])
+  @Audit({ accion: TipoAccionEnum.DELETE, modulo: 'faqs', tabla: 'logs_audit_logs' })
   remove(@Param('id') id: string) {
     return this.faqService.remove(id);
   }

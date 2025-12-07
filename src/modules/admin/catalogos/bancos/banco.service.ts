@@ -6,12 +6,13 @@ import { Prisma } from 'src/generated/prisma/client';
 import { Banco } from './banco.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { IToken } from 'src/common/decorators/token.decorator';
 
 @Injectable()
 export class BancoService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(inputDto: CreateBancoDto) {
+  async create(inputDto: CreateBancoDto, session: IToken) {
     const exists = await this.prismaService.banco.findFirst({
       where: { nombre: inputDto.nombre },
       select: { id: true },
@@ -19,7 +20,10 @@ export class BancoService {
     if (exists) return dataResponseError('El banco ya existe');
 
     const result = await this.prismaService.banco.create({
-      data: inputDto,
+      data: {
+        ...inputDto,
+        userCreateId: session.usuarioId,
+      },
     });
     return dataResponseSuccess<Banco>({ data: result });
   }
@@ -90,7 +94,7 @@ export class BancoService {
     return dataResponseSuccess<Banco>({ data: item });
   }
 
-  async update(id: number, updateBancoDto: UpdateBancoDto) {
+  async update(id: number, updateBancoDto: UpdateBancoDto, session: IToken) {
     const exists = await this.prismaService.banco.findUnique({
       where: { id },
       select: { id: true },
@@ -107,7 +111,10 @@ export class BancoService {
 
     const result = await this.prismaService.banco.update({
       where: { id },
-      data: updateBancoDto,
+      data: {
+        ...updateBancoDto,
+        userUpdateId: session.usuarioId,
+      },
     });
 
     return dataResponseSuccess<Banco>({ data: result });

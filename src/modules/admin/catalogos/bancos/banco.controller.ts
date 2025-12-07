@@ -8,12 +8,16 @@ import {
   Delete,
   Query,
   ParseIntPipe,
+  UseInterceptors,
 } from '@nestjs/common';
+import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 import { BancoService } from './banco.service';
 import { CreateBancoDto, UpdateBancoDto, ListBancoArgsDto } from './dto/banco.input.dto';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { PermisoEnum } from 'src/enums/permisos.enum';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Audit } from 'src/common/decorators/audit.decorator';
+import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
 import {
   PaginateBancosType,
   ResponseBancoType,
@@ -22,9 +26,11 @@ import {
 } from './dto/banco.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { TipoAccionEnum } from 'src/generated/prisma/enums';
 
 @ApiTags('[admin] Bancos')
 @Controller('bancos')
+@UseInterceptors(AuditInterceptor)
 export class BancoController {
   constructor(private readonly bancoService: BancoService) {}
 
@@ -32,8 +38,14 @@ export class BancoController {
   @BearerAuthPermision([PermisoEnum.BANCOS_CREAR])
   @ApiDescription('Crear un nuevo banco', [PermisoEnum.BANCOS_CREAR])
   @ApiResponse({ status: 200, type: () => ResponseBancoType })
-  create(@Body() inputDto: CreateBancoDto) {
-    return this.bancoService.create(inputDto);
+  @Audit({
+    accion: TipoAccionEnum.CREATE,
+    modulo: 'catalogos',
+    tabla: 'Banco',
+    descripcion: 'Creación de nuevo banco',
+  })
+  create(@Body() inputDto: CreateBancoDto, @AuthUser() session: IToken) {
+    return this.bancoService.create(inputDto, session);
   }
 
   @Get()
@@ -64,14 +76,30 @@ export class BancoController {
   @BearerAuthPermision([PermisoEnum.BANCOS_EDITAR])
   @ApiResponse({ status: 200, type: () => ResponseBancoType })
   @ApiDescription('Actualizar un banco por ID', [PermisoEnum.BANCOS_EDITAR])
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateBancoDto: UpdateBancoDto) {
-    return this.bancoService.update(id, updateBancoDto);
+  @Audit({
+    accion: TipoAccionEnum.UPDATE,
+    modulo: 'catalogos',
+    tabla: 'Banco',
+    descripcion: 'Actualización de banco',
+  })
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateBancoDto: UpdateBancoDto,
+    @AuthUser() session: IToken,
+  ) {
+    return this.bancoService.update(id, updateBancoDto, session);
   }
 
   @Delete(':id')
   @BearerAuthPermision([PermisoEnum.BANCOS_ELIMINAR])
   @ApiResponse({ status: 200, type: () => ResponseBancoType })
   @ApiDescription('Eliminar un banco por ID', [PermisoEnum.BANCOS_ELIMINAR])
+  @Audit({
+    accion: TipoAccionEnum.DELETE,
+    modulo: 'catalogos',
+    tabla: 'Banco',
+    descripcion: 'Eliminación de banco',
+  })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.bancoService.remove(id);
   }

@@ -10,12 +10,13 @@ import { Prisma } from 'src/generated/prisma/client';
 import { CuentaBancaria } from './cuenta-bancaria.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { IToken } from 'src/common/decorators/token.decorator';
 
 @Injectable()
 export class CuentaBancariaService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(inputDto: CreateCuentaBancariaDto) {
+  async create(inputDto: CreateCuentaBancariaDto, session: IToken) {
     // Verificar que el banco existe
     const bancoExists = await this.prismaService.banco.findUnique({
       where: { id: inputDto.bancoId },
@@ -31,7 +32,10 @@ export class CuentaBancariaService {
     if (exists) return dataResponseError('Ya existe una cuenta bancaria con ese número');
 
     const result = await this.prismaService.cuentaBancaria.create({
-      data: inputDto,
+      data: {
+        ...inputDto,
+        userCreateId: session.usuarioId,
+      },
       include: { banco: true },
     });
     return dataResponseSuccess<CuentaBancaria>({ data: result });
@@ -110,7 +114,7 @@ export class CuentaBancariaService {
     return dataResponseSuccess<CuentaBancaria>({ data: item });
   }
 
-  async update(id: number, updateCuentaBancariaDto: UpdateCuentaBancariaDto) {
+  async update(id: number, updateCuentaBancariaDto: UpdateCuentaBancariaDto, session: IToken) {
     const exists = await this.prismaService.cuentaBancaria.findUnique({
       where: { id },
       select: { id: true },
@@ -137,7 +141,10 @@ export class CuentaBancariaService {
 
     const result = await this.prismaService.cuentaBancaria.update({
       where: { id },
-      data: updateCuentaBancariaDto,
+      data: {
+        ...updateCuentaBancariaDto,
+        userUpdateId: session.usuarioId,
+      },
       include: { banco: true },
     });
 

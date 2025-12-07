@@ -11,18 +11,19 @@ async function main() {
   // Limpiar la base de datos
   await clearDatabase();
 
+  // Crear usuarios primero para obtener el ID del admin
+  const usuarios = await createUsuarios();
+  const adminUserId = usuarios.adminUser.id;
+
   // Crear roles básicos
-  const roles = await createRoles();
+  const roles = await createRoles(adminUserId);
   console.info(`Created ${roles.allRoles.length} roles`);
 
   // Crear permisos
-  await createPermisos();
+  await createPermisos(adminUserId);
 
   // Asignar permisos a roles
   await assignPermisosToRoles(roles.allRoles.map((r) => r.id));
-
-  // Crear usuarios
-  const usuarios = await createUsuarios();
 
   // Asignar roles a usuarios
   await assignRolesToUsers(usuarios.adminUser.id, roles.adminRole.id);
@@ -33,7 +34,11 @@ async function main() {
   );
   await assignRolesToUsers(
     usuarios.vetUser.id,
-    roles.allRoles.find((r) => r.nombre === 'EMPLOYEE').id,
+    roles.allRoles.find((r) => r.nombre === 'CLEANING_STAFF').id,
+  );
+  await assignRolesToUsers(
+    usuarios.groomerUser.id,
+    roles.allRoles.find((r) => r.nombre === 'CONTENT_CREATOR').id,
   );
 
   // Asignar TODOS los roles al usuario admin (excepto el que ya tiene asignado)
@@ -43,13 +48,13 @@ async function main() {
   );
 
   // Crear categorías
-  await createCategorias();
+  await createCategorias(adminUserId);
 
   // Crear configuraciones de aplicación
-  await createConfiguracionAplicacion();
+  await createConfiguracionAplicacion(adminUserId);
 
   // Crear FAQs
-  await createFaqs();
+  await createFaqs(adminUserId);
 
   console.info('Seeding finished');
 }
@@ -66,13 +71,13 @@ async function clearDatabase() {
   await prisma.usuario.deleteMany();
 }
 
-async function createRoles() {
+async function createRoles(userId: string) {
   const roles = [
-    { nombre: 'ADMIN', descripcion: 'Administrador del sistema' },
-    { nombre: 'CLIENT', descripcion: 'Cliente del sistema' },
-    { nombre: 'MANAGER', descripcion: 'Gerente de sucursal' },
-    { nombre: 'CLEANING_STAFF', descripcion: 'Personal de limpieza' },
-    { nombre: 'CONTENT_CREATOR', descripcion: 'Creador de contenido' },
+    { nombre: 'ADMIN', descripcion: 'Administrador del sistema', userCreateId: userId },
+    { nombre: 'CLIENT', descripcion: 'Cliente del sistema', userCreateId: userId },
+    { nombre: 'MANAGER', descripcion: 'Gerente de sucursal', userCreateId: userId },
+    { nombre: 'CLEANING_STAFF', descripcion: 'Personal de limpieza', userCreateId: userId },
+    { nombre: 'CONTENT_CREATOR', descripcion: 'Creador de contenido', userCreateId: userId },
   ];
 
   const createdRoles = [];
@@ -90,9 +95,10 @@ async function createRoles() {
   return { adminRole, clientRole, allRoles: createdRoles };
 }
 
-async function createPermisos() {
+async function createPermisos(userId: string) {
   // Elimina todos los permisos existentes y crea solo los definidos en permisos.data.ts
   await prisma.permiso.deleteMany();
+  // Permiso model doesn't have userCreateId field, only userUpdateId
   await prisma.permiso.createMany({ data: permisosSeed });
   return await prisma.permiso.findMany();
 }
@@ -200,12 +206,12 @@ async function assignAllRolesToAdmin(userId: string, allRoles: any[]) {
   }
 }
 
-async function createCategorias() {
+async function createCategorias(userId: string) {
   const categorias = [
-    { nombre: 'Alimentos', descripcion: 'Alimentos para mascotas' },
-    { nombre: 'Accesorios', descripcion: 'Accesorios para mascotas' },
-    { nombre: 'Higiene', descripcion: 'Productos de higiene para mascotas' },
-    { nombre: 'Juguetes', descripcion: 'Juguetes para mascotas' },
+    { nombre: 'Alimentos', descripcion: 'Alimentos para mascotas', userCreateId: userId },
+    { nombre: 'Accesorios', descripcion: 'Accesorios para mascotas', userCreateId: userId },
+    { nombre: 'Higiene', descripcion: 'Productos de higiene para mascotas', userCreateId: userId },
+    { nombre: 'Juguetes', descripcion: 'Juguetes para mascotas', userCreateId: userId },
   ];
 
   const categoriasCreadas = [];
@@ -220,7 +226,7 @@ async function createCategorias() {
   return categoriasCreadas;
 }
 
-async function createConfiguracionAplicacion() {
+async function createConfiguracionAplicacion(userId: string) {
   const configuraciones = [
     // Configuraciones del sistema
     {
@@ -230,6 +236,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'sistema',
       descripcion: 'Indica si el sistema está en modo mantenimiento',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'sistema_tema_color',
@@ -238,6 +245,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'apariencia',
       descripcion: 'Color principal del tema del sistema',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'sistema_nombre',
@@ -246,6 +254,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'sistema',
       descripcion: 'Nombre de la aplicación',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'sistema_version',
@@ -254,6 +263,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'sistema',
       descripcion: 'Versión actual del sistema',
       esEditable: false,
+      userCreateId: userId,
     },
 
     // Políticas de negocio
@@ -264,6 +274,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'politicas',
       descripcion: 'Términos y condiciones del sistema',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'politica_privacidad',
@@ -272,6 +283,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'politicas',
       descripcion: 'Política de privacidad del sistema',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'politica_devoluciones',
@@ -280,6 +292,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'politicas',
       descripcion: 'Política de devoluciones',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'politica_envios',
@@ -288,6 +301,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'politicas',
       descripcion: 'Política de envíos',
       esEditable: true,
+      userCreateId: userId,
     },
 
     // Configuraciones de email
@@ -298,6 +312,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'emails',
       descripcion: 'Correo electrónico del remitente',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'email_bienvenida_asunto',
@@ -306,6 +321,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'emails',
       descripcion: 'Asunto del correo de bienvenida',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'email_bienvenida_cuerpo',
@@ -314,6 +330,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'emails',
       descripcion: 'Cuerpo del correo de bienvenida',
       esEditable: true,
+      userCreateId: userId,
     },
 
     // Configuraciones de seguridad
@@ -324,6 +341,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'seguridad',
       descripcion: 'Máximo número de intentos de inicio de sesión fallidos',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'seguridad_bloqueo_tiempo',
@@ -332,6 +350,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'seguridad',
       descripcion: 'Tiempo de bloqueo en minutos tras intentos fallidos',
       esEditable: true,
+      userCreateId: userId,
     },
 
     // Configuraciones de apariencia
@@ -342,6 +361,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'apariencia',
       descripcion: 'URL del logo del sistema',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'apariencia_favicon',
@@ -350,6 +370,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'apariencia',
       descripcion: 'URL del favicon del sistema',
       esEditable: true,
+      userCreateId: userId,
     },
 
     // Configuraciones de contacto/negocio
@@ -360,6 +381,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'negocio',
       descripcion: 'Correo de contacto del sistema',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'contacto_telefono',
@@ -368,6 +390,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'negocio',
       descripcion: 'Teléfono de contacto del sistema',
       esEditable: true,
+      userCreateId: userId,
     },
 
     // Configuraciones de horarios
@@ -378,6 +401,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'negocio',
       descripcion: 'Horario de atención de lunes a viernes',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'horario_sabado',
@@ -386,6 +410,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'negocio',
       descripcion: 'Horario de atención los sábados',
       esEditable: true,
+      userCreateId: userId,
     },
     {
       clave: 'horario_domingo',
@@ -394,6 +419,7 @@ async function createConfiguracionAplicacion() {
       categoria: 'negocio',
       descripcion: 'Horario de atención los domingos',
       esEditable: true,
+      userCreateId: userId,
     },
   ];
 
@@ -404,10 +430,10 @@ async function createConfiguracionAplicacion() {
   console.info(`Created ${configuraciones.length} configuraciones de aplicación`);
 }
 
-async function createFaqs() {
+async function createFaqs(userId: string) {
   const faqs = [
     {
-      clave: 'faq',
+      clave: 'faq_documentos_escritura',
       valor: JSON.stringify({
         pregunta: '¿Cuáles son los documentos necesarios para una escritura pública?',
         respuesta:
@@ -420,9 +446,10 @@ async function createFaqs() {
       categoria: 'faqs',
       descripcion: '¿Cuáles son los documentos necesarios para una escritura pública?',
       esEditable: true,
+      userCreateId: userId,
     },
     {
-      clave: 'faq',
+      clave: 'faq_tiempo_legalizacion',
       valor: JSON.stringify({
         pregunta: '¿Cuánto tiempo tarda el proceso de legalización de documentos?',
         respuesta:
@@ -435,9 +462,10 @@ async function createFaqs() {
       categoria: 'faqs',
       descripcion: '¿Cuánto tiempo tarda el proceso de legalización de documentos?',
       esEditable: true,
+      userCreateId: userId,
     },
     {
-      clave: 'faq',
+      clave: 'faq_costos_servicios',
       valor: JSON.stringify({
         pregunta: '¿Cuáles son los costos de los servicios notariales?',
         respuesta:
@@ -450,9 +478,10 @@ async function createFaqs() {
       categoria: 'faqs',
       descripcion: '¿Cuáles son los costos de los servicios notariales?',
       esEditable: true,
+      userCreateId: userId,
     },
     {
-      clave: 'faq',
+      clave: 'faq_agendar_cita',
       valor: JSON.stringify({
         pregunta: '¿Necesito agendar una cita previa?',
         respuesta:
@@ -465,9 +494,10 @@ async function createFaqs() {
       categoria: 'faqs',
       descripcion: '¿Necesito agendar una cita previa?',
       esEditable: true,
+      userCreateId: userId,
     },
     {
-      clave: 'faq',
+      clave: 'faq_poder_notarial',
       valor: JSON.stringify({
         pregunta: '¿Qué es un poder notarial y cuándo lo necesito?',
         respuesta:
@@ -480,9 +510,10 @@ async function createFaqs() {
       categoria: 'faqs',
       descripcion: '¿Qué es un poder notarial y cuándo lo necesito?',
       esEditable: true,
+      userCreateId: userId,
     },
     {
-      clave: 'faq',
+      clave: 'faq_documentos_internacional',
       valor: JSON.stringify({
         pregunta: '¿Puedo legalizar documentos para uso internacional?',
         respuesta:
@@ -495,9 +526,10 @@ async function createFaqs() {
       categoria: 'faqs',
       descripcion: '¿Puedo legalizar documentos para uso internacional?',
       esEditable: true,
+      userCreateId: userId,
     },
     {
-      clave: 'faq',
+      clave: 'faq_validez_documento',
       valor: JSON.stringify({
         pregunta: '¿Qué validez tiene un documento notariado?',
         respuesta:
@@ -510,9 +542,10 @@ async function createFaqs() {
       categoria: 'faqs',
       descripcion: '¿Qué validez tiene un documento notariado?',
       esEditable: true,
+      userCreateId: userId,
     },
     {
-      clave: 'faq',
+      clave: 'faq_asesoria_legal',
       valor: JSON.stringify({
         pregunta: '¿Ofrecen asesoría legal gratuita?',
         respuesta:
@@ -525,6 +558,7 @@ async function createFaqs() {
       categoria: 'faqs',
       descripcion: '¿Ofrecen asesoría legal gratuita?',
       esEditable: true,
+      userCreateId: userId,
     },
   ];
 

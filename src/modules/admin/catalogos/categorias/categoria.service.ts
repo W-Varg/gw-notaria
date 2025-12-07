@@ -10,12 +10,13 @@ import { Prisma } from 'src/generated/prisma/client';
 import { Categoria } from './categoria.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { IToken } from 'src/common/decorators/token.decorator';
 
 @Injectable()
 export class CategoriaService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(inputDto: CreateCategoriaDto) {
+  async create(inputDto: CreateCategoriaDto, session: IToken) {
     const exists = await this.prismaService.categoria.findUnique({
       where: { nombre: inputDto.nombre },
       select: { id: true },
@@ -23,7 +24,10 @@ export class CategoriaService {
     if (exists) return dataResponseError('La categoría ya existe');
 
     const result = await this.prismaService.categoria.create({
-      data: inputDto,
+      data: {
+        ...inputDto,
+        userCreateId: session.usuarioId,
+      },
     });
     return dataResponseSuccess<Categoria>({ data: result });
   }
@@ -88,7 +92,7 @@ export class CategoriaService {
     return dataResponseSuccess<Categoria>({ data: item });
   }
 
-  async update(id: string, updateCategoriaDto: UpdateCategoriaDto) {
+  async update(id: string, updateCategoriaDto: UpdateCategoriaDto, session: IToken) {
     const exists = await this.prismaService.categoria.findUnique({
       where: { id },
       select: { id: true },
@@ -105,7 +109,10 @@ export class CategoriaService {
 
     const result = await this.prismaService.categoria.update({
       where: { id },
-      data: updateCategoriaDto,
+      data: {
+        ...updateCategoriaDto,
+        userUpdateId: session.usuarioId,
+      },
     });
 
     return dataResponseSuccess<Categoria>({ data: result });

@@ -5,6 +5,7 @@ import { ScheduledTasksModule } from './scheduled/scheduled-tasks.module';
 import { FileStorageService } from './services/file-storage.service';
 import { QrCodeService } from './services/qr-code.service';
 import { UserValidationService } from './services/user-validation.service';
+import { AuditModule } from './services/audit.module';
 
 @Global()
 @Module({
@@ -12,6 +13,7 @@ import { UserValidationService } from './services/user-validation.service';
     DatabaseModule,
     ScheduledTasksModule, // Módulo de tareas programadas
     EmailModule,
+    AuditModule, // Módulo de auditoría
   ],
   providers: [FileStorageService, QrCodeService, UserValidationService],
   exports: [FileStorageService, QrCodeService, UserValidationService],

@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseInterceptors,
+} from '@nestjs/common';
+import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 import { CategoriaService } from './categoria.service';
 import {
   CreateCategoriaDto,
@@ -16,9 +27,13 @@ import {
 } from './dto/categoria.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { Audit } from 'src/common/decorators/audit.decorator';
+import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from 'src/generated/prisma/enums';
 
 @ApiTags('[admin] Categorías')
 @Controller('categorias')
+@UseInterceptors(AuditInterceptor)
 export class CategoriaController {
   constructor(private readonly categoriaService: CategoriaService) {}
 
@@ -26,8 +41,14 @@ export class CategoriaController {
   @BearerAuthPermision([PermisoEnum.CATEGORIAS_CREAR])
   @ApiDescription('Crear una nueva categoría', [PermisoEnum.CATEGORIAS_CREAR])
   @ApiResponse({ status: 200, type: () => ResponseCategoriaType })
-  create(@Body() inputDto: CreateCategoriaDto) {
-    return this.categoriaService.create(inputDto);
+  @Audit({
+    accion: TipoAccionEnum.CREATE,
+    modulo: 'catalogos',
+    tabla: 'Categoria',
+    descripcion: 'Crear nueva categoría',
+  })
+  create(@Body() inputDto: CreateCategoriaDto, @AuthUser() session: IToken) {
+    return this.categoriaService.create(inputDto, session);
   }
 
   @Get()
@@ -60,14 +81,30 @@ export class CategoriaController {
   @BearerAuthPermision([PermisoEnum.CATEGORIAS_EDITAR])
   @ApiResponse({ status: 200, type: () => ResponseCategoriaType })
   @ApiDescription('Actualizar una categoría por ID', [PermisoEnum.CATEGORIAS_EDITAR])
-  update(@Param('id') id: string, @Body() updateCategoriaDto: UpdateCategoriaDto) {
-    return this.categoriaService.update(id, updateCategoriaDto);
+  @Audit({
+    accion: TipoAccionEnum.UPDATE,
+    modulo: 'catalogos',
+    tabla: 'Categoria',
+    descripcion: 'Actualizar categoría',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateCategoriaDto: UpdateCategoriaDto,
+    @AuthUser() session: IToken,
+  ) {
+    return this.categoriaService.update(id, updateCategoriaDto, session);
   }
 
   @Delete(':id')
   @BearerAuthPermision([PermisoEnum.CATEGORIAS_ELIMINAR])
   @ApiResponse({ status: 200, type: () => ResponseCategoriaType })
   @ApiDescription('Eliminar una categoría por ID', [PermisoEnum.CATEGORIAS_ELIMINAR])
+  @Audit({
+    accion: TipoAccionEnum.DELETE,
+    modulo: 'catalogos',
+    tabla: 'Categoria',
+    descripcion: 'Eliminar categoría',
+  })
   remove(@Param('id') id: string) {
     return this.categoriaService.remove(id);
   }

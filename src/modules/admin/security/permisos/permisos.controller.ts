@@ -1,9 +1,13 @@
-import { Controller, Get, Post, Body, Query, Patch, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Patch, Param, UseInterceptors } from '@nestjs/common';
+import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 import { PermisosService } from './permisos.service';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { PermisoEnum } from 'src/enums/permisos.enum';
+import { Audit } from 'src/common/decorators/audit.decorator';
+import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from 'src/generated/prisma/enums';
 import { ListPermisosArgsDto, UpdatePermisoActivoDto } from './dto/permisos.dto';
 import {
   ResponseMessageType,
@@ -15,6 +19,7 @@ import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 
 @ApiTags('[auth] Permisos')
 @Controller('permisos')
+@UseInterceptors(AuditInterceptor)
 export class PermisosController {
   constructor(private readonly permisosService: PermisosService) {}
 
@@ -38,6 +43,12 @@ export class PermisosController {
   @BearerAuthPermision([PermisoEnum.ROLES_EDITAR])
   @ApiDescription('Asignar permisos a un rol', [PermisoEnum.ROLES_EDITAR])
   @ApiResponse({ status: 200, type: () => ResponseRolDetailType })
+  @Audit({
+    accion: TipoAccionEnum.UPDATE,
+    modulo: 'admin',
+    tabla: 'Permiso',
+    descripcion: 'Asignación de permisos a rol',
+  })
   assign(@Body() body: { roleId: number; permisos: string[] }) {
     return this.permisosService.assignToRoleByNames(body.roleId, body.permisos);
   }
@@ -46,6 +57,12 @@ export class PermisosController {
   @BearerAuthPermision([PermisoEnum.PERMISOS_EDITAR])
   @ApiDescription('Cambiar el estado activo de un permiso', [PermisoEnum.PERMISOS_EDITAR])
   @ApiResponse({ status: 200, type: () => ResponseMessageType })
+  @Audit({
+    accion: TipoAccionEnum.UPDATE,
+    modulo: 'admin',
+    tabla: 'Permiso',
+    descripcion: 'Cambio de estado activo de permiso',
+  })
   updateActivo(@Param('id') id: string, @Body() updateActivoDto: UpdatePermisoActivoDto) {
     return this.permisosService.updateActivo(+id, updateActivoDto);
   }

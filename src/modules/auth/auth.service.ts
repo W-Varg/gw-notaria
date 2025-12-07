@@ -18,8 +18,9 @@ import {
 import { AuthResponse, AuthUsuario, GoogleUserData } from './auth.entity';
 import { TokenService } from '../../common/guards/token-auth.service';
 import { EmailService } from '../../global/emails/email.service';
-import { Usuario as UserModel } from '../../generated/prisma/client';
+import { TipoAccionEnum, Usuario as UserModel } from '../../generated/prisma/client';
 import { TokenTemporalTipoEnum, TokenTemporalClaveEnum } from 'src/enums';
+import { AuditService } from 'src/global/services/audit.service';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +28,7 @@ export class AuthService {
     private readonly prismaService: PrismaService,
     private readonly tokenService: TokenService,
     private readonly emailService: EmailService,
+    private readonly auditService: AuditService,
   ) {}
 
   /**
@@ -287,6 +289,14 @@ export class AuthService {
     });
 
     if (!user) {
+      // Registrar intento fallido en audit log
+      await this.auditService.logLoginAttempt({
+        email,
+        exitoso: false,
+        motivoFallo: 'Usuario no encontrado',
+        ip: ipAddress,
+        userAgent,
+      });
       return dataResponseError('no existe el usuario');
     }
 
@@ -301,6 +311,17 @@ export class AuthService {
         ipAddress,
         'Contraseña incorrecta',
       );
+
+      // Registrar en audit log
+      await this.auditService.logLoginAttempt({
+        email: user.email,
+        exitoso: false,
+        motivoFallo: 'Contraseña incorrecta',
+        ip: ipAddress,
+        userAgent,
+        intentosSospechoso: false,
+      });
+
       return dataResponseError('Credenciales inválidas');
     }
 
@@ -313,6 +334,17 @@ export class AuthService {
         ipAddress,
         'Email no verificado',
       );
+
+      // Registrar en audit log
+      await this.auditService.logLoginAttempt({
+        email: user.email,
+        exitoso: false,
+        motivoFallo: 'Email no verificado',
+        ip: ipAddress,
+        userAgent,
+        intentosSospechoso: false,
+      });
+
       return dataResponseError(
         'Debes verificar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.',
       );
@@ -321,6 +353,17 @@ export class AuthService {
     // Verificar que el usuario esté activo
     if (!user.estaActivo) {
       await this.registrarHistorialLogin(user.id, false, userAgent, ipAddress, 'Usuario inactivo');
+
+      // Registrar en audit log
+      await this.auditService.logLoginAttempt({
+        email: user.email,
+        exitoso: false,
+        motivoFallo: 'Usuario inactivo',
+        ip: ipAddress,
+        userAgent,
+        intentosSospechoso: false,
+      });
+
       return dataResponseError('Tu cuenta se encuentra inactiva. Contacta al administrador.');
     }
 
@@ -336,6 +379,25 @@ export class AuthService {
 
       // Registrar historial de login exitoso
       await this.registrarHistorialLogin(user.id, true, userAgent, ipAddress);
+
+      // Registrar en audit log
+      await this.auditService.logLoginAttempt({
+        email: user.email,
+        exitoso: true,
+        ip: ipAddress,
+        userAgent,
+      });
+
+      await this.auditService.logAudit({
+        usuarioId: user.id,
+        accion: TipoAccionEnum.LOGIN,
+        modulo: 'auth',
+        tabla: 'Usuario',
+        registroId: user.id,
+        descripcion: `Usuario ${user.email} inició sesión desde dispositivo de confianza`,
+        usuarioIp: ipAddress,
+        userAgent,
+      });
 
       // Crear sesión activa
       await this.crearSesion(user.id, tokens.refreshToken, userAgent, ipAddress);
@@ -501,7 +563,25 @@ export class AuthService {
     return dataResponseSuccess<AuthResponse>({ data: response });
   }
 
-  logout(_userId: string) {
+  async logout(userId: string) {
+    // Obtener información del usuario para el log
+    const user = await this.prismaService.usuario.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, nombre: true },
+    });
+
+    if (user) {
+      // Registrar logout en audit log
+      await this.auditService.logAudit({
+        usuarioId: user.id,
+        accion: TipoAccionEnum.LOGOUT,
+        modulo: 'auth',
+        tabla: 'Usuario',
+        registroId: user.id,
+        descripcion: `Usuario ${user.email} cerró sesión`,
+      });
+    }
+
     // En un sistema real, aquí invalidarías el refresh token
     // Por simplicidad, solo retornamos un mensaje de éxito
     return dataResponseSuccess<string>({ data: 'Sesión cerrada exitosamente' });
@@ -925,6 +1005,17 @@ export class AuthService {
         ipAddress,
         'Código 2FA inválido',
       );
+
+      // Registrar en audit log
+      await this.auditService.logLoginAttempt({
+        email: user.email,
+        exitoso: false,
+        motivoFallo: 'Código 2FA inválido',
+        ip: ipAddress,
+        userAgent,
+        intentosSospechoso: false,
+      });
+
       return dataResponseError('Código de verificación inválido');
     }
 
@@ -937,6 +1028,25 @@ export class AuthService {
 
     // Registrar historial de login exitoso
     await this.registrarHistorialLogin(user.id, true, userAgent, ipAddress);
+
+    // Registrar en audit log - Login exitoso con 2FA
+    await this.auditService.logLoginAttempt({
+      email: user.email,
+      exitoso: true,
+      ip: ipAddress,
+      userAgent,
+    });
+
+    await this.auditService.logAudit({
+      usuarioId: user.id,
+      accion: TipoAccionEnum.LOGIN,
+      modulo: 'auth',
+      tabla: 'Usuario',
+      registroId: user.id,
+      descripcion: `Usuario ${user.email} completó login con verificación 2FA`,
+      usuarioIp: ipAddress,
+      userAgent,
+    });
 
     // Crear sesión activa
     await this.crearSesion(user.id, tokens.refreshToken, userAgent, ipAddress);

@@ -7,13 +7,14 @@ import {
   ListNotificacionArgsDto,
 } from './dto/notificacion.input.dto';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
+import { IToken } from 'src/common/decorators/token.decorator';
 
 @Injectable()
 export class NotificacionService {
   constructor(private readonly prisma: PrismaService) {}
 
   // ==================== CREATE ====================
-  async create(createDto: CreateNotificacionDto) {
+  async create(createDto: CreateNotificacionDto, session: IToken) {
     const notificacion = await this.prisma.notificacion.create({
       data: {
         usuarioId: createDto.usuarioId,
@@ -23,6 +24,7 @@ export class NotificacionService {
         leida: createDto.leida || false,
         icono: createDto.icono,
         ruta: createDto.ruta,
+        userCreateId: session.usuarioId,
       },
     });
 
@@ -86,7 +88,7 @@ export class NotificacionService {
   }
 
   // ==================== UPDATE ====================
-  async update(id: string, updateDto: UpdateNotificacionDto) {
+  async update(id: string, updateDto: UpdateNotificacionDto, session: IToken) {
     await this.findOne(id); // Verifica existencia
 
     const notificacion = await this.prisma.notificacion.update({
@@ -98,6 +100,7 @@ export class NotificacionService {
         leida: updateDto.leida,
         icono: updateDto.icono,
         ruta: updateDto.ruta,
+        userUpdateId: session.usuarioId,
       },
     });
 

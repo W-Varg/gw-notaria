@@ -1,0 +1,129 @@
+### Audit System Testing
+### This file tests the complete audit logging system
+
+@baseUrl = http://localhost:3000/api
+@token = YOUR_ACCESS_TOKEN_HERE
+
+### 1. Login with valid credentials (should log successful login)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "password123",
+  "userAgent": "Mozilla/5.0 (Test Browser) Audit Test",
+  "ipAddress": "127.0.0.1"
+}
+
+### 2. Login with invalid password (should log failed attempt)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "wrongpassword",
+  "userAgent": "Mozilla/5.0 (Test Browser) Audit Test",
+  "ipAddress": "127.0.0.1"
+}
+
+### 3. Create FAQ (should log CREATE action)
+POST {{baseUrl}}/admin/faqs
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "pregunta": "¿Cómo funciona el sistema de auditoría?",
+  "respuesta": "El sistema registra todas las acciones importantes de los usuarios",
+  "orden": 1,
+  "estaActivo": true
+}
+
+### 4. Update FAQ (should log UPDATE action with before/after data)
+PATCH {{baseUrl}}/admin/faqs/FAQ_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "pregunta": "¿Cómo funciona el sistema de auditoría actualizado?",
+  "respuesta": "El sistema registra todas las acciones con datos antes y después",
+  "orden": 2
+}
+
+### 5. Delete FAQ (should log DELETE action)
+DELETE {{baseUrl}}/admin/faqs/FAQ_ID_HERE
+Authorization: Bearer {{token}}
+
+### 6. Create Categoria (should log CREATE action)
+POST {{baseUrl}}/admin/categorias
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre": "Categoría de Prueba Auditoría",
+  "descripcion": "Esta es una categoría para probar el sistema de auditoría",
+  "estaActivo": true
+}
+
+### 7. Update Categoria (should log UPDATE action)
+PATCH {{baseUrl}}/admin/categorias/CATEGORIA_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre": "Categoría de Prueba Auditoría Modificada",
+  "descripcion": "Descripción actualizada para verificar el tracking de cambios"
+}
+
+### 8. Delete Categoria (should log DELETE action)
+DELETE {{baseUrl}}/admin/categorias/CATEGORIA_ID_HERE
+Authorization: Bearer {{token}}
+
+### 9. Logout (should log LOGOUT action)
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{token}}
+
+### === QUERY AUDIT LOGS ===
+
+### 10. Get all audit logs
+GET {{baseUrl}}/admin/logs/audit?limite=20&pagina=1
+Authorization: Bearer {{token}}
+
+### 11. Get audit logs filtered by action
+GET {{baseUrl}}/admin/logs/audit?accion=CREATE&limite=10
+Authorization: Bearer {{token}}
+
+### 12. Get audit logs filtered by module
+GET {{baseUrl}}/admin/logs/audit?modulo=faqs&limite=10
+Authorization: Bearer {{token}}
+
+### 13. Get audit logs filtered by user
+GET {{baseUrl}}/admin/logs/audit?usuarioId=USER_ID_HERE&limite=10
+Authorization: Bearer {{token}}
+
+### 14. Get audit stats
+GET {{baseUrl}}/admin/logs/audit/stats
+Authorization: Bearer {{token}}
+
+### 15. Get login attempts
+GET {{baseUrl}}/admin/logs/login-attempts?limite=10
+Authorization: Bearer {{token}}
+
+### 16. Get login attempts (failed only)
+GET {{baseUrl}}/admin/logs/login-attempts?exito=false&limite=10
+Authorization: Bearer {{token}}
+
+### 17. Get system logs
+GET {{baseUrl}}/admin/logs/system?limite=10
+Authorization: Bearer {{token}}
+
+### 18. Get error logs
+GET {{baseUrl}}/admin/logs/errors?limite=10
+Authorization: Bearer {{token}}
+
+### 19. Get data change history for specific record
+GET {{baseUrl}}/admin/logs/data-changes/Faq/FAQ_ID_HERE
+Authorization: Bearer {{token}}
+
+### 20. Get access logs
+GET {{baseUrl}}/admin/logs/access?limite=10
+Authorization: Bearer {{token}}

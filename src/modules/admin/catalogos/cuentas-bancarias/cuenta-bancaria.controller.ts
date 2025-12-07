@@ -8,7 +8,9 @@ import {
   Delete,
   Query,
   ParseIntPipe,
+  UseInterceptors,
 } from '@nestjs/common';
+import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 import { CuentaBancariaService } from './cuenta-bancaria.service';
 import {
   CreateCuentaBancariaDto,
@@ -18,6 +20,9 @@ import {
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { PermisoEnum } from 'src/enums/permisos.enum';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Audit } from 'src/common/decorators/audit.decorator';
+import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from 'src/generated/prisma/enums';
 import {
   PaginateCuentasBancariasType,
   ResponseCuentaBancariaType,
@@ -29,6 +34,7 @@ import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 
 @ApiTags('[admin] Cuentas Bancarias')
 @Controller('cuentas-bancarias')
+@UseInterceptors(AuditInterceptor)
 export class CuentaBancariaController {
   constructor(private readonly cuentaBancariaService: CuentaBancariaService) {}
 
@@ -36,8 +42,14 @@ export class CuentaBancariaController {
   @BearerAuthPermision([PermisoEnum.CUENTAS_BANCARIAS_CREAR])
   @ApiDescription('Crear una nueva cuenta bancaria', [PermisoEnum.CUENTAS_BANCARIAS_CREAR])
   @ApiResponse({ status: 200, type: () => ResponseCuentaBancariaType })
-  create(@Body() inputDto: CreateCuentaBancariaDto) {
-    return this.cuentaBancariaService.create(inputDto);
+  @Audit({
+    accion: TipoAccionEnum.CREATE,
+    modulo: 'catalogos',
+    tabla: 'CuentaBancaria',
+    descripcion: 'Creación de nueva cuenta bancaria',
+  })
+  create(@Body() inputDto: CreateCuentaBancariaDto, @AuthUser() session: IToken) {
+    return this.cuentaBancariaService.create(inputDto, session);
   }
 
   @Get()
@@ -70,17 +82,30 @@ export class CuentaBancariaController {
   @BearerAuthPermision([PermisoEnum.CUENTAS_BANCARIAS_EDITAR])
   @ApiResponse({ status: 200, type: () => ResponseCuentaBancariaType })
   @ApiDescription('Actualizar una cuenta bancaria por ID', [PermisoEnum.CUENTAS_BANCARIAS_EDITAR])
+  @Audit({
+    accion: TipoAccionEnum.UPDATE,
+    modulo: 'catalogos',
+    tabla: 'CuentaBancaria',
+    descripcion: 'Actualización de cuenta bancaria',
+  })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCuentaBancariaDto: UpdateCuentaBancariaDto,
+    @AuthUser() session: IToken,
   ) {
-    return this.cuentaBancariaService.update(id, updateCuentaBancariaDto);
+    return this.cuentaBancariaService.update(id, updateCuentaBancariaDto, session);
   }
 
   @Delete(':id')
   @BearerAuthPermision([PermisoEnum.CUENTAS_BANCARIAS_ELIMINAR])
   @ApiResponse({ status: 200, type: () => ResponseCuentaBancariaType })
   @ApiDescription('Eliminar una cuenta bancaria por ID', [PermisoEnum.CUENTAS_BANCARIAS_ELIMINAR])
+  @Audit({
+    accion: TipoAccionEnum.DELETE,
+    modulo: 'catalogos',
+    tabla: 'CuentaBancaria',
+    descripcion: 'Eliminación de cuenta bancaria',
+  })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.cuentaBancariaService.remove(id);
   }

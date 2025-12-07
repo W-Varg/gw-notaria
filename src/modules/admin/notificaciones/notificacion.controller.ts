@@ -6,9 +6,10 @@ import {
   Patch,
   Param,
   Delete,
-  Request,
   HttpStatus,
+  UseInterceptors,
 } from '@nestjs/common';
+import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { NotificacionService } from './notificacion.service';
 import {
@@ -25,15 +26,25 @@ import {
 import { Notificacion, NotificacionDetail } from './notificacion.entity';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { PermisoEnum } from 'src/enums/permisos.enum';
+import { Audit } from 'src/common/decorators/audit.decorator';
+import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from 'src/generated/prisma/enums';
 
 @ApiTags('[admin] Notificaciones')
 @Controller('notificaciones')
+@UseInterceptors(AuditInterceptor)
 export class NotificacionController {
   constructor(private readonly notificacionService: NotificacionService) {}
 
   // ==================== CREATE ====================
   @Post()
   @BearerAuthPermision([PermisoEnum.NOTIFICACIONES_CREAR])
+  @Audit({
+    accion: TipoAccionEnum.CREATE,
+    modulo: 'notificaciones',
+    tabla: 'Notificacion',
+    descripcion: 'Creación de notificación',
+  })
   @ApiOperation({
     summary: 'Crear notificación',
     description: 'Crea una nueva notificación en el sistema',
@@ -43,8 +54,8 @@ export class NotificacionController {
     description: 'Notificación creada exitosamente',
     type: ResponseNotificacionType,
   })
-  async create(@Body() createDto: CreateNotificacionDto) {
-    const notificacion = await this.notificacionService.create(createDto);
+  async create(@Body() createDto: CreateNotificacionDto, @AuthUser() session: IToken) {
+    const notificacion = await this.notificacionService.create(createDto, session);
 
     return {
       status: 'success',
@@ -65,8 +76,8 @@ export class NotificacionController {
     description: 'Lista de notificaciones',
     type: [Notificacion],
   })
-  async findAll(@Request() req) {
-    const usuarioId = req.user.id;
+  async findAll(@AuthUser() session: IToken) {
+    const usuarioId = session.usuarioId;
     const notificaciones = await this.notificacionService.findUnreadByUser(usuarioId);
 
     return notificaciones;
@@ -119,6 +130,12 @@ export class NotificacionController {
   // ==================== UPDATE ====================
   @Patch(':id')
   @BearerAuthPermision([PermisoEnum.NOTIFICACIONES_EDITAR])
+  @Audit({
+    accion: TipoAccionEnum.UPDATE,
+    modulo: 'notificaciones',
+    tabla: 'Notificacion',
+    descripcion: 'Actualización de notificación',
+  })
   @ApiOperation({
     summary: 'Actualizar notificación',
     description: 'Actualiza los datos de una notificación existente',
@@ -128,8 +145,12 @@ export class NotificacionController {
     description: 'Notificación actualizada exitosamente',
     type: ResponseNotificacionType,
   })
-  async update(@Param('id') id: string, @Body() updateDto: UpdateNotificacionDto) {
-    const notificacion = await this.notificacionService.update(id, updateDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateNotificacionDto,
+    @AuthUser() session: IToken,
+  ) {
+    const notificacion = await this.notificacionService.update(id, updateDto, session);
 
     return {
       status: 'success',
@@ -141,6 +162,12 @@ export class NotificacionController {
   // ==================== DELETE ====================
   @Delete(':id')
   @BearerAuthPermision([PermisoEnum.NOTIFICACIONES_ELIMINAR])
+  @Audit({
+    accion: TipoAccionEnum.DELETE,
+    modulo: 'notificaciones',
+    tabla: 'Notificacion',
+    descripcion: 'Eliminación de notificación',
+  })
   @ApiOperation({
     summary: 'Eliminar notificación',
     description: 'Elimina una notificación del sistema',
@@ -173,8 +200,8 @@ export class NotificacionController {
     description: 'Lista de notificaciones no leídas',
     type: [Notificacion],
   })
-  async getUnread(@Request() req) {
-    const usuarioId = req.user.id;
+  async getUnread(@AuthUser() session: IToken) {
+    const usuarioId = session.usuarioId;
     const notificaciones = await this.notificacionService.findUnreadByUser(usuarioId);
 
     return notificaciones;
@@ -197,14 +224,20 @@ export class NotificacionController {
       },
     },
   })
-  async countUnread(@Request() req) {
-    const usuarioId = req.user.id;
+  async countUnread(@AuthUser() session: IToken) {
+    const usuarioId = session.usuarioId;
     return await this.notificacionService.countUnreadByUser(usuarioId);
   }
 
   // Marcar notificación como leída
   @Patch(':id/marcar-leida')
   @BearerAuthPermision([PermisoEnum.NOTIFICACIONES_EDITAR])
+  @Audit({
+    accion: TipoAccionEnum.UPDATE,
+    modulo: 'notificaciones',
+    tabla: 'Notificacion',
+    descripcion: 'Marcar notificación como leída',
+  })
   @ApiOperation({
     summary: 'Marcar notificación como leída',
     description: 'Marca una notificación específica como leída',
@@ -233,8 +266,8 @@ export class NotificacionController {
     status: HttpStatus.OK,
     description: 'Todas las notificaciones marcadas como leídas',
   })
-  async markAllAsRead(@Request() req) {
-    const usuarioId = req.user.id;
+  async markAllAsRead(@AuthUser() session: IToken) {
+    const usuarioId = session.usuarioId;
     const result = await this.notificacionService.markAllAsReadByUser(usuarioId);
 
     return {
@@ -255,8 +288,8 @@ export class NotificacionController {
     status: HttpStatus.OK,
     description: 'Notificaciones leídas eliminadas',
   })
-  async clearRead(@Request() req) {
-    const usuarioId = req.user.id;
+  async clearRead(@AuthUser() session: IToken) {
+    const usuarioId = session.usuarioId;
     const result = await this.notificacionService.clearReadByUser(usuarioId);
 
     return {

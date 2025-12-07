@@ -7,12 +7,13 @@ import { Faq } from './faq.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { ConfiguracionAplicacionClaveEnum } from 'src/enums/configuraciones.enum';
+import { IToken } from 'src/common/decorators/token.decorator';
 
 @Injectable()
 export class FaqService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(inputDto: CreateFaqDto) {
+  async create(inputDto: CreateFaqDto, session: IToken) {
     // Crear el FAQ
     const faq = await this.prismaService.configuracionAplicacion.create({
       data: {
@@ -27,6 +28,7 @@ export class FaqService {
         tipo: 'json',
         categoria: 'faqs',
         descripcion: inputDto.pregunta,
+        userCreateId: session.usuarioId,
         esEditable: true,
       },
     });

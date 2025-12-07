@@ -58,4 +58,10 @@ export enum PermisoEnum {
   // Admin - Reportes
   // ==========================
   REPORTES_VER = 'REPORTES_VER',
+
+  // ==========================
+  // Admin - Logs y Auditoría
+  // ==========================
+  LOGS_VER = 'LOGS_VER',
+  LOGS_EXPORTAR = 'LOGS_EXPORTAR',
 }

@@ -6,12 +6,13 @@ import { Prisma } from 'src/generated/prisma/client';
 import { Role } from './role.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { IToken } from 'src/common/decorators/token.decorator';
 
 @Injectable()
 export class RolesService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async create(inputDto: CreateRolDto) {
+  async create(inputDto: CreateRolDto, session: IToken) {
     const { permisosIds, ...rolData } = inputDto;
     const permisosExist = await this.prismaService.permiso.findMany({
       where: { id: { in: permisosIds || [] } },
@@ -32,6 +33,7 @@ export class RolesService {
     const result = await this.prismaService.rol.create({
       data: {
         ...rolData,
+        userCreateId: session.usuarioId,
         rolPermisos: {
           create: permisosIds?.map((permisoId) => ({
             permiso: { connect: { id: permisoId } },
@@ -97,7 +99,7 @@ export class RolesService {
     return rol;
   }
 
-  async update(id: number, updateRoleDto: UpdateRoleDto) {
+  async update(id: number, updateRoleDto: UpdateRoleDto, session: IToken) {
     const existingRole = await this.prismaService.rol.findUnique({
       where: { id },
       select: { id: true },
@@ -123,6 +125,7 @@ export class RolesService {
         where: { id },
         data: {
           ...rolData,
+          userUpdateId: session.usuarioId,
           rolPermisos: {
             deleteMany: {},
             create: permisosIds?.map((permisoId) => ({

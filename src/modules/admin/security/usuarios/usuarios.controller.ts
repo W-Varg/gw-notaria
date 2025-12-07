@@ -29,9 +29,13 @@ import {
 } from './dto/usuarios.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { Audit } from 'src/common/decorators/audit.decorator';
+import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from 'src/generated/prisma/enums';
 
 @ApiTags('[auth] Usuarios')
 @Controller('usuarios')
+@UseInterceptors(AuditInterceptor)
 export class UsuariosController {
   constructor(private readonly usuariosService: UsuariosService) {}
 
@@ -41,6 +45,12 @@ export class UsuariosController {
   @UseInterceptors(FileInterceptor('avatar'))
   @ApiDescription('Crear un nuevo usuario', [PermisoEnum.USUARIOS_CREAR])
   @ApiResponse({ status: 200, type: () => ResponseUsuarioType })
+  @Audit({
+    accion: TipoAccionEnum.CREATE,
+    modulo: 'usuarios',
+    tabla: 'Usuario',
+    descripcion: 'Crear nuevo usuario',
+  })
   create(@Body() inputDto: CreateUsuarioDto, @UploadedFile() avatar?: Express.Multer.File) {
     return this.usuariosService.create(inputDto, avatar);
   }
@@ -75,6 +85,12 @@ export class UsuariosController {
   @UseInterceptors(FileInterceptor('avatar'))
   @ApiResponse({ status: 200, type: () => ResponseUsuarioType })
   @ApiDescription('Actualizar un usuario por ID', [PermisoEnum.USUARIOS_EDITAR])
+  @Audit({
+    accion: TipoAccionEnum.UPDATE,
+    modulo: 'usuarios',
+    tabla: 'Usuario',
+    descripcion: 'Actualizar usuario',
+  })
   update(
     @Param('id') id: string,
     @Body() updateUsuarioDto: UpdateUsuarioDto,
@@ -87,6 +103,12 @@ export class UsuariosController {
   @BearerAuthPermision([PermisoEnum.USUARIOS_ELIMINAR])
   @ApiResponse({ status: 200, type: () => ResponseUsuarioType })
   @ApiDescription('Eliminar un usuario por ID', [PermisoEnum.USUARIOS_ELIMINAR])
+  @Audit({
+    accion: TipoAccionEnum.DELETE,
+    modulo: 'usuarios',
+    tabla: 'Usuario',
+    descripcion: 'Eliminar usuario',
+  })
   remove(@Param('id') id: string) {
     return this.usuariosService.delete(id);
   }
@@ -95,6 +117,12 @@ export class UsuariosController {
   @BearerAuthPermision([PermisoEnum.USUARIOS_EDITAR_CONTRASENIA])
   @ApiDescription('Cambiar contraseña de un usuario', [PermisoEnum.USUARIOS_EDITAR_CONTRASENIA])
   @ApiResponse({ status: 200, type: () => ResponseUsuarioType })
+  @Audit({
+    accion: TipoAccionEnum.PASSWORD_CHANGE,
+    modulo: 'usuarios',
+    tabla: 'Usuario',
+    descripcion: 'Cambiar contraseña de usuario',
+  })
   changePassword(@Param('id') id: string, @Body() inputDto: ResetPasswordDto) {
     return this.usuariosService.changePassword(id, inputDto);
   }
