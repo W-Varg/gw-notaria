@@ -17,10 +17,6 @@ import { ContactoMensajeDto, FAQsDto } from './dto/public.input';
 export class PublicController {
   constructor(private readonly publicService: PublicService) {}
 
-  /* ---------------------------------------------------------------------------------------------------------------- */
-  /*                                              Categorías y Productos                                              */
-  /* ---------------------------------------------------------------------------------------------------------------- */
-
   @Get('categorias')
   @UseCache({ ttl: 5 * 60, keyPrefix: 'categorias' }) // Cache for 5 minutes
   @ApiDescription('Obtener categorías activas')

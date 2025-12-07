@@ -93,36 +93,6 @@ export const permisos: Prisma.PermisoUncheckedCreateInput[] = [
     modulo: 'permisos',
     accion: 'eliminar',
   },
-  {
-    nombre: PermisoEnum.EMPLEADOS_VER,
-    descripcion: 'Permite ver empleados',
-    modulo: 'empleados',
-    accion: 'ver',
-  },
-  {
-    nombre: PermisoEnum.EMPLEADOS_CREAR,
-    descripcion: 'Permite crear empleados',
-    modulo: 'empleados',
-    accion: 'crear',
-  },
-  {
-    nombre: PermisoEnum.EMPLEADOS_EDITAR,
-    descripcion: 'Permite editar empleados',
-    modulo: 'empleados',
-    accion: 'actualizar',
-  },
-  {
-    nombre: PermisoEnum.EMPLEADOS_ELIMINAR,
-    descripcion: 'Permite eliminar empleados',
-    modulo: 'empleados',
-    accion: 'eliminar',
-  },
-  {
-    nombre: PermisoEnum.EMPLEADOS_ASIGNAR_SUCURSAL,
-    descripcion: 'Permite asignar sucursal a empleados',
-    modulo: 'empleados',
-    accion: 'asignar_sucursal',
-  },
 
   // ==========================
   // Admin - Catálogo
@@ -149,31 +119,6 @@ export const permisos: Prisma.PermisoUncheckedCreateInput[] = [
     nombre: PermisoEnum.CATEGORIAS_ELIMINAR,
     descripcion: 'Permite eliminar categorías',
     modulo: 'categorias',
-    accion: 'eliminar',
-  },
-
-  {
-    nombre: PermisoEnum.TIPOS_PRODUCTO_VER,
-    descripcion: 'Permite ver tipos de producto',
-    modulo: 'tipos_producto',
-    accion: 'ver',
-  },
-  {
-    nombre: PermisoEnum.TIPOS_PRODUCTO_CREAR,
-    descripcion: 'Permite crear tipos de producto',
-    modulo: 'tipos_producto',
-    accion: 'crear',
-  },
-  {
-    nombre: PermisoEnum.TIPOS_PRODUCTO_EDITAR,
-    descripcion: 'Permite editar tipos de producto',
-    modulo: 'tipos_producto',
-    accion: 'actualizar',
-  },
-  {
-    nombre: PermisoEnum.TIPOS_PRODUCTO_ELIMINAR,
-    descripcion: 'Permite eliminar tipos de producto',
-    modulo: 'tipos_producto',
     accion: 'eliminar',
   },
 

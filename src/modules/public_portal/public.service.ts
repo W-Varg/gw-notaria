@@ -9,10 +9,6 @@ import dayjs from 'dayjs';
 export class PublicService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /* ---------------------------------------------------------------------------------------------------------------- */
-  /*                                              Categorías y Productos                                              */
-  /* ---------------------------------------------------------------------------------------------------------------- */
-
   getCategorias(): Promise<CategoriaPublica[]> {
     return this.prisma.categoria.findMany({
       where: { estaActiva: true },

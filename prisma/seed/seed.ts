@@ -68,7 +68,6 @@ async function createRoles() {
     { nombre: 'ADMIN', descripcion: 'Administrador del sistema' },
     { nombre: 'CLIENT', descripcion: 'Cliente del sistema' },
     { nombre: 'MANAGER', descripcion: 'Gerente de sucursal' },
-    { nombre: 'EMPLOYEE', descripcion: 'Empleado general' },
     { nombre: 'CLEANING_STAFF', descripcion: 'Personal de limpieza' },
     { nombre: 'CONTENT_CREATOR', descripcion: 'Creador de contenido' },
   ];

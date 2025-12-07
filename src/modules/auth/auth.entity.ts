@@ -112,7 +112,7 @@ export class AuthResponse {
   @ApiPropertyOptional({
     type: [String],
     description: 'Lista de permisos del usuario',
-    example: ['productos:ver', 'pedidos:crear'],
+    example: ['categorias:ver', 'pedidos:crear'],
     default: [],
   })
   permissions?: string[];

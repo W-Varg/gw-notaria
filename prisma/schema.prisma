@@ -174,7 +174,6 @@ model Usuario {
   tokensTemporales          TokenTemporal[]
   // Relaciones de negocio
   mensajesContacto          MensajeContacto[]
-  // Relación con empleado
   historialEstadosServicios HistorialEstadosServicio[]
   responsableServicios      ResponsableServicio[]
   pagosIngresos             PagosIngresos[]
