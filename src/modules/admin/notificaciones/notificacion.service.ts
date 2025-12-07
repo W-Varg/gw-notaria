@@ -31,10 +31,7 @@ export class NotificacionService {
 
   // ==================== FIND ALL (PAGINATED) ====================
   async findAll(listArgs: ListNotificacionArgsDto) {
-    const { skip, take, orderBy, pagination } = paginationParamsFormat(
-      listArgs,
-      true,
-    );
+    const { skip, take, orderBy, pagination } = paginationParamsFormat(listArgs, true);
     const { usuarioId, titulo, mensaje, tipo, leida, icono, ruta, fechaCreacion } =
       listArgs.where || {};
 
@@ -82,9 +79,7 @@ export class NotificacionService {
     });
 
     if (!notificacion) {
-      throw new NotFoundException(
-        `Notificación con ID "${id}" no encontrada`,
-      );
+      throw new NotFoundException(`Notificación con ID "${id}" no encontrada`);
     }
 
     return notificacion;

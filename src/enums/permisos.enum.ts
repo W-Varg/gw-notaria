@@ -30,6 +30,12 @@ export enum PermisoEnum {
   NOTIFICACIONES_EDITAR = 'NOTIFICACIONES_EDITAR',
   NOTIFICACIONES_ELIMINAR = 'NOTIFICACIONES_ELIMINAR',
 
+  // FAQs
+  FAQS_VER = 'FAQS_VER',
+  FAQS_CREAR = 'FAQS_CREAR',
+  FAQS_EDITAR = 'FAQS_EDITAR',
+  FAQS_ELIMINAR = 'FAQS_ELIMINAR',
+
   // ==========================
   // Admin - Catálogo
   // ==========================

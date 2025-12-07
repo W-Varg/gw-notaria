@@ -9,12 +9,7 @@ import {
   Request,
   HttpStatus,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { NotificacionService } from './notificacion.service';
 import {
   CreateNotificacionDto,
@@ -72,9 +67,7 @@ export class NotificacionController {
   })
   async findAll(@Request() req) {
     const usuarioId = req.user.id;
-    const notificaciones = await this.notificacionService.findUnreadByUser(
-      usuarioId,
-    );
+    const notificaciones = await this.notificacionService.findUnreadByUser(usuarioId);
 
     return notificaciones;
   }
@@ -135,10 +128,7 @@ export class NotificacionController {
     description: 'Notificación actualizada exitosamente',
     type: ResponseNotificacionType,
   })
-  async update(
-    @Param('id') id: string,
-    @Body() updateDto: UpdateNotificacionDto,
-  ) {
+  async update(@Param('id') id: string, @Body() updateDto: UpdateNotificacionDto) {
     const notificacion = await this.notificacionService.update(id, updateDto);
 
     return {
@@ -185,9 +175,7 @@ export class NotificacionController {
   })
   async getUnread(@Request() req) {
     const usuarioId = req.user.id;
-    const notificaciones = await this.notificacionService.findUnreadByUser(
-      usuarioId,
-    );
+    const notificaciones = await this.notificacionService.findUnreadByUser(usuarioId);
 
     return notificaciones;
   }
@@ -239,8 +227,7 @@ export class NotificacionController {
   @BearerAuthPermision([PermisoEnum.NOTIFICACIONES_EDITAR])
   @ApiOperation({
     summary: 'Marcar todas las notificaciones como leídas',
-    description:
-      'Marca todas las notificaciones no leídas del usuario como leídas',
+    description: 'Marca todas las notificaciones no leídas del usuario como leídas',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -248,9 +235,7 @@ export class NotificacionController {
   })
   async markAllAsRead(@Request() req) {
     const usuarioId = req.user.id;
-    const result = await this.notificacionService.markAllAsReadByUser(
-      usuarioId,
-    );
+    const result = await this.notificacionService.markAllAsReadByUser(usuarioId);
 
     return {
       status: 'success',

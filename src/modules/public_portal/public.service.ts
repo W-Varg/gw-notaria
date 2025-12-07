@@ -4,6 +4,7 @@ import { CategoriaPublica } from './dto/public.response';
 import { ContactoMensajeDto, FAQsDto } from './dto/public.input';
 import { dataResponseSuccess } from 'src/common/dtos/response.dto';
 import dayjs from 'dayjs';
+import { ConfiguracionAplicacionClaveEnum } from 'src/enums/configuraciones.enum';
 
 @Injectable()
 export class PublicService {
@@ -88,66 +89,48 @@ export class PublicService {
   }
 
   async getFAQs(input: FAQsDto) {
-    const { categoria, limit = 20 } = input;
+    const { categoria, limit = 50 } = input;
 
-    // Por ahora retornamos datos mock ya que no hay tabla de FAQs
-    // TODO: Implementar cuando se cree la tabla de FAQs en Prisma
-    const faqs = [
-      {
-        id: '1',
-        categoria: 'productos',
-        pregunta: '¿Cómo elegir el alimento adecuado para mi mascota?',
-        respuesta:
-          'Considera la edad, tamaño, raza y necesidades especiales de tu mascota. Consulta con nuestros especialistas para una recomendación personalizada.',
-        orden: 1,
-        estaActiva: true,
+    // Obtener FAQs desde configuración
+    const configuraciones = await this.prisma.configuracionAplicacion.findMany({
+      where: {
+        clave: ConfiguracionAplicacionClaveEnum.FAQ,
       },
-      {
-        id: '2',
-        categoria: 'envios',
-        pregunta: '¿Cuánto tiempo tarda la entrega?',
-        respuesta:
-          'Los envíos se realizan en un plazo de 1-3 días hábiles dentro de la ciudad y 3-7 días a nivel nacional.',
-        orden: 2,
-        estaActiva: true,
+      orderBy: {
+        fechaCreacion: 'desc',
       },
-      {
-        id: '3',
-        categoria: 'pagos',
-        pregunta: '¿Qué métodos de pago aceptan?',
-        respuesta:
-          'Aceptamos tarjetas de crédito, débito, transferencias bancarias y efectivo contra entrega.',
-        orden: 3,
-        estaActiva: true,
-      },
-      {
-        id: '4',
-        categoria: 'devoluciones',
-        pregunta: '¿Puedo devolver un producto?',
-        respuesta:
-          'Sí, puedes devolver productos en perfecto estado dentro de los primeros 30 días de la compra.',
-        orden: 4,
-        estaActiva: true,
-      },
-      {
-        id: '5',
-        categoria: 'general',
-        pregunta: '¿Tienen tienda física?',
-        respuesta:
-          'Sí, contamos con 5 sucursales en diferentes ubicaciones. Puedes consultar direcciones y horarios en la sección "Sobre Nosotros".',
-        orden: 5,
-        estaActiva: true,
-      },
-    ];
+    });
 
-    let faqsFiltradas = faqs.filter((f) => f.estaActiva);
+    // Parsear y filtrar FAQs
+    let faqs = configuraciones
+      .map((config) => {
+        try {
+          const data = JSON.parse(config.valor);
+          return {
+            id: config.id,
+            pregunta: data.pregunta,
+            respuesta: data.respuesta,
+            categoria: data.categoria || null,
+            orden: data.orden || 0,
+            estaActiva: data.estaActiva !== undefined ? data.estaActiva : true,
+          };
+        } catch {
+          return null;
+        }
+      })
+      .filter((faq) => faq !== null && faq.estaActiva);
 
+    // Filtrar por categoría si se especifica
     if (categoria) {
-      faqsFiltradas = faqsFiltradas.filter((f) => f.categoria === categoria);
+      faqs = faqs.filter((f) => f.categoria === categoria);
     }
 
+    // Ordenar por orden y limitar
+    faqs.sort((a, b) => a.orden - b.orden);
+    faqs = faqs.slice(0, limit);
+
     return dataResponseSuccess({
-      data: faqsFiltradas.slice(0, limit),
+      data: faqs,
     });
   }
 

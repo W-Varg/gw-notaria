@@ -1,7 +1,7 @@
 /**
  * Enum con las claves de configuración de la aplicación
  */
-export enum ConfiguracionClaveEnum {
+export enum ConfiguracionAplicacionClaveEnum {
   // Sistema
   SISTEMA_MANTENIMIENTO = 'sistema_mantenimiento',
   SISTEMA_TEMA_COLOR = 'sistema_tema_color',
@@ -35,6 +35,9 @@ export enum ConfiguracionClaveEnum {
   HORARIO_LUNES_VIERNES = 'horario_lunes_viernes',
   HORARIO_SABADO = 'horario_sabado',
   HORARIO_DOMINGO = 'horario_domingo',
+
+  // FAQs
+  FAQ = 'faq',
 }
 
 export enum ConfiguracionTipoEnum {
