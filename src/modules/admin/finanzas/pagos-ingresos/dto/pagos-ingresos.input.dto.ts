@@ -21,9 +21,8 @@ import { MetodoPagoEnum, ConstanciaEnum } from 'src/generated/prisma/enums';
 export class CreatePagosIngresosDto {
   @Expose()
   @IsOptional()
-  @IsInt()
-  @ApiPropertyOptional({ type: Number })
-  servicioId?: number;
+  @ApiPropertyOptional()
+  servicioId?: string;
 
   @Expose()
   @IsDefined()
@@ -75,10 +74,10 @@ export class UpdatePagosIngresosDto extends PartialType(CreatePagosIngresosDto) 
 
 class PagosIngresosWhereInput {
   @Expose()
-  @ApiPropertyOptional({ type: IntNullableFilter })
+  @ApiPropertyOptional({ type: StringNullableFilter })
   @IsOptional()
-  @Type(() => IntNullableFilter)
-  servicioId?: IntNullableFilter;
+  @Type(() => StringNullableFilter)
+  servicioId?: StringNullableFilter;
 
   @Expose()
   @ApiPropertyOptional({ type: FloatFilter })

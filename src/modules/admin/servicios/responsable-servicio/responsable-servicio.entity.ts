@@ -8,7 +8,7 @@ export class ResponsableServicio {
   usuarioId: string;
 
   @ApiProperty()
-  servicioId: number;
+  servicioId: string;
 
   @ApiProperty()
   fechaAsignacion: Date;

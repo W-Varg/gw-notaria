@@ -3,13 +3,13 @@ import { Prisma } from 'src/generated/prisma/client';
 
 export class Servicio {
   @ApiProperty()
-  id: number;
+  id: string;
 
   @ApiProperty()
   codigoTicket: string;
 
   @ApiProperty()
-  clienteId: number;
+  clienteId: string;
 
   @ApiProperty()
   tipoDocumentoId: string;

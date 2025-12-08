@@ -7,7 +7,7 @@ export class PagosIngresos {
   id: number;
 
   @ApiPropertyOptional()
-  servicioId?: number;
+  servicioId?: string;
 
   @ApiProperty()
   fecha: Date;

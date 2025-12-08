@@ -139,7 +139,7 @@ export class ServicioService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const item = await this.prismaService.servicio.findUnique({
       where: { id },
       include: {
@@ -169,7 +169,7 @@ export class ServicioService {
     return dataResponseSuccess<Servicio>({ data: item });
   }
 
-  async update(id: number, updateDto: UpdateServicioDto, session: IToken) {
+  async update(id: string, updateDto: UpdateServicioDto, session: IToken) {
     const exists = await this.prismaService.servicio.findUnique({
       where: { id },
       select: { id: true },
@@ -209,7 +209,7 @@ export class ServicioService {
     return dataResponseSuccess<Servicio>({ data: result });
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const exists = await this.prismaService.servicio.findUnique({
       where: { id },
       select: { id: true },

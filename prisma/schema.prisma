@@ -495,11 +495,11 @@ model EstadoTramite {
 // ============================================================================
 
 model Cliente {
-  id                 Int             @id @default(autoincrement())
+  id                 String          @id @default(cuid())
   tipo               TipoClienteEnum
   direccion          String?         @db.VarChar(255)
   telefono           String?         @db.VarChar(20)
-  email  String?         @db.VarChar(100)
+  email              String?         @db.VarChar(100)
   userCreateId       String
   userUpdateId       String?
   fechaCreacion      DateTime        @default(now())
@@ -515,7 +515,7 @@ model Cliente {
 }
 
 model PersonaNatural {
-  clienteId          Int       @id
+  clienteId          String    @id
   ci                 String?   @unique @db.VarChar(20)
   expedido           String?   @db.VarChar(10)
   nombres            String    @db.VarChar(100)
@@ -533,7 +533,7 @@ model PersonaNatural {
 }
 
 model PersonaJuridica {
-  clienteId          Int      @id
+  clienteId          String   @id
   nit                String?  @unique @db.VarChar(20)
   razonSocial        String   @db.VarChar(150)
   representanteLegal String?  @db.VarChar(150)
@@ -553,9 +553,9 @@ model PersonaJuridica {
 // ============================================================================
 
 model Servicio {
-  id                 Int      @id @default(autoincrement())
+  id                 String   @id @default(cuid())
   codigoTicket       String   @unique @db.VarChar(20)
-  clienteId          Int
+  clienteId          String
   tipoDocumentoId    String
   claseTramite       String?  @db.VarChar(50)
   tipoTramite        String?  @db.VarChar(50)
@@ -582,7 +582,7 @@ model Servicio {
 model HistorialEstadosServicio {
   id          Int      @id @default(autoincrement())
   usuarioId   String?
-  servicioId  Int
+  servicioId  String
   estadoId    String
   fechaCambio DateTime @default(now()) @db.Timestamptz()
   comentario  String?  @db.VarChar(255)
@@ -598,7 +598,7 @@ model HistorialEstadosServicio {
 model ResponsableServicio {
   id              Int       @id @default(autoincrement())
   usuarioId       String
-  servicioId      Int
+  servicioId      String
   fechaAsignacion DateTime  @default(now()) @db.Timestamptz()
   fechaBaja       DateTime?
   activo          Boolean   @default(true)
@@ -616,7 +616,7 @@ model ResponsableServicio {
 
 model PagosIngresos {
   id                Int             @id @default(autoincrement())
-  servicioId        Int?
+  servicioId        String?
   fecha             DateTime        @default(now()) @db.Timestamptz()
   monto             Decimal         @db.Decimal(10, 2)
   tipoPago          MetodoPagoEnum

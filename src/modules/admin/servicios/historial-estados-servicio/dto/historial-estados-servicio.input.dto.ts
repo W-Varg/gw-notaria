@@ -1,13 +1,6 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import {
-  IsDefined,
-  IsInt,
-  IsOptional,
-  IsString,
-  MaxLength,
-  ValidateNested,
-} from 'class-validator';
+import { IsDefined, IsInt, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
 import { BaseFilterDto } from 'src/common/dtos/filters.dto';
 import { IntFilter } from 'src/common/dtos/prisma/int-filter.input';
 import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
@@ -22,9 +15,8 @@ export class CreateHistorialEstadosServicioDto {
 
   @Expose()
   @IsDefined()
-  @IsInt()
-  @ApiProperty({ type: Number })
-  servicioId: number;
+  @ApiProperty({ type: String })
+  servicioId: string;
 
   @Expose()
   @IsDefined()
@@ -52,10 +44,10 @@ class HistorialEstadosServicioWhereInput {
   usuarioId?: StringNullableFilter;
 
   @Expose()
-  @ApiPropertyOptional({ type: IntFilter })
+  @ApiPropertyOptional({ type: StringFilter })
   @IsOptional()
-  @Type(() => IntFilter)
-  servicioId?: IntFilter;
+  @Type(() => StringFilter)
+  servicioId?: StringFilter;
 
   @Expose()
   @ApiPropertyOptional({ type: StringFilter })

@@ -3,7 +3,7 @@ import { TipoClienteEnum } from 'src/generated/prisma/enums';
 
 export class PersonaNatural {
   @ApiProperty()
-  clienteId: number;
+  clienteId: string;
 
   @ApiPropertyOptional()
   ci?: string;
@@ -35,7 +35,7 @@ export class PersonaNatural {
 
 export class PersonaJuridica {
   @ApiProperty()
-  clienteId: number;
+  clienteId: string;
 
   @ApiPropertyOptional()
   nit?: string;
@@ -61,7 +61,7 @@ export class PersonaJuridica {
 
 export class Cliente {
   @ApiProperty()
-  id: number;
+  id: string;
 
   @ApiProperty({ enum: TipoClienteEnum })
   tipo: TipoClienteEnum;

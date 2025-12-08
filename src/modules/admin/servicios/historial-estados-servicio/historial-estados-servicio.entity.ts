@@ -8,7 +8,7 @@ export class HistorialEstadosServicio {
   usuarioId?: string;
 
   @ApiProperty()
-  servicioId: number;
+  servicioId: string;
 
   @ApiProperty()
   estadoId: string;

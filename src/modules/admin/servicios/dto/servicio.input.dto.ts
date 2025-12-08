@@ -19,9 +19,8 @@ import { FloatFilter } from 'src/common/dtos/prisma/float-filter.input';
 export class CreateServicioDto {
   @Expose()
   @IsDefined()
-  @IsInt()
-  @ApiProperty({ type: Number })
-  clienteId: number;
+  @ApiProperty({ type: String })
+  clienteId: string;
 
   @Expose()
   @IsDefined()
@@ -79,10 +78,10 @@ class ServicioWhereInput {
   codigoTicket?: StringFilter;
 
   @Expose()
-  @ApiPropertyOptional({ type: IntFilter })
+  @ApiPropertyOptional({ type: StringFilter })
   @IsOptional()
-  @Type(() => IntFilter)
-  clienteId?: IntFilter;
+  @Type(() => StringFilter)
+  clienteId?: StringFilter;
 
   @Expose()
   @ApiPropertyOptional({ type: StringFilter })

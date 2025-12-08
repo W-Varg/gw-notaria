@@ -25,7 +25,7 @@ export class CreateResponsableServicioDto {
   @IsDefined()
   @IsInt()
   @ApiProperty({ type: Number })
-  servicioId: number;
+  servicioId: string;
 
   @Expose()
   @IsOptional()
@@ -50,10 +50,10 @@ class ResponsableServicioWhereInput {
   usuarioId?: StringFilter;
 
   @Expose()
-  @ApiPropertyOptional({ type: IntFilter })
+  @ApiPropertyOptional({ type: StringFilter })
   @IsOptional()
-  @Type(() => IntFilter)
-  servicioId?: IntFilter;
+  @Type(() => StringFilter)
+  servicioId?: StringFilter;
 
   @Expose()
   @ApiPropertyOptional({ type: BoolFilter })

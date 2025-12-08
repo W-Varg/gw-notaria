@@ -62,9 +62,7 @@ export class ServicioController {
 
   @Post('list')
   @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
-  @ApiDescription('Servicio post con filtros y paginado de servicios', [
-    PermisoEnum.SERVICIOS_VER,
-  ])
+  @ApiDescription('Servicio post con filtros y paginado de servicios', [PermisoEnum.SERVICIOS_VER])
   @ApiResponse({ status: 200, type: () => PaginateServiciosType })
   list(@Body() inputDto: ListServicioArgsDto) {
     return this.servicioService.filter(inputDto);
@@ -74,7 +72,7 @@ export class ServicioController {
   @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
   @ApiResponse({ status: 200, type: () => ResponseServicioDetailType })
   @ApiDescription('Obtener un servicio por ID', [PermisoEnum.SERVICIOS_VER])
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.servicioService.findOne(id);
   }
 
@@ -89,7 +87,7 @@ export class ServicioController {
     descripcion: 'Actualizar servicio',
   })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateDto: UpdateServicioDto,
     @AuthUser() session: IToken,
   ) {
@@ -106,7 +104,7 @@ export class ServicioController {
     tabla: 'Servicio',
     descripcion: 'Eliminar servicio',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.servicioService.remove(id);
   }
 }

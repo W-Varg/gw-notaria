@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  CreateClienteDto,
-  UpdateClienteDto,
-  ListClienteArgsDto,
-} from './dto/cliente.input.dto';
+import { CreateClienteDto, UpdateClienteDto, ListClienteArgsDto } from './dto/cliente.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
 import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
@@ -138,7 +134,7 @@ export class ClienteService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const item = await this.prismaService.cliente.findUnique({
       where: { id },
       include: {
@@ -150,7 +146,7 @@ export class ClienteService {
     return dataResponseSuccess<Cliente>({ data: item });
   }
 
-  async update(id: number, updateDto: UpdateClienteDto, session: IToken) {
+  async update(id: string, updateDto: UpdateClienteDto, session: IToken) {
     const exists = await this.prismaService.cliente.findUnique({
       where: { id },
       select: { id: true, tipo: true },
@@ -227,7 +223,7 @@ export class ClienteService {
     return dataResponseSuccess<Cliente>({ data: result });
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const exists = await this.prismaService.cliente.findUnique({
       where: { id },
       select: { id: true },

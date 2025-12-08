@@ -68,7 +68,7 @@ export class ClienteController {
   @BearerAuthPermision([PermisoEnum.CLIENTES_VER])
   @ApiResponse({ status: 200, type: () => ResponseClienteDetailType })
   @ApiDescription('Obtener un cliente por ID', [PermisoEnum.CLIENTES_VER])
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.clienteService.findOne(id);
   }
 
@@ -83,7 +83,7 @@ export class ClienteController {
     descripcion: 'Actualizar cliente',
   })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateDto: UpdateClienteDto,
     @AuthUser() session: IToken,
   ) {
@@ -100,7 +100,7 @@ export class ClienteController {
     tabla: 'Cliente',
     descripcion: 'Eliminar cliente',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseIntPipe) id: string) {
     return this.clienteService.remove(id);
   }
 }
