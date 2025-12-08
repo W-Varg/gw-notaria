@@ -1,0 +1,172 @@
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { Expose, Type } from 'class-transformer';
+import {
+  IsDefined,
+  IsEnum,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import { BaseFilterDto } from 'src/common/dtos/filters.dto';
+import { IntFilter } from 'src/common/dtos/prisma/int-filter.input';
+import { IntNullableFilter } from 'src/common/dtos/prisma/int-nullable-filter.input';
+import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
+import { FloatFilter } from 'src/common/dtos/prisma/float-filter.input';
+import { MetodoPagoEnum, ConstanciaEnum } from 'src/generated/prisma/enums';
+
+export class CreatePagosIngresosDto {
+  @Expose()
+  @IsOptional()
+  @IsInt()
+  @ApiPropertyOptional({ type: Number })
+  servicioId?: number;
+
+  @Expose()
+  @IsDefined()
+  @IsNumber()
+  @Min(0)
+  @ApiProperty({ type: Number })
+  monto: number;
+
+  @Expose()
+  @IsDefined()
+  @IsEnum(MetodoPagoEnum)
+  @ApiProperty({ enum: MetodoPagoEnum })
+  tipoPago: MetodoPagoEnum;
+
+  @Expose()
+  @IsOptional()
+  @IsInt()
+  @ApiPropertyOptional({ type: Number })
+  cuentaBancariaId?: number;
+
+  @Expose()
+  @IsOptional()
+  @IsEnum(ConstanciaEnum)
+  @ApiPropertyOptional({ enum: ConstanciaEnum })
+  constanciaTipo?: ConstanciaEnum;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  @ApiPropertyOptional({ type: String })
+  numeroConstancia?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  @ApiPropertyOptional({ type: String })
+  concepto?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String })
+  usuarioRegistroId?: string;
+}
+
+export class UpdatePagosIngresosDto extends PartialType(CreatePagosIngresosDto) {}
+
+class PagosIngresosWhereInput {
+  @Expose()
+  @ApiPropertyOptional({ type: IntNullableFilter })
+  @IsOptional()
+  @Type(() => IntNullableFilter)
+  servicioId?: IntNullableFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: FloatFilter })
+  @IsOptional()
+  @Type(() => FloatFilter)
+  monto?: FloatFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ enum: MetodoPagoEnum })
+  @IsOptional()
+  @IsEnum(MetodoPagoEnum)
+  tipoPago?: MetodoPagoEnum;
+
+  @Expose()
+  @ApiPropertyOptional({ type: IntNullableFilter })
+  @IsOptional()
+  @Type(() => IntNullableFilter)
+  cuentaBancariaId?: IntNullableFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ enum: ConstanciaEnum })
+  @IsOptional()
+  @IsEnum(ConstanciaEnum)
+  constanciaTipo?: ConstanciaEnum;
+
+  @Expose()
+  @ApiPropertyOptional({ type: StringNullableFilter })
+  @IsOptional()
+  @Type(() => StringNullableFilter)
+  numeroConstancia?: StringNullableFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: StringNullableFilter })
+  @IsOptional()
+  @Type(() => StringNullableFilter)
+  usuarioRegistroId?: StringNullableFilter;
+}
+
+class PagosIngresosSelectInput {
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  id?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  servicioId?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  fecha?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  monto?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  tipoPago?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  cuentaBancariaId?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  constanciaTipo?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  numeroConstancia?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  concepto?: boolean;
+}
+
+export class ListPagosIngresosArgsDto extends BaseFilterDto {
+  @Expose()
+  @ApiPropertyOptional({ type: PagosIngresosWhereInput })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PagosIngresosWhereInput)
+  where?: PagosIngresosWhereInput;
+
+  @Expose()
+  @ApiPropertyOptional({ type: PagosIngresosSelectInput })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PagosIngresosSelectInput)
+  select?: PagosIngresosSelectInput;
+}

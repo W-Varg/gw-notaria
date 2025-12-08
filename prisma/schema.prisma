@@ -438,8 +438,9 @@ model CuentaBancaria {
 // ============================================================================
 
 model TipoDocumento {
-  id                 Int      @id @default(autoincrement())
+  id                 String   @id @default(cuid())
   nombre             String   @unique @db.VarChar(100)
+  descripcion        String   @db.Text
   precioBase         Decimal  @default(0.00) @db.Decimal(10, 2)
   userCreateId       String
   userUpdateId       String?
@@ -456,9 +457,11 @@ model TipoDocumento {
 
 model PlantillaDocumento {
   id                 Int      @id @default(autoincrement())
-  tipoDocumentoId    Int
+  tipoDocumentoId    String
   nombrePlantilla    String?  @db.VarChar(100)
+  descripcion        String?  @db.Text
   contenidoHtml      String?  @db.Text
+  estaActiva         Boolean? @default(true)
   userCreateId       String
   userUpdateId       String?
   fechaCreacion      DateTime @default(now())
@@ -496,9 +499,10 @@ model Cliente {
   tipo               TipoClienteEnum
   direccion          String?         @db.VarChar(255)
   telefono           String?         @db.VarChar(20)
-  email              String?         @db.VarChar(100)
+  email  String?         @db.VarChar(100)
   userCreateId       String
   userUpdateId       String?
+  fechaCreacion      DateTime        @default(now())
   fechaRegistro      DateTime        @default(now()) @db.Timestamptz()
   fechaActualizacion DateTime        @updatedAt
 
@@ -552,7 +556,7 @@ model Servicio {
   id                 Int      @id @default(autoincrement())
   codigoTicket       String   @unique @db.VarChar(20)
   clienteId          Int
-  tipoDocumentoId    Int
+  tipoDocumentoId    String
   claseTramite       String?  @db.VarChar(50)
   tipoTramite        String?  @db.VarChar(50)
   negocio            String?  @db.VarChar(50)

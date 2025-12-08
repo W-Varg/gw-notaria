@@ -1,20 +1,19 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import {
-  LoginAttempt,
-  ErrorLog,
-  AccessLog,
-  DataChangeLog,
-} from 'src/generated/prisma/client';
+import { LoginAttempt } from '../entities/login-attempt.entity';
+import { ErrorLog } from '../entities/error-log.entity';
+import { AccessLog } from '../entities/access-log.entity';
+import { DataChangeLog } from '../entities/data-change-log.entity';
+import { AuditLog } from '../entities/audig-log.entity';
+import { SystemLog } from '../system-log.entity';
 import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
-import { AuditLog } from '../audig-log.entity';
 
 // ============================================
 // AUDIT LOGS RESPONSES
 // ============================================
 
 class PaginateAuditLogsData extends OmitType(ResponseStructDTO, ['validationErrors']) {
-  @ApiProperty({ description: 'Lista de logs de auditoría', isArray: true })
-  data?: any[];
+  @ApiProperty({ description: 'Lista de logs de auditoría', type: [AuditLog] })
+  data?: AuditLog[];
 }
 
 export class PaginateAuditLogsType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -27,8 +26,8 @@ export class PaginateAuditLogsType extends OmitType(ApiOkResponseDto, ['cache'])
 // ============================================
 
 class PaginateSystemLogsData extends OmitType(ResponseStructDTO, ['validationErrors']) {
-  @ApiProperty({ description: 'Lista de logs de sistema', isArray: true })
-  data?: any[];
+  @ApiProperty({ description: 'Lista de logs de sistema', type: [SystemLog] })
+  data?: SystemLog[];
 }
 
 export class PaginateSystemLogsType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -41,8 +40,8 @@ export class PaginateSystemLogsType extends OmitType(ApiOkResponseDto, ['cache']
 // ============================================
 
 class PaginateLoginAttemptsData extends OmitType(ResponseStructDTO, ['validationErrors']) {
-  @ApiProperty({ description: 'Lista de intentos de login', isArray: true })
-  data?: any[];
+  @ApiProperty({ description: 'Lista de intentos de login', type: [LoginAttempt] })
+  data?: LoginAttempt[];
 }
 
 export class PaginateLoginAttemptsType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -55,8 +54,8 @@ export class PaginateLoginAttemptsType extends OmitType(ApiOkResponseDto, ['cach
 // ============================================
 
 class PaginateErrorLogsData extends OmitType(ResponseStructDTO, ['validationErrors']) {
-  @ApiProperty({ description: 'Lista de logs de errores', isArray: true })
-  data?: any[];
+  @ApiProperty({ description: 'Lista de logs de errores', type: [ErrorLog] })
+  data?: ErrorLog[];
 }
 
 export class PaginateErrorLogsType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -69,8 +68,8 @@ export class PaginateErrorLogsType extends OmitType(ApiOkResponseDto, ['cache'])
 // ============================================
 
 class PaginateAccessLogsData extends OmitType(ResponseStructDTO, ['validationErrors']) {
-  @ApiProperty({ description: 'Lista de logs de acceso', isArray: true })
-  data?: any[];
+  @ApiProperty({ description: 'Lista de logs de acceso', type: [AccessLog] })
+  data?: AccessLog[];
 }
 
 export class PaginateAccessLogsType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -110,6 +109,23 @@ export class ResponseAuditStatsType extends OmitType(ApiOkResponseDto, ['cache']
 // DATA CHANGE HISTORY RESPONSE
 // ============================================
 
+export class DataChangeHistoryItem {
+  @ApiProperty()
+  campo: string;
+
+  @ApiProperty({ required: false })
+  valorAnterior?: string;
+
+  @ApiProperty({ required: false })
+  valorNuevo?: string;
+
+  @ApiProperty()
+  fechaCambio: Date;
+
+  @ApiProperty()
+  usuarioEmail: string;
+}
+
 export class DataChangeHistory {
   @ApiProperty()
   tabla: string;
@@ -117,17 +133,11 @@ export class DataChangeHistory {
   @ApiProperty()
   registroId: string;
 
-  @ApiProperty({ type: [Object] })
-  historial: Array<{
-    campo: string;
-    valorAnterior: string;
-    valorNuevo: string;
-    fechaCambio: Date;
-    usuarioEmail: string;
-  }>;
+  @ApiProperty({ type: [DataChangeHistoryItem] })
+  historial: DataChangeHistoryItem[];
 }
 
-class DataChangeHistoryData extends OmitType(ResponseStructDTO, ['pagination']) {
+class DataChangeHistoryData extends OmitType(ResponseStructDTO, ['pagination', 'validationErrors']) {
   @ApiProperty({ type: DataChangeHistory })
   data: DataChangeHistory;
 }

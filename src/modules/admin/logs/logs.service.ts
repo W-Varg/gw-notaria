@@ -8,6 +8,8 @@ import {
   ListAccessLogsArgsDto,
 } from './dto/logs.input.dto';
 import { Prisma } from 'src/generated/prisma/client';
+import { dataResponseSuccess } from 'src/common/dtos/response.dto';
+import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 
 @Injectable()
 export class LogsService {
@@ -17,25 +19,24 @@ export class LogsService {
    * Obtener logs de auditoría con filtros
    */
   async getAuditLogs(filters: ListAuditLogsArgsDto) {
-    const { accion, modulo, tabla, usuarioId, fechaCreacion, exitoso } = filters.where || {};
+    const { skip, take, orderBy, pagination } = paginationParamsFormat(filters, true);
+    const { accion, modulo, tabla, usuarioId, usuarioEmail, fechaCreacion, exitoso } = filters.where || {};
     const whereInput: Prisma.AuditLogWhereInput = {};
 
     if (accion) whereInput.accion = accion;
     if (modulo) whereInput.modulo = modulo;
     if (tabla) whereInput.tabla = tabla;
     if (usuarioId) whereInput.usuarioId = usuarioId;
+    if (usuarioEmail) whereInput.usuarioEmail = usuarioEmail;
     if (fechaCreacion) whereInput.fechaCreacion = fechaCreacion;
     if (exitoso !== undefined) whereInput.exitoso = exitoso;
 
-    const page = filters.page || 0;
-    const size = filters.size || 10;
-
-    const [data, total] = await Promise.all([
+    const [list, total] = await Promise.all([
       this.prisma.auditLog.findMany({
         where: whereInput,
-        skip: page * size,
-        take: size,
-        orderBy: { fechaCreacion: 'desc' },
+        skip,
+        take,
+        orderBy: orderBy || { fechaCreacion: 'desc' },
         include: {
           usuario: {
             select: {
@@ -50,22 +51,17 @@ export class LogsService {
       this.prisma.auditLog.count({ where: whereInput }),
     ]);
 
-    return {
-      data,
-      pagination: {
-        total,
-        page,
-        size,
-        from: page * size,
-        totalPages: Math.ceil(total / size),
-      },
-    };
+    return dataResponseSuccess({
+      data: list,
+      pagination: { ...pagination, total },
+    });
   }
 
   /**
    * Obtener logs de sistema
    */
   async getSystemLogs(filters: ListSystemLogsArgsDto) {
+    const { skip, take, orderBy, pagination } = paginationParamsFormat(filters, true);
     const { nivel, modulo, usuarioId, fechaCreacion } = filters.where || {};
     const whereInput: Prisma.SystemLogWhereInput = {};
 
@@ -74,35 +70,27 @@ export class LogsService {
     if (usuarioId) whereInput.usuarioId = usuarioId;
     if (fechaCreacion) whereInput.fechaCreacion = fechaCreacion;
 
-    const page = filters.page || 0;
-    const size = filters.size || 10;
-
-    const [data, total] = await Promise.all([
+    const [list, total] = await Promise.all([
       this.prisma.systemLog.findMany({
         where: whereInput,
-        skip: page * size,
-        take: size,
-        orderBy: { fechaCreacion: 'desc' },
+        skip,
+        take,
+        orderBy: orderBy || { fechaCreacion: 'desc' },
       }),
       this.prisma.systemLog.count({ where: whereInput }),
     ]);
 
-    return {
-      data,
-      pagination: {
-        total,
-        page,
-        size,
-        from: page * size,
-        totalPages: Math.ceil(total / size),
-      },
-    };
+    return dataResponseSuccess({
+      data: list,
+      pagination: { ...pagination, total },
+    });
   }
 
   /**
    * Obtener intentos de login
    */
   async getLoginAttempts(filters: ListLoginAttemptsArgsDto) {
+    const { skip, take, orderBy, pagination } = paginationParamsFormat(filters, true);
     const { email, ip, exitoso, fechaIntento } = filters.where || {};
     const whereInput: Prisma.LoginAttemptWhereInput = {};
 
@@ -111,35 +99,27 @@ export class LogsService {
     if (exitoso !== undefined) whereInput.exitoso = exitoso;
     if (fechaIntento) whereInput.fechaIntento = fechaIntento;
 
-    const page = filters.page || 0;
-    const size = filters.size || 10;
-
-    const [data, total] = await Promise.all([
+    const [list, total] = await Promise.all([
       this.prisma.loginAttempt.findMany({
         where: whereInput,
-        skip: page * size,
-        take: size,
-        orderBy: { fechaIntento: 'desc' },
+        skip,
+        take,
+        orderBy: orderBy || { fechaIntento: 'desc' },
       }),
       this.prisma.loginAttempt.count({ where: whereInput }),
     ]);
 
-    return {
-      data,
-      pagination: {
-        total,
-        page,
-        size,
-        from: page * size,
-        totalPages: Math.ceil(total / size),
-      },
-    };
+    return dataResponseSuccess({
+      data: list,
+      pagination: { ...pagination, total },
+    });
   }
 
   /**
    * Obtener logs de errores
    */
   async getErrorLogs(filters: ListErrorLogsArgsDto) {
+    const { skip, take, orderBy, pagination } = paginationParamsFormat(filters, true);
     const { tipo, severidad, modulo, fechaError, resuelto } = filters.where || {};
     const whereInput: Prisma.ErrorLogWhereInput = {};
 
@@ -149,35 +129,27 @@ export class LogsService {
     if (fechaError) whereInput.fechaError = fechaError;
     if (resuelto !== undefined) whereInput.resuelto = resuelto;
 
-    const page = filters.page || 0;
-    const size = filters.size || 10;
-
-    const [data, total] = await Promise.all([
+    const [list, total] = await Promise.all([
       this.prisma.errorLog.findMany({
         where: whereInput,
-        skip: page * size,
-        take: size,
-        orderBy: { fechaError: 'desc' },
+        skip,
+        take,
+        orderBy: orderBy || { fechaError: 'desc' },
       }),
       this.prisma.errorLog.count({ where: whereInput }),
     ]);
 
-    return {
-      data,
-      pagination: {
-        total,
-        page,
-        size,
-        from: page * size,
-        totalPages: Math.ceil(total / size),
-      },
-    };
+    return dataResponseSuccess({
+      data: list,
+      pagination: { ...pagination, total },
+    });
   }
 
   /**
    * Obtener logs de acceso
    */
   async getAccessLogs(filters: ListAccessLogsArgsDto) {
+    const { skip, take, orderBy, pagination } = paginationParamsFormat(filters, true);
     const { recurso, metodoHttp, usuarioId, fechaAcceso } = filters.where || {};
     const whereInput: Prisma.AccessLogWhereInput = {};
 
@@ -186,29 +158,20 @@ export class LogsService {
     if (usuarioId) whereInput.usuarioId = usuarioId;
     if (fechaAcceso) whereInput.fechaAcceso = fechaAcceso;
 
-    const page = filters.page || 0;
-    const size = filters.size || 10;
-
-    const [data, total] = await Promise.all([
+    const [list, total] = await Promise.all([
       this.prisma.accessLog.findMany({
         where: whereInput,
-        skip: page * size,
-        take: size,
-        orderBy: { fechaAcceso: 'desc' },
+        skip,
+        take,
+        orderBy: orderBy || { fechaAcceso: 'desc' },
       }),
       this.prisma.accessLog.count({ where: whereInput }),
     ]);
 
-    return {
-      data,
-      pagination: {
-        total,
-        page,
-        size,
-        from: page * size,
-        totalPages: Math.ceil(total / size),
-      },
-    };
+    return dataResponseSuccess({
+      data: list,
+      pagination: { ...pagination, total },
+    });
   }
 
   /**
@@ -237,7 +200,7 @@ export class LogsService {
         }),
       ]);
 
-    return {
+    return dataResponseSuccess({
       data: {
         totalAcciones,
         accionesPorTipo: Object.fromEntries(
@@ -252,7 +215,7 @@ export class LogsService {
           count: item._count,
         })),
       },
-    };
+    });
   }
 
   /**
@@ -264,7 +227,7 @@ export class LogsService {
       orderBy: { fechaCambio: 'desc' },
     });
 
-    return {
+    return dataResponseSuccess({
       data: {
         tabla,
         registroId,
@@ -276,6 +239,6 @@ export class LogsService {
           usuarioEmail: cambio.usuarioEmail || 'Sistema',
         })),
       },
-    };
+    });
   }
 }

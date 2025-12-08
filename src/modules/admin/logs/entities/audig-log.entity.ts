@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { TipoAccionEnum } from 'src/generated/prisma/enums';
-import { Usuario } from '../security/usuarios/usuario.entity';
+import { Usuario } from '../../security/usuarios/usuario.entity';
 
 export class AuditLog {
   @ApiProperty()
