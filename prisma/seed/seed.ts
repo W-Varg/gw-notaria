@@ -17,10 +17,9 @@ async function main() {
 
   // Crear roles básicos
   const roles = await createRoles(adminUserId);
-  console.info(`Created ${roles.allRoles.length} roles`);
 
   // Crear permisos
-  await createPermisos(adminUserId);
+  await createPermisos();
 
   // Asignar permisos a roles
   await assignPermisosToRoles(roles.allRoles.map((r) => r.id));
@@ -99,7 +98,7 @@ async function createRoles(userId: string) {
   return { adminRole, clientRole, allRoles: createdRoles };
 }
 
-async function createPermisos(userId: string) {
+async function createPermisos() {
   // Elimina todos los permisos existentes y crea solo los definidos en permisos.data.ts
   await prisma.permiso.deleteMany();
   // Permiso model doesn't have userCreateId field, only userUpdateId

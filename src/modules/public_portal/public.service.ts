@@ -157,9 +157,7 @@ export class PublicService {
         fundadores: ['María González', 'Carlos Rodríguez'],
         hitos: [
           { ano: 2020, evento: 'Fundación de la empresa' },
-          { ano: 2021, evento: 'Apertura de la primera sucursal' },
           { ano: 2022, evento: 'Lanzamiento de la tienda online' },
-          { ano: 2023, evento: 'Expansión a 5 sucursales' },
           { ano: 2024, evento: 'Certificación ISO de calidad' },
         ],
       },
