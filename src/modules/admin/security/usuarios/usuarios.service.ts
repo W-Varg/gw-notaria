@@ -17,6 +17,8 @@ import { AuthService } from 'src/modules/auth/auth.service';
 import { ProfileService } from 'src/modules/auth/profile/profile.service';
 import { FileStorageService } from 'src/global/services/file-storage.service';
 import { UserValidationService } from 'src/global/services/user-validation.service';
+import { IToken } from 'src/common/decorators/token.decorator';
+import { AuditService } from 'src/global/services/audit.service';
 
 @Injectable()
 export class UsuariosService {
@@ -26,6 +28,7 @@ export class UsuariosService {
     private readonly profileService: ProfileService,
     private readonly fileStorageService: FileStorageService,
     private readonly userValidationService: UserValidationService,
+    private readonly auditService: AuditService,
   ) {}
 
   async create(inputDto: CreateUsuarioDto, file?: Express.Multer.File) {
@@ -173,12 +176,23 @@ export class UsuariosService {
     return dataResponseSuccess<Usuario>({ data: usuarioSinPassword });
   }
 
-  async update(id: string, updateUsuarioDto: UpdateUsuarioDto, file?: Express.Multer.File) {
+  async update(id: string, updateUsuarioDto: UpdateUsuarioDto, session: IToken) {
     try {
-      // Verificar que el usuario existe y obtener avatar actual
+      // Verificar que el usuario existe y obtener datos completos para auditoría
       const existingUsuario = await this.prismaService.usuario.findUnique({
         where: { id },
-        select: { id: true, avatar: true },
+        include: {
+          roles: {
+            include: {
+              rol: {
+                select: {
+                  id: true,
+                  nombre: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!existingUsuario) return dataResponseError('Usuario no encontrado');
@@ -201,33 +215,30 @@ export class UsuariosService {
         }
       }
 
-      // Procesar nuevo avatar si se proporciona usando FileStorageService
-      let newAvatarUrl: string | null = null;
-      if (file) {
-        newAvatarUrl = await this.fileStorageService.processAvatarUpload(file);
-
-        // Eliminar avatar anterior si existe y se está reemplazando
-        if (existingUsuario.avatar && newAvatarUrl) {
-          const oldFileName = basename(existingUsuario.avatar);
-          await this.fileStorageService.deleteAvatar(oldFileName);
-        }
-      }
-
       // Preparar los datos de actualización
       const updateData: any = { ...usuarioData };
-
-      // Agregar nuevo avatar si se procesó
-      if (newAvatarUrl) {
-        updateData.avatar = newAvatarUrl;
-      }
 
       // Encriptar la contraseña si se proporciona
       if (password) {
         updateData.password = await hash(password, 10);
       }
 
-      // Actualizar roles si se proporcionan
+      // Guardar información de roles para auditoría y log
+      let rolesLog = '';
       if (rolesIds !== undefined) {
+        const rolesAnteriores = existingUsuario.roles.map((ur) => ur.rol.nombre).sort();
+        const rolesNuevos =
+          rolesIds.length > 0
+            ? await this.prismaService.rol
+                .findMany({
+                  where: { id: { in: rolesIds } },
+                  select: { nombre: true },
+                })
+                .then((roles) => roles.map((r) => r.nombre).sort())
+            : [];
+
+        rolesLog = `Roles anteriores: [${rolesAnteriores.join(', ') || 'Sin roles'}] → Roles nuevos: [${rolesNuevos.join(', ') || 'Sin roles'}]`;
+
         updateData.roles = {
           deleteMany: {},
           create: rolesIds.map((rolId) => ({
@@ -242,24 +253,54 @@ export class UsuariosService {
         include: { roles: { include: { rol: true } } },
       });
 
+      // Registrar cambios detallados usando AuditService.registrarCambiosDetallados
+      // Preparar datos anteriores y nuevos para comparación
+      const datosAnteriores = {
+        email: existingUsuario.email,
+        nombre: existingUsuario.nombre,
+        apellidos: existingUsuario.apellidos,
+        telefono: existingUsuario.telefono,
+        direccion: existingUsuario.direccion,
+        estaActivo: existingUsuario.estaActivo,
+        emailVerificado: existingUsuario.emailVerificado,
+        roles: existingUsuario.roles.map((ur) => ur.rol.nombre).sort(),
+      };
+
+      const datosNuevos = {
+        email: result.email,
+        nombre: result.nombre,
+        apellidos: result.apellidos,
+        telefono: result.telefono,
+        direccion: result.direccion,
+        estaActivo: result.estaActivo,
+        emailVerificado: result.emailVerificado,
+        roles: result.roles.map((ur) => ur.rol.nombre).sort(),
+      };
+
+      await this.auditService.registrarCambiosDetallados(
+        'Usuario',
+        id,
+        datosAnteriores,
+        datosNuevos,
+        session.usuarioId,
+        undefined, // usuarioEmail
+        session.nombreCompleto,
+        undefined, // ipOrigen
+      );
+
       // Remover contraseña de la respuesta
       const { password: _, ...usuarioSinPassword } = result;
 
-      Logger.log(`Usuario actualizado exitosamente: ${usuarioSinPassword.email}`);
+      // Log con información de roles si se actualizaron
+      if (rolesLog) {
+        Logger.log(`Usuario actualizado: ${usuarioSinPassword.email} - ${rolesLog}`);
+      } else {
+        Logger.log(`Usuario actualizado exitosamente: ${usuarioSinPassword.email}`);
+      }
 
       return dataResponseSuccess<Usuario>({ data: usuarioSinPassword });
     } catch (error) {
       Logger.error('Error al actualizar usuario:', error);
-
-      // Cleanup: eliminar nuevo avatar si hubo error usando FileStorageService
-      if (file && error instanceof Error) {
-        try {
-          const fileName = basename(file.originalname);
-          await this.fileStorageService.deleteAvatar(fileName);
-        } catch (cleanupError) {
-          Logger.error('Error al limpiar archivo de avatar:', cleanupError);
-        }
-      }
 
       return dataResponseError('Error al actualizar el usuario. Por favor intente nuevamente.');
     }

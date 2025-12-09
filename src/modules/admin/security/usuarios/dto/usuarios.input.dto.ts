@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
 import { Expose, Type, Transform } from 'class-transformer';
 import {
   IsArray,
@@ -96,13 +96,21 @@ export class CreateUsuarioDto {
   estaActivo?: boolean;
 }
 
-export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
+export class UpdateUsuarioDto extends PartialType(OmitType(CreateUsuarioDto, ['avatar', 'password'] as const)) {
   @Expose()
   @IsOptional()
   @IsBoolean()
   @ApiPropertyOptional({ type: Boolean })
   @Expose()
   emailVerificado?: boolean;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  @ApiPropertyOptional({ type: String, description: 'Contraseña (opcional al actualizar)' })
+  @Expose()
+  password?: string;
 }
 
 class UsuarioWhereInput {

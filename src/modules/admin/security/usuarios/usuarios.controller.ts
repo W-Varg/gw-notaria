@@ -32,6 +32,7 @@ import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
 import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 
 @ApiTags('[auth] Usuarios')
 @Controller('usuarios')
@@ -81,8 +82,6 @@ export class UsuariosController {
 
   @Patch(':id')
   @BearerAuthPermision([PermisoEnum.USUARIOS_EDITAR])
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('avatar'))
   @ApiResponse({ status: 200, type: () => ResponseUsuarioType })
   @ApiDescription('Actualizar un usuario por ID', [PermisoEnum.USUARIOS_EDITAR])
   @Audit({
@@ -94,9 +93,9 @@ export class UsuariosController {
   update(
     @Param('id') id: string,
     @Body() updateUsuarioDto: UpdateUsuarioDto,
-    @UploadedFile() avatar?: Express.Multer.File,
+    @AuthUser() session: IToken,
   ) {
-    return this.usuariosService.update(id, updateUsuarioDto, avatar);
+    return this.usuariosService.update(id, updateUsuarioDto, session);
   }
 
   @Delete(':id')
