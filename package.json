@@ -29,7 +29,8 @@
     "release:major": "release-it major",
     "prisma:seed": "ts-node prisma/seed/seed.ts",
     "prepare": "husky",
-    "postinstall": "npx prisma generate"
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && nest build"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
