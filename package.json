@@ -11,7 +11,8 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "nest build && npm run copy-assets",
+    "copy-assets": "mkdir -p dist/public dist/storage dist/uploads && cp -r public/* dist/public/ 2>/dev/null || true && cp -r storage/* dist/storage/ 2>/dev/null || true && cp -r uploads/* dist/uploads/ 2>/dev/null || true",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -30,7 +31,7 @@
     "prisma:seed": "ts-node prisma/seed/seed.ts",
     "prepare": "husky",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && nest build"
+    "vercel-build": "prisma generate && nest build && npm run copy-assets"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",

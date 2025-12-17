@@ -10,7 +10,8 @@
         "outDir": "dist",
         "watchAssets": false
       }
-    ]
+    ],
+    "webpack": false
   },
   "generateOptions": {
     "spec": false
