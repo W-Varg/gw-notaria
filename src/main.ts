@@ -5,7 +5,6 @@ import { VersioningType } from '@nestjs/common';
 import { join } from 'path';
 import { ConfigService } from '@nestjs/config';
 import { json, urlencoded } from 'express';
-import * as express from 'express';
 import { configSwagger, IPackageJson, printServerInitLog } from './helpers/swagger.helper';
 import { getCors } from './helpers/cors.helpers';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
@@ -17,11 +16,11 @@ async function bootstrap() {
   // Habilitar hooks de apagado para limpiar recursos (como conexiones a BD)
   app.enableShutdownHooks();
 
-  // Servir archivos estáticos usando middleware directo de Express ANTES de cualquier cosa
+  // Servir archivos estáticos usando useStaticAssets de NestJS
   // __dirname en producción apunta a dist/src, necesitamos subir 2 niveles
-  app.use('/storage', express.static(join(__dirname, '..', '..', 'storage')));
-  app.use('/uploads', express.static(join(__dirname, '..', '..', 'uploads')));
-  app.use(express.static(join(__dirname, '..', '..', 'public')));
+  app.useStaticAssets(join(__dirname, '..', '..', 'storage'), { prefix: '/storage' });
+  app.useStaticAssets(join(__dirname, '..', '..', 'uploads'), { prefix: '/uploads' });
+  app.useStaticAssets(join(__dirname, '..', '..', 'public'));
 
   app.enableVersioning({ type: VersioningType.URI });
 
