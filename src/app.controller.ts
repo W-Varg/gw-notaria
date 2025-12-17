@@ -17,6 +17,13 @@ export class AppController {
     // Retorna 204 No Content - silenciosamente ignora la solicitud
   }
 
+  // Manejar solicitud de favicon en assets
+  @Get('assets/favicon.ico')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  getAssetsFavicon(): void {
+    // Retorna 204 No Content - silenciosamente ignora la solicitud
+  }
+
   // Manejar solicitudes de Chrome DevTools
   @Get('.well-known/appspecific/com.chrome.devtools.json')
   @HttpCode(HttpStatus.NO_CONTENT)
