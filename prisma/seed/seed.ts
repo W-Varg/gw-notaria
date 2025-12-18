@@ -3,6 +3,8 @@ import { PrismaClient } from '../../src/generated/prisma/client';
 import { permisos as permisosSeed } from '../../src/modules/admin/security/permisos/permisos.data';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
+import { crearGastos } from './gastos.seed';
+import { crearPagosIngresos } from './pagos-ingresos.seed';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 export const prisma = new PrismaClient({ adapter });
@@ -57,6 +59,10 @@ async function main() {
 
   // Crear FAQs
   await createFaqs(adminUserId);
+  
+  await crearGastos(prisma, adminUserId);
+
+  await crearPagosIngresos(prisma, adminUserId)
 
   console.info('Seeding finished');
 }
