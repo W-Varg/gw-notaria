@@ -26,7 +26,7 @@ export class MovimientosService {
         },
       });
     }
-
+    // TODO: falta gastos con banco
     const gastosMov = gastos.map((gasto) => {
       const movimiento: IMovimiento = {
         gastoId: gasto.id,
@@ -43,6 +43,10 @@ export class MovimientosService {
     });
 
     const totalEgresos = gastosMov.reduce((prev, actual) => {
+      return prev.plus(actual.egreso ?? 0);
+    }, new Decimal(0));
+
+    const totalEgresosBancos = gastosMov.reduce((prev, actual) => {
       return prev.plus(actual.egreso ?? 0);
     }, new Decimal(0));
 
@@ -82,9 +86,15 @@ export class MovimientosService {
       return movimiento;
     });
 
-    const totalIngresos = pagosMov.reduce((prev, actual) => {
-      return prev.plus(actual.ingreso ?? 0);
-    }, new Decimal(0));
+    const { totalIngresos, totalIngresosBancos } = pagosMov.reduce(
+      (prev, actual) => {
+        if (actual.banco) prev.totalIngresosBancos.plus(actual.ingreso ?? 0);
+        else prev.totalIngresos.plus(actual.ingreso ?? 0);
+
+        return prev;
+      },
+      { totalIngresos: new Decimal(0), totalIngresosBancos: new Decimal(0) },
+    );
 
     const movimientos: IMovimiento[] = [...gastosMov, ...pagosMov];
     movimientos.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
@@ -93,6 +103,8 @@ export class MovimientosService {
       movimientos,
       totalIngresos,
       totalEgresos,
+      totalIngresosBancos,
+      totalEgresosBancos,
       saldoFinal: totalIngresos.minus(totalEgresos),
     };
   }
