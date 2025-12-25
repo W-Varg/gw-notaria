@@ -17,45 +17,64 @@ export class MovimientosService {
       fin: fecha?.endOf('day').toDate(),
     };
 
-    let gastos = [];
-
-    if (!filtro.bancoId) {
-      gastos = await this._prismaService.gastos.findMany({
-        where: {
-          fechaGasto: fechas.inicio,
+    const transaccionesEgresos = await this._prismaService.transaccionesEgresos.findMany({
+      where: {
+        fecha: { gte: fechas.inicio, lte: fechas.fin },
+        cuentaBancaria: filtro.bancoId
+          ? {
+              bancoId: filtro.bancoId,
+            }
+          : undefined,
+      },
+      include: {
+        gasto: true,
+        cuentaBancaria: {
+          select: {
+            banco: {
+              select: {
+                id: true,
+                nombre: true,
+              },
+            },
+          },
         },
-      });
-    }
-    // TODO: falta gastos con banco
-    const gastosMov = gastos.map((gasto) => {
+      },
+    });
+
+    const gastosMov = transaccionesEgresos.map((egreso) => {
       const movimiento: IMovimiento = {
-        gastoId: gasto.id,
-        fecha: gasto.fechaGasto,
+        gastoId: egreso.id,
+        fecha: egreso.fecha,
         tipo: 'GASTO',
-        concepto: gasto.descripcion,
-        referencia: 'RECIBO',
-        metodoPago: 'EFECTIVO',
+        concepto: egreso.gasto?.descripcion,
+        metodoPago: egreso.metodoPago,
         ingreso: null,
-        egreso: gasto.montoPagado,
+        egreso: egreso.monto,
+        banco: egreso?.cuentaBancaria?.banco,
       };
 
       return movimiento;
     });
 
-    const totalEgresos = gastosMov.reduce((prev, actual) => {
-      return prev.plus(actual.egreso ?? 0);
-    }, new Decimal(0));
+    const { totalEgresosEfectivo, totalEgresosBancos } = gastosMov.reduce(
+      (prev, actual) => {
+        if (actual.banco)
+          prev.totalEgresosBancos = prev.totalEgresosBancos.plus(actual.egreso ?? 0);
+        else prev.totalEgresosEfectivo = prev.totalEgresosEfectivo.plus(actual.egreso ?? 0);
 
-    const totalEgresosBancos = gastosMov.reduce((prev, actual) => {
-      return prev.plus(actual.egreso ?? 0);
-    }, new Decimal(0));
+        return prev;
+      },
+      { totalEgresosEfectivo: new Decimal(0), totalEgresosBancos: new Decimal(0) },
+    );
 
-    const pagosIngresos = await this._prismaService.pagosIngresos.findMany({
+    const ingresos = await this._prismaService.pagosIngresos.findMany({
       where: {
         fecha: { gte: fechas.inicio, lte: fechas.fin },
-        cuentaBancaria: {
-          bancoId: filtro.bancoId,
-        },
+        cuentaBancaria: filtro.bancoId
+          ? {
+              bancoId: filtro.bancoId,
+            }
+          : undefined,
       },
       include: {
         cuentaBancaria: {
@@ -70,7 +89,7 @@ export class MovimientosService {
         },
       },
     });
-    const pagosMov = pagosIngresos.map((ingreso) => {
+    const ingresosMov = ingresos.map((ingreso) => {
       const movimiento: IMovimiento = {
         ingresoId: ingreso.id,
         fecha: ingreso.fecha,
@@ -86,26 +105,30 @@ export class MovimientosService {
       return movimiento;
     });
 
-    const { totalIngresos, totalIngresosBancos } = pagosMov.reduce(
+    const { totalIngresosEfectivo, totalIngresosBancos } = ingresosMov.reduce(
       (prev, actual) => {
-        if (actual.banco) prev.totalIngresosBancos.plus(actual.ingreso ?? 0);
-        else prev.totalIngresos.plus(actual.ingreso ?? 0);
+        if (actual.banco)
+          prev.totalIngresosBancos = prev.totalIngresosBancos.plus(actual.ingreso ?? 0);
+        else prev.totalIngresosEfectivo = prev.totalIngresosEfectivo.plus(actual.ingreso ?? 0);
 
         return prev;
       },
-      { totalIngresos: new Decimal(0), totalIngresosBancos: new Decimal(0) },
+      { totalIngresosEfectivo: new Decimal(0), totalIngresosBancos: new Decimal(0) },
     );
 
-    const movimientos: IMovimiento[] = [...gastosMov, ...pagosMov];
+    const movimientos: IMovimiento[] = [...gastosMov, ...ingresosMov];
     movimientos.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
 
     return {
       movimientos,
-      totalIngresos,
-      totalEgresos,
+      totalIngresosEfectivo,
       totalIngresosBancos,
       totalEgresosBancos,
-      saldoFinal: totalIngresos.minus(totalEgresos),
+      totalEgresosEfectivo,
+      saldoFinal: totalIngresosEfectivo
+        .plus(totalIngresosBancos)
+        .minus(totalEgresosEfectivo)
+        .minus(totalEgresosBancos),
     };
   }
 }

@@ -14,7 +14,7 @@ export class IMovimiento {
   @ApiProperty()
   concepto: string;
   @ApiProperty({ enum: ConstanciaEnum })
-  referencia: ConstanciaEnum;
+  referencia?: ConstanciaEnum;
   @ApiProperty({ enum: MetodoPagoEnum })
   metodoPago: MetodoPagoEnum;
   @ApiProperty({ type: Number })

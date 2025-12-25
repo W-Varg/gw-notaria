@@ -7,9 +7,13 @@ class MovimientoResponse {
   @ApiProperty({ type: [IMovimiento] })
   movimientos: IMovimiento[];
   @ApiProperty({ type: Number })
-  totalIngresos: Decimal;
+  totalIngresosEfectivo: Decimal;
   @ApiProperty({ type: Number })
-  totalEgresos: Decimal;
+  totalIngresosBancos: Decimal;
+  @ApiProperty({ type: Number })
+  totalEgresosEfectivo: Decimal;
+  @ApiProperty({ type: Number })
+  totalEgresosBancos: Decimal;
   @ApiProperty({ type: Number })
   saldoFinal: Decimal;
 }
