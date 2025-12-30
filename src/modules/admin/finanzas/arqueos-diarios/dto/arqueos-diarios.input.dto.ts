@@ -112,6 +112,12 @@ class ArqueosDiariosWhereInput {
   @IsOptional()
   @Type(() => FloatFilter)
   saldoFinalDia?: FloatFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: DateTimeFilter })
+  @IsOptional()
+  @Type(() => DateTimeFilter)
+  fechaCierre?: DateTimeFilter;
 }
 
 class ArqueosDiariosSelectInput {

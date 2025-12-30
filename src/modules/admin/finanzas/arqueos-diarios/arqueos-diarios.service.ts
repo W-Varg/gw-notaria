@@ -79,10 +79,12 @@ export class ArqueosDiariosService {
       totalEgresosEfectivo,
       totalEgresosBancos,
       saldoFinalDia,
+      fechaCierre,
     } = inputDto.where || {};
     const whereInput: Prisma.ArqueosDiariosWhereInput = {};
 
     if (fecha) whereInput.fecha = fecha;
+    if (fechaCierre) whereInput.fechaCierre = fechaCierre;
     if (usuarioCierreId) whereInput.usuarioCierreId = usuarioCierreId;
     if (totalIngresosEfectivo !== undefined)
       whereInput.totalIngresosEfectivo = totalIngresosEfectivo;
