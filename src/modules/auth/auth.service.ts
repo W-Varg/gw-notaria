@@ -467,8 +467,6 @@ export class AuthService {
       // Generar código OTP de 6 dígitos
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-      console.log('execute', dayjs);
-
       // Guardar OTP con expiración de 10 minutos
       const expirationTime = dayjs().add(10, 'minute').toDate(); // 10 minutos
       await this.prismaService.tokenTemporal.upsert({

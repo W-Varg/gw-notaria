@@ -148,8 +148,6 @@ export class ProfileController {
   @ApiDescription('Desactivar 2FA', [])
   @ApiResponse({ status: 200, type: () => ResponseMessage2FAType })
   async disable2FA(@AuthUser() session: IToken, @Body() inputDto: Disable2FAInput) {
-    console.log(session);
-
     return this.profileService.disable2FA(session.usuarioId, inputDto);
   }
 

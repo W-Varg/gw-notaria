@@ -1,8 +1,35 @@
+import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
+import { DateTime } from 'luxon';
+import { ResponseDTO } from './common/dtos';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
+  constructor(private readonly configService: ConfigService) {}
+
+  /**
+   * Devuelve información esencial de servicio.
+   * @returns
+   */
+  getPing(): ResponseDTO<{
+    author: string;
+    dateTimeServer: Date;
+    nameApp: string;
+    version: string;
+  }> {
+    const packageJson = this.configService.get<any>('packageJson');
+    return {
+      error: false,
+      message: packageJson?.description,
+      response: {
+        data: {
+          author: packageJson.author,
+          dateTimeServer: DateTime.now().toJSDate(),
+          nameApp: packageJson?.name,
+          version: packageJson?.version,
+        },
+      },
+      status: 200,
+    };
   }
 }
