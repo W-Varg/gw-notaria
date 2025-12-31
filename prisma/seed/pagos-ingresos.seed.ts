@@ -1,12 +1,13 @@
 import { ConstanciaEnum, MetodoPagoEnum, PrismaClient } from '../../src/generated/prisma/client';
+import { randomFromArray } from './seed';
 
-export async function crearPagosIngresos(prisma: PrismaClient, usuarioId: string) {
+export async function crearPagosIngresos(prisma: PrismaClient, usuarioId: string, cuentaIds: number[]) {
   const data = [
   {
     fecha: new Date(),
-    monto: 150.0,
+    monto: 150,
     tipoPago: MetodoPagoEnum.EFECTIVO,
-    cuentaBancariaId: null,
+    cuentaBancariaId: randomFromArray(cuentaIds),
     constanciaTipo: ConstanciaEnum.RECIBO,
     numeroConstancia: 'REC-0001',
     concepto: 'Pago inicial en efectivo',
@@ -14,9 +15,9 @@ export async function crearPagosIngresos(prisma: PrismaClient, usuarioId: string
   },
   {
     fecha: new Date(),
-    monto: 200.0,
+    monto: 200,
     tipoPago: MetodoPagoEnum.QR,
-    cuentaBancariaId: null,
+    cuentaBancariaId: randomFromArray(cuentaIds),
     constanciaTipo: ConstanciaEnum.FACTURA,
     numeroConstancia: 'QR-10234',
     concepto: 'Pago vía código QR',
@@ -24,9 +25,9 @@ export async function crearPagosIngresos(prisma: PrismaClient, usuarioId: string
   },
   {
     fecha: new Date(),
-    monto: 500.0,
+    monto: 500,
     tipoPago: MetodoPagoEnum.TRANSFERENCIA,
-    cuentaBancariaId: null,
+    cuentaBancariaId: randomFromArray(cuentaIds),
     constanciaTipo: ConstanciaEnum.FACTURA,
     numeroConstancia: 'TRF-55821',
     concepto: 'Transferencia bancaria',
@@ -34,9 +35,9 @@ export async function crearPagosIngresos(prisma: PrismaClient, usuarioId: string
   },
   {
     fecha: new Date(),
-    monto: 1000.0,
+    monto: 1000,
     tipoPago: MetodoPagoEnum.CHEQUE,
-    cuentaBancariaId: null,
+    cuentaBancariaId: randomFromArray(cuentaIds),
     constanciaTipo: ConstanciaEnum.RECIBO,
     numeroConstancia: 'CHQ-88991',
     concepto: 'Pago mediante cheque',
@@ -44,9 +45,9 @@ export async function crearPagosIngresos(prisma: PrismaClient, usuarioId: string
   },
   {
     fecha: new Date(),
-    monto: 800.0,
+    monto: 800,
     tipoPago: MetodoPagoEnum.DEPOSITO,
-    cuentaBancariaId: null,
+    cuentaBancariaId: randomFromArray(cuentaIds),
     constanciaTipo: ConstanciaEnum.RECIBO,
     numeroConstancia: 'DEP-44321',
     concepto: 'Depósito bancario',

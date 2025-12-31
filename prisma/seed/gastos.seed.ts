@@ -80,9 +80,11 @@ export async function crearGastos(prisma: PrismaClient, usuarioId: string) {
     CASCADE;
   `);
 
-  await prisma.gastos.createMany({
+  const result = await prisma.gastos.createManyAndReturn({
     data,
   });
 
   console.info(`Created ${data.length} gastos`);
+
+  return result.map((v) => v.id);
 }

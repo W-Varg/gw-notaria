@@ -5,9 +5,16 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 import { crearGastos } from './gastos.seed';
 import { crearPagosIngresos } from './pagos-ingresos.seed';
+import { crearBancos } from './bancos.seed';
+import { crearCuentasBancarias } from './cuentas-bancarias.seed';
+import { crearTransaccionesEgresos } from './transacciones-egresos.seed';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 export const prisma = new PrismaClient({ adapter });
+
+export function randomFromArray<T>(array: T[]): T {
+  return array[Math.floor(Math.random() * array.length)];
+}
 
 async function main() {
   // Limpiar la base de datos
@@ -60,10 +67,16 @@ async function main() {
   // Crear FAQs
   await createFaqs(adminUserId);
   
-  await crearGastos(prisma, adminUserId);
+  const bancoIds = await crearBancos(prisma, adminUserId)
 
-  await crearPagosIngresos(prisma, adminUserId)
+  const cuentasIds = await crearCuentasBancarias(prisma, adminUserId, bancoIds)
 
+  await crearPagosIngresos(prisma, adminUserId, cuentasIds)
+  
+  const gastosIds = await crearGastos(prisma, adminUserId);
+
+  await crearTransaccionesEgresos(prisma, gastosIds, cuentasIds)
+  
   console.info('Seeding finished');
 }
 
