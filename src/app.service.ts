@@ -1,7 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
-import { DateTime } from 'luxon';
 import { ResponseDTO } from './common/dtos';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class AppService {
@@ -24,7 +24,7 @@ export class AppService {
       response: {
         data: {
           author: packageJson.author,
-          dateTimeServer: DateTime.now().toJSDate(),
+          dateTimeServer: dayjs().toDate(),
           nameApp: packageJson?.name,
           version: packageJson?.version,
         },
