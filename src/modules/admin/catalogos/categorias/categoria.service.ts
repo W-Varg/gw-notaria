@@ -5,7 +5,11 @@ import {
   ListCategoriaArgsDto,
 } from './dto/categoria.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { Categoria } from './categoria.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -21,7 +25,7 @@ export class CategoriaService {
       where: { nombre: inputDto.nombre },
       select: { id: true },
     });
-    if (exists) return dataResponseError('La categoría ya existe');
+    if (exists) return dataErrorValidations({ nombre: ['La categoría ya existe'] });
 
     const result = await this.prismaService.categoria.create({
       data: {
@@ -104,7 +108,7 @@ export class CategoriaService {
         where: { nombre: updateCategoriaDto.nombre, id: { not: id } },
         select: { id: true },
       });
-      if (nameExists) return dataResponseError('Ya existe una categoría con ese nombre');
+      if (nameExists) return dataErrorValidations({ nombre: ['Ya existe una categoría con ese nombre'] });
     }
 
     const result = await this.prismaService.categoria.update({

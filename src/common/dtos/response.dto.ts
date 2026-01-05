@@ -145,3 +145,31 @@ export const dataResponseError = <T>(
 ): ResponseDTO<T> => {
   return { error, message, response, status };
 };
+
+/* ---------------------------------------------------------------------------------------------- */
+/**
+ * @param validationErrors - Objeto con los campos y sus mensajes de error
+ * @param message - Mensaje general del error (opcional)
+ * @returns ResponseDTO con estructura de errores de validación
+ *
+ * @example
+ * // Con mensaje personalizado
+ * dataErrorValidations({
+ *   nombre: ['La categoría ya existe'],
+ *   descripcion: ['La descripción es requerida', 'Debe tener al menos 10 caracteres']},
+ *   'Error en el registro del usuario'
+ * );
+ */
+export const dataErrorValidations = <T = any>(
+  validationErrors: Partial<ValidationErrorsType<T>>,
+  message: string = 'hay un error de validación, por favor verifique los datos ingresados',
+): ResponseDTO<T> => {
+  return {
+    error: true,
+    message,
+    response: {
+      validationErrors: validationErrors as ValidationErrorsType<T>,
+    },
+    status: 406,
+  };
+};
