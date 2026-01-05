@@ -29,7 +29,7 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 
 @ApiTags('[admin] Mensajes de Contacto')
 @Controller('mensajes-contacto')
@@ -39,9 +39,7 @@ export class MensajeContactoController {
 
   @Post()
   @BearerAuthPermision([PermisoEnum.MENSAJES_CONTACTO_CREAR])
-  @ApiDescription('Registrar un nuevo mensaje de contacto', [
-    PermisoEnum.MENSAJES_CONTACTO_CREAR,
-  ])
+  @ApiDescription('Registrar un nuevo mensaje de contacto', [PermisoEnum.MENSAJES_CONTACTO_CREAR])
   @ApiResponse({ status: 200, type: () => ResponseMensajeContactoType })
   @Audit({
     accion: TipoAccionEnum.CREATE,

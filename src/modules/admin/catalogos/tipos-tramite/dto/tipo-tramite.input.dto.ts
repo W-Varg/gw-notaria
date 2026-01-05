@@ -3,9 +3,11 @@ import { Expose, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsDefined,
+  IsNumber,
   IsOptional,
   IsString,
   MaxLength,
+  Min,
   MinLength,
 } from 'class-validator';
 import { BaseFilterDto } from 'src/common/dtos/filters.dto';
@@ -15,10 +17,10 @@ import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-fil
 
 export class CreateTipoTramiteDto {
   @Expose()
-  @IsDefined()
+  @IsOptional()
   @IsString()
-  @ApiProperty({ type: String })
-  tipoDocumentoId: string;
+  @ApiPropertyOptional({ type: String })
+  tipoDocumentoId?: string;
 
   @Expose()
   @IsDefined()
@@ -57,6 +59,13 @@ export class CreateTipoTramiteDto {
 
   @Expose()
   @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @ApiPropertyOptional({ type: Number, default: 0 })
+  costoBase?: number;
+
+  @Expose()
+  @IsOptional()
   @IsBoolean()
   @ApiPropertyOptional({ type: Boolean })
   estaActiva?: boolean;
@@ -75,7 +84,7 @@ class TipoTramiteWhereInput {
   @ApiPropertyOptional({ type: StringFilter })
   @IsOptional()
   @Type(() => StringFilter)
-  tipoDocumentoId?: StringFilter;
+  tipoDocumentoId?: StringNullableFilter;
 
   @Expose()
   @ApiPropertyOptional({ type: StringNullableFilter })

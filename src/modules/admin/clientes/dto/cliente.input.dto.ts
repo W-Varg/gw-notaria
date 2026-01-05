@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  IsInt,
   MaxLength,
   MinLength,
   ValidateNested,
@@ -15,7 +16,7 @@ import {
 import { BaseFilterDto } from 'src/common/dtos/filters.dto';
 import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
 import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
-import { TipoClienteEnum } from 'src/generated/prisma/enums';
+import { TipoClienteEnum } from 'src/enums/tipo-cliente.enum';
 
 // DTOs para PersonaNatural
 export class CreatePersonaNaturalDto {
@@ -82,8 +83,8 @@ export class CreatePersonaJuridicaDto {
 export class CreateClienteDto {
   @Expose()
   @IsDefined()
-  @IsEnum(TipoClienteEnum)
-  @ApiProperty({ enum: TipoClienteEnum })
+  @IsInt()
+  @ApiProperty({ type: Number, enum: TipoClienteEnum, description: '1 = NATURAL, 2 = JURIDICA' })
   tipo: TipoClienteEnum;
 
   @Expose()
@@ -129,9 +130,13 @@ export class UpdateClienteDto extends PartialType(CreateClienteDto) {}
 
 class ClienteWhereInput {
   @Expose()
-  @ApiPropertyOptional({ enum: TipoClienteEnum })
+  @ApiPropertyOptional({
+    type: Number,
+    enum: TipoClienteEnum,
+    description: '1 = NATURAL, 2 = JURIDICA',
+  })
   @IsOptional()
-  @IsEnum(TipoClienteEnum)
+  @IsInt()
   tipo?: TipoClienteEnum;
 
   @Expose()

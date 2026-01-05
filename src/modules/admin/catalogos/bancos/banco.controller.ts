@@ -26,7 +26,7 @@ import {
 } from './dto/banco.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 
 @ApiTags('[admin] Bancos')
 @Controller('bancos')

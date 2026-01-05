@@ -1,4 +1,5 @@
-import { ConstanciaEnum, MetodoPagoEnum, PrismaClient } from '../../src/generated/prisma/client';
+import { ConstanciaEnum, PrismaClient } from '../../src/generated/prisma/client';
+import { MetodoPagoEnum } from '../../src/enums/metodo-pago.enum';
 
 export async function crearPagosIngresos(prisma: PrismaClient, usuarioId: string) {
   const data = [

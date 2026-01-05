@@ -137,7 +137,10 @@ export class DataChangeHistory {
   historial: DataChangeHistoryItem[];
 }
 
-class DataChangeHistoryData extends OmitType(ResponseStructDTO, ['pagination', 'validationErrors']) {
+class DataChangeHistoryData extends OmitType(ResponseStructDTO, [
+  'pagination',
+  'validationErrors',
+]) {
   @ApiProperty({ type: DataChangeHistory })
   data: DataChangeHistory;
 }

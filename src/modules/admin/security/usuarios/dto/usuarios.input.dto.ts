@@ -96,7 +96,9 @@ export class CreateUsuarioDto {
   estaActivo?: boolean;
 }
 
-export class UpdateUsuarioDto extends PartialType(OmitType(CreateUsuarioDto, ['avatar', 'password'] as const)) {
+export class UpdateUsuarioDto extends PartialType(
+  OmitType(CreateUsuarioDto, ['avatar', 'password'] as const),
+) {
   @Expose()
   @IsOptional()
   @IsBoolean()

@@ -42,7 +42,13 @@ Este archivo contiene todos los DTOs para las operaciones de entrada del módulo
 ### 1️⃣ CreateDto - DTO de Creación
 
 ```typescript
-export class CreateCategoriaDto {
+export class CreateTipoTramiteDto {
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String, description: 'ID del tipo de documento (opcional)' })
+  tipoDocumentoId?: string;
+
   @Expose()
   @IsDefined()
   @IsString()
@@ -60,8 +66,21 @@ export class CreateCategoriaDto {
 
   @Expose()
   @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  @ApiPropertyOptional({ type: String })
+  claseTramite?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({ type: Number, description: 'Costo base del trámite' })
+  costoBase?: number;
+
+  @Expose()
+  @IsOptional()
   @IsBoolean()
-  @ApiPropertyOptional({ type: Boolean })
+  @ApiPropertyOptional({ type: Boolean, default: true })
   estaActiva?: boolean;
 }
 ```
@@ -74,6 +93,11 @@ export class CreateCategoriaDto {
 - `@MinLength()`, `@MaxLength()`: Validación de longitud
 - `@ApiProperty()`: Documentación Swagger (requerido)
 - `@ApiPropertyOptional()`: Documentación Swagger (opcional)
+
+**Nota sobre campos opcionales:**
+- En Prisma, un campo con `?` es nullable en la base de datos
+- En DTOs de creación, usa `@IsOptional()` para campos no requeridos
+- Ejemplo: `tipoDocumentoId String?` en schema → `tipoDocumentoId?: string` con `@IsOptional()` en DTO
 
 **Orden de decoradores:**
 1. `@Expose()` - Siempre primero
@@ -131,12 +155,26 @@ class [Nombre]WhereInput {
   @Type(() => IntFilter)
   cantidad?: IntFilter;
 
+  // Filtros para números decimales (Prisma Decimal)
+  @Expose()
+  @ApiPropertyOptional({ type: DecimalFilter })
+  @IsOptional()
+  @Type(() => DecimalFilter)
+  costoBase?: DecimalFilter;
+
   // Filtros para fechas
   @Expose()
   @ApiPropertyOptional({ type: DateTimeFilter })
   @IsOptional()
   @Type(() => DateTimeFilter)
   fechaCreacion?: DateTimeFilter;
+
+  // Filtros para fechas opcionales (nullable)
+  @Expose()
+  @ApiPropertyOptional({ type: DateTimeNullableFilter })
+  @IsOptional()
+  @Type(() => DateTimeNullableFilter)
+  fechaFinalizacion?: DateTimeNullableFilter;
 }
 ```
 
@@ -147,12 +185,14 @@ class [Nombre]WhereInput {
 4. `@Type(() => TipoFiltro)` - Transformación de tipo
 
 **Tipos de filtros disponibles:**
-- `StringFilter`: Para campos `string`
-- `StringNullableFilter`: Para campos `string | null`
+- `StringFilter`: Para campos `string` (required)
+- `StringNullableFilter`: Para campos `string | null` (optional)
 - `IntFilter`: Para campos `number` (enteros)
 - `FloatFilter`: Para campos `number` (decimales)
+- `DecimalFilter`: Para campos `Decimal` de Prisma
 - `BoolFilter`: Para campos `boolean`
-- `DateTimeFilter`: Para campos `Date`
+- `DateTimeFilter`: Para campos `Date` / `DateTime`
+- `DateTimeNullableFilter`: Para campos `DateTime?` (optional)
 
 ### 4️⃣ SelectInput - DTO de Selección de Campos
 
@@ -194,6 +234,37 @@ export class List[Nombre]ArgsDto extends BaseFilterDto {
   @ValidateNested()
   @Type(() => [Nombre]SelectInput)
   select?: [Nombre]SelectInput;
+}
+```
+
+### 6️⃣ Filtros en Relaciones
+
+Cuando necesitas filtrar por campos de relaciones (ej: filtrar derivaciones por tipo de trámite del servicio):
+
+```typescript
+class DerivacionWhereInput {
+  // Filtros directos
+  @Expose()
+  @ApiPropertyOptional({ type: StringFilter })
+  @IsOptional()
+  @Type(() => StringFilter)
+  servicioId?: StringFilter;
+
+  // Filtro simple por ID de relación (recomendado)
+  @Expose()
+  @ApiPropertyOptional({ type: String, description: 'Filtrar por ID del tipo de trámite del servicio' })
+  @IsOptional()
+  @IsString()
+  tramiteId?: string;
+}
+```
+
+**En el servicio, aplica el filtro así:**
+```typescript
+if (tramiteId) {
+  whereInput.servicio = {
+    tipoTramiteId: tramiteId,
+  };
 }
 ```
 
@@ -420,10 +491,20 @@ create(@Body() inputDto: Create[Nombre]Dto, @AuthUser() session: IToken) {
 - `@ApiResponse({...})`: Define tipo de respuesta en Swagger
 - `@Audit({...})`: Registra la acción de creación en logs
   - `accion`: Tipo de acción (CREATE, UPDATE, DELETE, etc.)
-  - `modulo`: Módulo al que pertenece (ej: 'catalogos', 'security')
-  - `tabla`: Nombre de la tabla/modelo
-  - `descripcion`: Descripción de la acción
+  - `modulo`: Módulo al que pertenece (ej: 'catalogos', 'security', 'servicios')
+  - `tabla`: Nombre de la tabla/modelo en Prisma (ej: 'Categoria', 'DerivacionServicio')
+  - `descripcion`: Descripción legible de la acción
 - `@AuthUser()`: Inyecta sesión del usuario autenticado
+
+**Ejemplo de @Audit en módulo de servicios:**
+```typescript
+@Audit({
+  accion: TipoAccionEnum.CREATE,
+  modulo: 'servicios',
+  tabla: 'DerivacionServicio',
+  descripcion: 'Crear derivación de servicio',
+})
+```
 
 **Retorna:** `Response[Nombre]Type` (registro individual)
 
@@ -582,6 +663,12 @@ remove(@Param('id') id: string) {
 
 A continuación se muestra un ejemplo completo del módulo de Categorías siguiendo todos los estándares documentados:
 
+**Nota sobre tipos Decimal de Prisma:**
+- En el schema: `Decimal @db.Decimal(10, 2)`
+- En DTOs: Usa `@IsNumber()` y `number` en TypeScript
+- Prisma convierte automáticamente entre `Decimal` y `number`
+- En filtros: Usa `DecimalFilter` si necesitas comparaciones precisas
+
 ### categoria.input.dto.ts
 
 ```typescript
@@ -592,6 +679,7 @@ import {
   IsDefined,
   IsOptional,
   IsString,
+  IsNumber,
   MaxLength,
   MinLength,
   ValidateNested,
@@ -600,6 +688,8 @@ import { BaseFilterDto } from 'src/common/dtos/filters.dto';
 import { BoolFilter } from 'src/common/dtos/prisma/bool-filter.input';
 import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
 import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
+import { DecimalFilter } from 'src/common/dtos/prisma/decimal-filter.input';
+import { DateTimeFilter, DateTimeNullableFilter } from 'src/common/dtos';
 
 export class CreateCategoriaDto {
   @Expose()
@@ -656,6 +746,12 @@ class CategoriaWhereInput {
   @IsOptional()
   @Type(() => BoolFilter)
   estaActiva?: BoolFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: DateTimeFilter })
+  @IsOptional()
+  @Type(() => DateTimeFilter)
+  fechaCreacion?: DateTimeFilter;
 }
 
 class CategoriaSelectInput {
@@ -916,8 +1012,17 @@ Al crear un nuevo módulo CRUD, asegúrate de:
 
 ### Input DTOs (`[nombre].input.dto.ts`)
 - [ ] `Create[Nombre]Dto` con todos los campos requeridos y opcionales
+- [ ] Campos opcionales en Prisma (`field?`) → `@IsOptional()` en DTO
+- [ ] Campos con valor por defecto → `@IsOptional()` en DTO (el default se aplica en DB)
+- [ ] Campos tipo `Decimal` → `@IsNumber()` en DTO
+- [ ] Campos tipo `DateTime` → `@IsDateString()` o `@IsISO8601()` si se envían como string
 - [ ] `Update[Nombre]Dto` usando `PartialType`
 - [ ] `[Nombre]WhereInput` con filtros apropiados
+  - [ ] `StringFilter` / `StringNullableFilter` para strings
+  - [ ] `IntFilter` / `FloatFilter` / `DecimalFilter` para números
+  - [ ] `BoolFilter` para booleanos
+  - [ ] `DateTimeFilter` / `DateTimeNullableFilter` para fechas
+  - [ ] Campos de relación como `string` simple para filtrar por ID
 - [ ] `[Nombre]SelectInput` con todos los campos del modelo
 - [ ] `List[Nombre]ArgsDto` extendiendo `BaseFilterDto`
 - [ ] Todos los decoradores de validación (`@IsString`, `@IsOptional`, etc.)
@@ -1021,5 +1126,16 @@ Al crear un nuevo módulo CRUD, asegúrate de:
     - Usa `@AuthUser() session: IToken` en lugar de `@Request() req`
     - Pasa `session` al servicio para rastrear `userCreateId` y `userUpdateId`
     - La sesión incluye: `usuarioId`, `nombreCompleto`, `estaActivo`, `token`, `expireIn`, `client`
+
+12. **Manejo de Fechas (DateTime)**:
+    - En Prisma: `@db.Timestamptz()` para fechas con zona horaria
+    - En DTOs: Usa `@IsDateString()` o `@IsISO8601()` para validación
+    - Para fechas opcionales en filtros: `DateTimeNullableFilter`
+    - Ejemplo de campo fecha: `fechaDerivacion DateTime @default(now()) @db.Timestamptz()`
+
+13. **Campos Opcionales con Valor por Defecto**:
+    - En schema: `prioridad String @default("normal") @db.VarChar(20)`
+    - En CreateDTO: Marca como `@IsOptional()` para que el usuario pueda omitirlo
+    - El valor por defecto se aplica automáticamente en la base de datos
 
 ---

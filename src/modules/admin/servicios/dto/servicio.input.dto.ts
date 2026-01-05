@@ -34,6 +34,34 @@ export class CreateServicioDto {
 
   @Expose()
   @IsOptional()
+  @ApiPropertyOptional({ type: String })
+  estadoActualId?: string;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Date })
+  fechaEstimadaEntrega?: Date;
+
+  @Expose()
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @ApiPropertyOptional({ type: Number })
+  plazoEntregaDias?: number;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  @ApiPropertyOptional({
+    type: String,
+    enum: ['baja', 'normal', 'alta', 'urgente'],
+    default: 'normal',
+  })
+  prioridad?: string;
+
+  @Expose()
+  @IsOptional()
   @IsString()
   @ApiPropertyOptional({ type: String })
   observaciones?: string;

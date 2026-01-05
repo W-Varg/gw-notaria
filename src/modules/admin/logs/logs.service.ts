@@ -20,7 +20,8 @@ export class LogsService {
    */
   async getAuditLogs(filters: ListAuditLogsArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(filters, true);
-    const { accion, modulo, tabla, usuarioId, usuarioEmail, fechaCreacion, exitoso } = filters.where || {};
+    const { accion, modulo, tabla, usuarioId, usuarioEmail, fechaCreacion, exitoso } =
+      filters.where || {};
     const whereInput: Prisma.AuditLogWhereInput = {};
 
     if (accion) whereInput.accion = accion;

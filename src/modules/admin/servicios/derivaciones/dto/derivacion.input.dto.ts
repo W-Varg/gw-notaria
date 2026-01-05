@@ -1,0 +1,178 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose, Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsDefined,
+  IsOptional,
+  IsString,
+  MaxLength,
+  ValidateNested,
+} from 'class-validator';
+import { BaseFilterDto } from 'src/common/dtos/filters.dto';
+import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
+import { BoolFilter } from 'src/common/dtos/prisma/bool-filter.input';
+import { DateTimeFilter } from 'src/common/dtos';
+
+export class CreateDerivacionDto {
+  @Expose()
+  @IsDefined()
+  @IsString()
+  @ApiProperty({ type: String, description: 'ID del servicio a derivar' })
+  servicioId: string;
+
+  @Expose()
+  @IsDefined()
+  @IsString()
+  @ApiProperty({ type: String, description: 'ID del usuario destino' })
+  usuarioDestinoId: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  @ApiPropertyOptional({ type: String, description: 'Motivo de la derivación' })
+  motivo?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  @ApiPropertyOptional({
+    type: String,
+    enum: ['baja', 'normal', 'alta', 'urgente'],
+    default: 'normal',
+    description: 'Prioridad de la derivación',
+  })
+  prioridad?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String, description: 'Comentario adicional' })
+  comentario?: string;
+}
+
+export class AceptarDerivacionDto {
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String, description: 'Comentario al aceptar' })
+  comentario?: string;
+}
+
+export class RechazarDerivacionDto {
+  @Expose()
+  @IsDefined()
+  @IsString()
+  @ApiProperty({ type: String, description: 'Motivo del rechazo' })
+  motivoRechazo: string;
+}
+
+class DerivacionWhereInput {
+  @Expose()
+  @ApiPropertyOptional({ type: StringFilter, description: 'Filtrar por ID del servicio' })
+  @IsOptional()
+  @Type(() => StringFilter)
+  servicioId?: StringFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: StringFilter, description: 'Filtrar por funcionario origen' })
+  @IsOptional()
+  @Type(() => StringFilter)
+  usuarioOrigenId?: StringFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: StringFilter, description: 'Filtrar por funcionario destino' })
+  @IsOptional()
+  @Type(() => StringFilter)
+  usuarioDestinoId?: StringFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: BoolFilter, description: 'Filtrar por estado de aceptación' })
+  @IsOptional()
+  @Type(() => BoolFilter)
+  aceptada?: BoolFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: DateTimeFilter, description: 'Filtrar por fecha de derivación' })
+  @IsOptional()
+  @Type(() => DateTimeFilter)
+  fechaDerivacion?: DateTimeFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: DateTimeFilter, description: 'Filtrar por fecha de aceptación' })
+  @IsOptional()
+  @Type(() => DateTimeFilter)
+  fechaAceptacion?: DateTimeFilter;
+
+  @Expose()
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Filtrar por ID del tipo de trámite del servicio',
+  })
+  @IsOptional()
+  @IsString()
+  tramiteId?: string;
+
+  @Expose()
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Filtrar por prioridad (baja, normal, alta, urgente)',
+  })
+  @IsOptional()
+  @IsString()
+  prioridad?: string;
+}
+
+class DerivacionSelectInput {
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  id?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  servicioId?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  usuarioOrigenId?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  usuarioDestinoId?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  motivo?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  prioridad?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  aceptada?: boolean;
+}
+
+export class ListDerivacionArgsDto extends BaseFilterDto {
+  @Expose()
+  @ApiPropertyOptional({ type: DerivacionWhereInput })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DerivacionWhereInput)
+  where?: DerivacionWhereInput;
+
+  @Expose()
+  @ApiPropertyOptional({ type: DerivacionSelectInput })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DerivacionSelectInput)
+  select?: DerivacionSelectInput;
+}

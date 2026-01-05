@@ -54,66 +54,8 @@ generator client {
 
 /// Enums
 
-enum EstadoPedido {
-  PENDIENTE
-  CONFIRMADO
-  EN_PREPARACION
-  LISTO_PARA_ENTREGA
-  ENTREGADO
-  CANCELADO
-  REEMBOLSADO
-
-  @@schema("public")
-}
-
-enum EstadoEntrega {
-  PENDIENTE
-  PROGRAMADA
-  EN_CAMINO
-  ENTREGADA
-  CANCELADA
-
-  @@schema("public")
-}
-
-enum UnidadMedida {
-  Gramos
-  Klg
-  Unidad
-  Caja
-  Paquete
-
-  @@schema("public")
-}
-
-enum DiaSemana {
-  Lunes
-  Martes
-  Miercoles
-  Jueves
-  Viernes
-  Sabado
-  Domingo
-
-  @@schema("public")
-}
-
-enum TipoClienteEnum {
-  NATURAL
-  JURIDICA
-
-  @@schema("public")
-}
-
-enum MetodoPagoEnum {
-  EFECTIVO
-  QR
-  TRANSFERENCIA
-  CHEQUE
-  DEPOSITO
-
-  @@schema("public")
-}
+// TipoCliente: 1 = NATURAL, 2 = JURIDICA
+// MetodoPago: 1 = EFECTIVO, 2 = QR, 3 = TRANSFERENCIA, 4 = CHEQUE, 5 = DEPOSITO
 
 enum ConstanciaEnum {
   RECIBO
@@ -200,6 +142,8 @@ model Usuario {
   notificaciones            Notificacion[]
   historialEstadosServicios HistorialEstadosServicio[]
   responsableServicios      ResponsableServicio[]
+  derivacionesOrigen        DerivacionServicio[]       @relation("DerivacionesOrigen")
+  derivacionesDestino       DerivacionServicio[]       @relation("DerivacionesDestino")
   pagosIngresos             PagosIngresos[]
   gastos                    Gastos[]
   arqueosDiarios            ArqueosDiarios[]
@@ -325,19 +269,20 @@ model ConfiguracionAplicacion {
 
 model TipoTramite {
   id                 String   @id @default(cuid())
-  tipoDocumentoId    String
+  tipoDocumentoId    String?
   nombre             String   @unique
   descripcion        String?
   claseTramite       String?  @db.VarChar(50)
   negocio            String?  @db.VarChar(50)
   imagen             String?
+  costoBase          Decimal  @default(0.00) @db.Decimal(10, 2)
   estaActiva         Boolean  @default(true)
   userCreateId       String
   userUpdateId       String?
   fechaCreacion      DateTime @default(now())
   fechaActualizacion DateTime @updatedAt
 
-  tipoDocumento TipoDocumento @relation(fields: [tipoDocumentoId], references: [id])
+  tipoDocumento TipoDocumento? @relation(fields: [tipoDocumentoId], references: [id])
   servicios     Servicio[]
 
   @@map("cat_tipos_tramite")
@@ -492,6 +437,7 @@ model EstadoTramite {
   fechaCreacion            DateTime                   @default(now())
   fechaActualizacion       DateTime                   @updatedAt
   historialEstadosServicio HistorialEstadosServicio[]
+  serviciosEstadoActual    Servicio[]                 @relation("EstadoActualServicio")
 
   @@map("estados_tramite")
   @@schema("public")
@@ -503,7 +449,7 @@ model EstadoTramite {
 
 model Cliente {
   id                 String          @id @default(cuid())
-  tipo               TipoClienteEnum
+  tipo               Int             // 1 = NATURAL, 2 = JURIDICA
   direccion          String?         @db.VarChar(255)
   telefono           String?         @db.VarChar(20)
   email              String?         @db.VarChar(100)
@@ -560,25 +506,33 @@ model PersonaJuridica {
 // ============================================================================
 
 model Servicio {
-  id                 String   @id @default(cuid())
-  codigoTicket       String   @unique @db.VarChar(20)
-  clienteId          String
-  tipoDocumentoId    String
-  tipoTramiteId      String
-  fechaInicio        DateTime @default(now()) @db.Timestamptz()
-  observaciones      String?  @db.Text
-  contenidoFinal     String?  @db.Text
-  montoTotal         Decimal  @db.Decimal(10, 2)
-  saldoPendiente     Decimal  @db.Decimal(10, 2)
-  userCreateId       String
-  userUpdateId       String?
-  fechaActualizacion DateTime @updatedAt
+  id                   String    @id @default(cuid())
+  codigoTicket         String    @unique @db.VarChar(20)
+  clienteId            String
+  tipoDocumentoId      String
+  tipoTramiteId        String
+  estadoActualId       String?
+  fechaInicio          DateTime  @default(now()) @db.Timestamptz()
+  fechaFinalizacion    DateTime?
+  fechaEstimadaEntrega DateTime?
+  plazoEntregaDias     Int?
+  prioridad            String    @default("normal") @db.VarChar(20)
+  observaciones        String?   @db.Text
+  contenidoFinal       String?   @db.Text
+  montoTotal           Decimal   @db.Decimal(10, 2)
+  saldoPendiente       Decimal   @db.Decimal(10, 2)
+  estaActivo           Boolean   @default(true)
+  userCreateId         String
+  userUpdateId         String?
+  fechaActualizacion   DateTime  @updatedAt
 
   cliente                  Cliente                    @relation(fields: [clienteId], references: [id])
   tipoDocumento            TipoDocumento              @relation(fields: [tipoDocumentoId], references: [id])
-  tipoTramite              TipoTramite               @relation(fields: [tipoTramiteId], references: [id])
+  tipoTramite              TipoTramite                @relation(fields: [tipoTramiteId], references: [id])
+  estadoActual             EstadoTramite?             @relation("EstadoActualServicio", fields: [estadoActualId], references: [id])
   historialEstadosServicio HistorialEstadosServicio[]
   responsablesServicio     ResponsableServicio[]
+  derivaciones             DerivacionServicio[]
   pagosIngresos            PagosIngresos[]
 
   @@map("servicios")
@@ -616,6 +570,29 @@ model ResponsableServicio {
   @@schema("public")
 }
 
+model DerivacionServicio {
+  id               Int       @id @default(autoincrement())
+  servicioId       String
+  usuarioOrigenId  String
+  usuarioDestinoId String
+  fechaDerivacion  DateTime  @default(now()) @db.Timestamptz()
+  motivo           String?   @db.Text
+  prioridad        String    @default("normal") @db.VarChar(20)
+  comentario       String?   @db.Text
+  aceptada         Boolean   @default(false)
+  fechaAceptacion  DateTime?
+
+  servicio       Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+  usuarioOrigen  Usuario  @relation("DerivacionesOrigen", fields: [usuarioOrigenId], references: [id])
+  usuarioDestino Usuario  @relation("DerivacionesDestino", fields: [usuarioDestinoId], references: [id])
+
+  @@index([servicioId])
+  @@index([usuarioDestinoId])
+  @@index([fechaDerivacion])
+  @@map("derivaciones_servicio")
+  @@schema("public")
+}
+
 // ============================================================================
 // PAYMENTS & INCOME
 // ============================================================================
@@ -625,7 +602,7 @@ model PagosIngresos {
   servicioId        String?
   fecha             DateTime        @default(now()) @db.Timestamptz()
   monto             Decimal         @db.Decimal(10, 2)
-  tipoPago          MetodoPagoEnum
+  tipoPago          Int             // 1 = EFECTIVO, 2 = QR, 3 = TRANSFERENCIA, 4 = CHEQUE, 5 = DEPOSITO
   cuentaBancariaId  Int?
   constanciaTipo    ConstanciaEnum?
   numeroConstancia  String?         @db.VarChar(50)
@@ -673,7 +650,7 @@ model TransaccionesEgresos {
   monto            Decimal        @db.Decimal(10, 2)
   fecha            DateTime       @default(now()) @db.Timestamptz()
   cuentaBancariaId Int?
-  metodoPago       MetodoPagoEnum
+  metodoPago       Int            // 1 = EFECTIVO, 2 = QR, 3 = TRANSFERENCIA, 4 = CHEQUE, 5 = DEPOSITO
 
   gasto          Gastos          @relation(fields: [gastoId], references: [id])
   cuentaBancaria CuentaBancaria? @relation(fields: [cuentaBancariaId], references: [id])
@@ -708,42 +685,13 @@ model ArqueosDiarios {
 // MÓDULO DE AUDITORÍA Y LOGS
 // ============================================
 
-enum TipoAccionEnum {
-  CREATE // Crear
-  UPDATE // Actualizar
-  DELETE // Eliminar
-  READ // Leer/Visualizar
-  LOGIN // Inicio de sesión
-  LOGOUT // Cierre de sesión
-  EXPORT // Exportar datos
-  IMPORT // Importar datos
-  PRINT // Imprimir
-  DOWNLOAD // Descargar
-  APPROVE // Aprobar
-  REJECT // Rechazar
-  ACTIVATE // Activar
-  DEACTIVATE // Desactivar
-  RESTORE // Restaurar
-  CUSTOM // Acción personalizada
-  PASSWORD_CHANGE // Cambio de contraseña
-
-  @@schema("logs")
-}
-
-enum NivelLogEnum {
-  INFO // Información general
-  WARNING // Advertencia
-  ERROR // Error
-  CRITICAL // Error crítico
-  DEBUG // Debug
-
-  @@schema("logs")
-}
+// TipoAccion: 1 = CREATE, 2 = UPDATE, 3 = DELETE, 4 = READ, 5 = LOGIN, 6 = LOGOUT, 7 = EXPORT, 8 = IMPORT, 9 = PRINT, 10 = DOWNLOAD, 11 = APPROVE, 12 = REJECT, 13 = ACTIVATE, 14 = DEACTIVATE, 15 = RESTORE, 16 = CUSTOM, 17 = PASSWORD_CHANGE
+// NivelLog: 1 = INFO, 2 = WARNING, 3 = ERROR, 4 = CRITICAL, 5 = DEBUG
 
 model AuditLog {
   id                String         @id @default(cuid())
   // Información de la acción
-  accion            TipoAccionEnum
+  accion            Int            // 1 = CREATE, 2 = UPDATE, 3 = DELETE, 4 = READ, etc.
   modulo            String // Ej: "usuarios", "categorias", "faqs", "pedidos"
   tabla             String? // Nombre de la tabla afectada
   registroId        String? // ID del registro afectado
@@ -781,7 +729,7 @@ model AuditLog {
 model SystemLog {
   id            String       @id @default(cuid())
   // Información del log
-  nivel         NivelLogEnum @default(INFO)
+  nivel         Int          @default(1) // 1 = INFO, 2 = WARNING, 3 = ERROR, 4 = CRITICAL, 5 = DEBUG
   mensaje       String
   contexto      String? // Contexto donde ocurrió (clase, método, etc.)
   modulo        String? // Módulo del sistema

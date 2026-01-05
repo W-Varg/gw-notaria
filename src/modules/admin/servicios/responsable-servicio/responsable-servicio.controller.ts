@@ -29,7 +29,7 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 
 @ApiTags('[admin] Responsables de Servicio')
 @Controller('responsables-servicio')
@@ -39,9 +39,7 @@ export class ResponsableServicioController {
 
   @Post()
   @BearerAuthPermision([PermisoEnum.RESPONSABLES_SERVICIO_CREAR])
-  @ApiDescription('Asignar un responsable a un servicio', [
-    PermisoEnum.RESPONSABLES_SERVICIO_CREAR,
-  ])
+  @ApiDescription('Asignar un responsable a un servicio', [PermisoEnum.RESPONSABLES_SERVICIO_CREAR])
   @ApiResponse({ status: 200, type: () => ResponseResponsableServicioType })
   @Audit({
     accion: TipoAccionEnum.CREATE,
@@ -95,10 +93,7 @@ export class ResponsableServicioController {
     tabla: 'ResponsableServicio',
     descripcion: 'Actualizar responsable de servicio',
   })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateDto: UpdateResponsableServicioDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateDto: UpdateResponsableServicioDto) {
     return this.responsableServicioService.update(id, updateDto);
   }
 

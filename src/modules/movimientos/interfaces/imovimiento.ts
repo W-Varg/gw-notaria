@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Decimal } from '@prisma/client/runtime/client';
-import { ConstanciaEnum, MetodoPagoEnum } from 'src/generated/prisma/enums';
+import { MetodoPagoEnum } from 'src/enums/metodo-pago.enum';
+import { ConstanciaEnum } from 'src/generated/prisma/enums';
 import { Banco } from 'src/modules/admin/catalogos/bancos/banco.entity';
 export class IMovimiento {
   @ApiProperty()
@@ -15,7 +16,11 @@ export class IMovimiento {
   concepto: string;
   @ApiProperty({ enum: ConstanciaEnum })
   referencia?: ConstanciaEnum;
-  @ApiProperty({ enum: MetodoPagoEnum })
+  @ApiProperty({
+    type: Number,
+    enum: MetodoPagoEnum,
+    description: '1 = EFECTIVO, 2 = QR, 3 = TRANSFERENCIA, 4 = CHEQUE, 5 = DEPOSITO',
+  })
   metodoPago: MetodoPagoEnum;
   @ApiProperty({ type: Number })
   ingreso: Decimal;

@@ -9,7 +9,8 @@ import {
   ValidateNested,
   IsBoolean,
 } from 'class-validator';
-import { NivelLogEnum, TipoAccionEnum } from 'src/generated/prisma/client';
+import { NivelLogEnum } from 'src/enums/nivel-log.enum';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 import {
   BaseFilterDto,
   StringFilter,

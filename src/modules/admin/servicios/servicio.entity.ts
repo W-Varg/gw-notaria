@@ -17,8 +17,23 @@ export class Servicio {
   @ApiPropertyOptional()
   tipoTramiteId?: string;
 
+  @ApiPropertyOptional()
+  estadoActualId?: string;
+
   @ApiProperty()
   fechaInicio: Date;
+
+  @ApiPropertyOptional()
+  fechaFinalizacion?: Date;
+
+  @ApiPropertyOptional()
+  fechaEstimadaEntrega?: Date;
+
+  @ApiPropertyOptional()
+  plazoEntregaDias?: number;
+
+  @ApiProperty({ default: 'normal' })
+  prioridad: string;
 
   @ApiPropertyOptional()
   observaciones?: string;
@@ -31,6 +46,9 @@ export class Servicio {
 
   @ApiProperty()
   saldoPendiente: Prisma.Decimal;
+
+  @ApiProperty({ default: true })
+  estaActivo: boolean;
 
   @ApiProperty()
   userCreateId: string;
@@ -52,10 +70,16 @@ export class Servicio {
   tipoTramite?: any;
 
   @ApiPropertyOptional()
+  estadoActual?: any;
+
+  @ApiPropertyOptional()
   historialEstadosServicio?: any[];
 
   @ApiPropertyOptional()
   responsablesServicio?: any[];
+
+  @ApiPropertyOptional()
+  derivaciones?: any[];
 
   @ApiPropertyOptional()
   pagosIngresos?: any[];

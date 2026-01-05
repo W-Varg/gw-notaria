@@ -29,7 +29,7 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 
 @ApiTags('[admin] Transacciones de Egresos')
 @Controller('transacciones-egresos')
@@ -95,10 +95,7 @@ export class TransaccionesEgresosController {
     tabla: 'TransaccionesEgresos',
     descripcion: 'Actualizar transacción de egreso',
   })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateDto: UpdateTransaccionesEgresosDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateDto: UpdateTransaccionesEgresosDto) {
     return this.transaccionesEgresosService.update(id, updateDto);
   }
 

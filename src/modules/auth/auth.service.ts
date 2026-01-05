@@ -18,7 +18,8 @@ import {
 import { AuthResponse, AuthUsuario, GoogleUserData } from './auth.entity';
 import { TokenService } from '../../common/guards/token-auth.service';
 import { EmailService } from '../../global/emails/email.service';
-import { TipoAccionEnum, Usuario as UserModel } from '../../generated/prisma/client';
+import { Usuario as UserModel } from '../../generated/prisma/client';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 import { TokenTemporalTipoEnum, TokenTemporalClaveEnum } from 'src/enums';
 import { AuditService } from 'src/global/services/audit.service';
 

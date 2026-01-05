@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { TipoAccionEnum, NivelLogEnum, Prisma } from '../../generated/prisma/client';
+import { Prisma } from '../../generated/prisma/client';
+import { TipoAccionEnum } from '../../enums/tipo-accion.enum';
+import { NivelLogEnum } from '../../enums/nivel-log.enum';
 
 export interface AuditLogData {
   accion: TipoAccionEnum;

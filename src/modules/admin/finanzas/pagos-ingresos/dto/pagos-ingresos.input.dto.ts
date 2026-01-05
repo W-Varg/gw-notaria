@@ -16,7 +16,8 @@ import { IntFilter } from 'src/common/dtos/prisma/int-filter.input';
 import { IntNullableFilter } from 'src/common/dtos/prisma/int-nullable-filter.input';
 import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
 import { FloatFilter } from 'src/common/dtos/prisma/float-filter.input';
-import { MetodoPagoEnum, ConstanciaEnum } from 'src/generated/prisma/enums';
+import { MetodoPagoEnum } from 'src/enums/metodo-pago.enum';
+import { ConstanciaEnum } from 'src/generated/prisma/enums';
 
 export class CreatePagosIngresosDto {
   @Expose()
@@ -33,8 +34,12 @@ export class CreatePagosIngresosDto {
 
   @Expose()
   @IsDefined()
-  @IsEnum(MetodoPagoEnum)
-  @ApiProperty({ enum: MetodoPagoEnum })
+  @IsInt()
+  @ApiProperty({
+    type: Number,
+    enum: MetodoPagoEnum,
+    description: '1 = EFECTIVO, 2 = QR, 3 = TRANSFERENCIA, 4 = CHEQUE, 5 = DEPOSITO',
+  })
   tipoPago: MetodoPagoEnum;
 
   @Expose()

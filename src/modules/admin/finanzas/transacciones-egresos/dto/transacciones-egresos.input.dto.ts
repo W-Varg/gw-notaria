@@ -13,7 +13,7 @@ import { BaseFilterDto } from 'src/common/dtos/filters.dto';
 import { IntFilter } from 'src/common/dtos/prisma/int-filter.input';
 import { IntNullableFilter } from 'src/common/dtos/prisma/int-nullable-filter.input';
 import { FloatFilter } from 'src/common/dtos/prisma/float-filter.input';
-import { MetodoPagoEnum } from 'src/generated/prisma/enums';
+import { MetodoPagoEnum } from 'src/enums/metodo-pago.enum';
 
 export class CreateTransaccionesEgresosDto {
   @Expose()

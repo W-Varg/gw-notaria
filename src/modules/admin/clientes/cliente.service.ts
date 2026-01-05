@@ -11,7 +11,7 @@ import { Cliente } from './cliente.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken } from 'src/common/decorators/token.decorator';
-import { TipoClienteEnum } from 'src/generated/prisma/enums';
+import { TipoClienteEnum } from 'src/enums/tipo-cliente.enum';
 
 @Injectable()
 export class ClienteService {

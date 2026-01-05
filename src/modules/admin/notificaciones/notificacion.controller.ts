@@ -29,7 +29,7 @@ import { PermisoEnum } from 'src/enums/permisos.enum';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 
 @ApiTags('[admin] Notificaciones')
 @Controller('notificaciones')
@@ -80,9 +80,7 @@ export class NotificacionController {
   @Patch(':id')
   @BearerAuthPermision([PermisoEnum.NOTIFICACIONES_EDITAR])
   @ApiResponse({ status: 200, type: () => ResponseNotificacionType })
-  @ApiDescription('Actualizar una notificación por ID', [
-    PermisoEnum.NOTIFICACIONES_EDITAR,
-  ])
+  @ApiDescription('Actualizar una notificación por ID', [PermisoEnum.NOTIFICACIONES_EDITAR])
   @Audit({
     accion: TipoAccionEnum.UPDATE,
     modulo: 'notificaciones',
@@ -100,9 +98,7 @@ export class NotificacionController {
   @Delete(':id')
   @BearerAuthPermision([PermisoEnum.NOTIFICACIONES_ELIMINAR])
   @ApiResponse({ status: 200, type: () => ResponseNotificacionType })
-  @ApiDescription('Eliminar una notificación por ID', [
-    PermisoEnum.NOTIFICACIONES_ELIMINAR,
-  ])
+  @ApiDescription('Eliminar una notificación por ID', [PermisoEnum.NOTIFICACIONES_ELIMINAR])
   @Audit({
     accion: TipoAccionEnum.DELETE,
     modulo: 'notificaciones',
@@ -127,9 +123,7 @@ export class NotificacionController {
 
   @Get('user/contador')
   @BearerAuthPermision([PermisoEnum.NOTIFICACIONES_VER])
-  @ApiDescription('Contar notificaciones no leídas del usuario', [
-    PermisoEnum.NOTIFICACIONES_VER,
-  ])
+  @ApiDescription('Contar notificaciones no leídas del usuario', [PermisoEnum.NOTIFICACIONES_VER])
   @ApiResponse({
     status: 200,
     schema: {

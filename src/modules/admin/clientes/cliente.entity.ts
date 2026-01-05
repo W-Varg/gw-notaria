@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { TipoClienteEnum } from 'src/generated/prisma/enums';
+import { TipoClienteEnum } from 'src/enums/tipo-cliente.enum';
 
 export class PersonaNatural {
   @ApiProperty()
@@ -63,7 +63,7 @@ export class Cliente {
   @ApiProperty()
   id: string;
 
-  @ApiProperty({ enum: TipoClienteEnum })
+  @ApiProperty({ type: Number, enum: TipoClienteEnum, description: '1 = NATURAL, 2 = JURIDICA' })
   tipo: TipoClienteEnum;
 
   @ApiProperty()

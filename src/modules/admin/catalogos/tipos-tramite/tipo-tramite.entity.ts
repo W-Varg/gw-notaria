@@ -1,11 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Prisma } from 'src/generated/prisma/client';
 
 export class TipoTramite {
   @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty({ type: String })
-  tipoDocumentoId: string;
+  @ApiPropertyOptional({ type: String })
+  tipoDocumentoId?: string;
 
   @ApiProperty({ type: String })
   nombre: string;
@@ -21,6 +22,9 @@ export class TipoTramite {
 
   @ApiPropertyOptional({ type: String })
   imagen?: string;
+
+  @ApiProperty({ type: Number })
+  costoBase: Prisma.Decimal;
 
   @ApiProperty({ type: Boolean })
   estaActiva: boolean = true;
