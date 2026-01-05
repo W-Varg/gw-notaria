@@ -61,7 +61,7 @@ export class TipoTramiteService {
         },
       },
     });
-    return dataResponseSuccess<{ id: string; nombre: string }[]>({ data: list });
+    return dataResponseSuccess<any[]>({ data: list });
   }
 
   async findAll(query: ListFindAllQueryDto) {

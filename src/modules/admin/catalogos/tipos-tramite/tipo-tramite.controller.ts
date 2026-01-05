@@ -62,7 +62,7 @@ export class TipoTramiteController {
   @Get()
   @BearerAuthPermision()
   @ApiDescription('Listar todos los tipos de trámite')
-  @ApiResponse({ type: ResponseTiposTramiteType })
+  @ApiResponse({ status: 200, type: PaginateTiposTramiteType })
   findAll() {
     return this.tipoTramiteService.select();
   }
