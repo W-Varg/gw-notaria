@@ -121,6 +121,16 @@ export class TipoDocumentoService {
   }
 
   async remove(id: string) {
+    //  query de tipo de documento, y verificar si existe algun Servicio asociado
+    const hasServices = await this.prismaService.servicio.count({
+      where: { tipoDocumentoId: id },
+    });
+
+    if (hasServices > 0) {
+      return dataResponseError(
+        'No se puede eliminar el tipo de documento porque tiene servicios asociados',
+      );
+    }
     const exists = await this.prismaService.tipoDocumento.findUnique({
       where: { id },
       select: { id: true },

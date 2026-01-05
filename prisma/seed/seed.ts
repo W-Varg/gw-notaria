@@ -1,10 +1,23 @@
 import 'dotenv/config';
 import { PrismaClient } from '../../src/generated/prisma/client';
-import { permisos as permisosSeed } from '../../src/modules/admin/security/permisos/permisos.data';
 import { PrismaPg } from '@prisma/adapter-pg';
-import * as bcrypt from 'bcrypt';
 import { crearGastos } from './gastos.seed';
 import { crearPagosIngresos } from './pagos-ingresos.seed';
+import {
+  createUsuarios,
+  createRoles,
+  createPermisos,
+  assignPermisosToRoles,
+  assignRolesToUsers,
+  assignAllRolesToAdmin,
+} from './auth.seed';
+import {
+  createCategorias,
+  createBancos,
+  createCuentasBancarias,
+  createTiposDocumento,
+  createEstadosTramite,
+} from './catalogos.seed';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 export const prisma = new PrismaClient({ adapter });
@@ -14,45 +27,56 @@ async function main() {
   await clearDatabase();
 
   // Crear usuarios primero para obtener el ID del admin
-  const usuarios = await createUsuarios();
+  const usuarios = await createUsuarios(prisma);
   const adminUserId = usuarios.adminUser.id;
 
-  // Crear roles básicos
-  const roles = await createRoles(adminUserId);
+  // Crear roles básicos (incluye SUPERUSUARIO)
+  const roles = await createRoles(prisma, adminUserId);
 
   // Crear permisos
-  await createPermisos();
+  await createPermisos(prisma);
 
-  // Asignar permisos a roles
-  await assignPermisosToRoles(roles.allRoles.map((r) => r.id));
+  // Asignar TODOS los permisos al rol SUPERUSUARIO
+  await assignPermisosToRoles(prisma, [roles.superusuarioRole.id]);
 
-  // Asignar roles a usuarios
-  await assignRolesToUsers(usuarios.adminUser.id, roles.adminRole.id);
-  await assignRolesToUsers(usuarios.clientUser.id, roles.clientRole.id);
+  // Asignar permisos limitados a otros roles
+  await assignPermisosToRoles(prisma, [roles.adminRole.id]);
+
+  // Asignar rol SUPERUSUARIO al usuario admin@gmail.com
+  await assignRolesToUsers(prisma, usuarios.adminUser.id, roles.superusuarioRole.id);
+
+  // Asignar roles a otros usuarios
+  await assignRolesToUsers(prisma, usuarios.clientUser.id, roles.clientRole.id);
   await assignRolesToUsers(
+    prisma,
     usuarios.managerUser.id,
     roles.allRoles.find((r) => r.nombre === 'MANAGER').id,
   );
   await assignRolesToUsers(
-    usuarios.vetUser.id,
-    roles.allRoles.find((r) => r.nombre === 'CLEANING_STAFF').id,
+    prisma,
+    usuarios.notarioUser.id,
+    roles.allRoles.find((r) => r.nombre === 'NOTARIO').id,
   );
   await assignRolesToUsers(
-    usuarios.groomerUser.id,
-    roles.allRoles.find((r) => r.nombre === 'CONTENT_CREATOR').id,
+    prisma,
+    usuarios.asistenteUser.id,
+    roles.allRoles.find((r) => r.nombre === 'ASISTENTE').id,
   );
 
-  // Asignar TODOS los roles al usuario admin (excepto el que ya tiene asignado)
-  await assignAllRolesToAdmin(
-    usuarios.adminUser.id,
-    roles.allRoles.filter((r) => r.nombre !== 'ADMIN'),
-  );
+  // Crear bancos
+  const bancos = await createBancos(prisma, adminUserId);
+
+  // Crear cuentas bancarias
+  await createCuentasBancarias(prisma, adminUserId, bancos);
 
   // Crear categorías
-  await createCategorias(adminUserId);
+  await createCategorias(prisma, adminUserId);
+
+  // Crear tipos de documento
+  await createTiposDocumento(prisma, adminUserId);
 
   // Crear estados de trámite
-  await createEstadosTramite(adminUserId);
+  await createEstadosTramite(prisma, adminUserId);
 
   // Crear configuraciones de aplicación
   await createConfiguracionAplicacion(adminUserId);
@@ -62,15 +86,28 @@ async function main() {
   
   await crearGastos(prisma, adminUserId);
 
-  await crearPagosIngresos(prisma, adminUserId)
+  await crearPagosIngresos(prisma, adminUserId);
 
   console.info('Seeding finished');
 }
 
 async function clearDatabase() {
   // Eliminar registros en orden inverso a las dependencias
-  await prisma.categoria.deleteMany();
+  await prisma.transaccionesEgresos.deleteMany();
+  await prisma.gastos.deleteMany();
+  await prisma.pagosIngresos.deleteMany();
+  await prisma.responsableServicio.deleteMany();
+  await prisma.historialEstadosServicio.deleteMany();
+  await prisma.servicio.deleteMany();
+  await prisma.personaJuridica.deleteMany();
+  await prisma.personaNatural.deleteMany();
+  await prisma.cliente.deleteMany();
+  await prisma.plantillaDocumento.deleteMany();
+  await prisma.tipoDocumento.deleteMany();
   await prisma.estadoTramite.deleteMany();
+  await prisma.cuentaBancaria.deleteMany();
+  await prisma.banco.deleteMany();
+  await prisma.categoria.deleteMany();
   await prisma.rolPermiso.deleteMany();
   await prisma.permiso.deleteMany();
   await prisma.usuarioRol.deleteMany();
@@ -78,242 +115,6 @@ async function clearDatabase() {
   await prisma.tokenTemporal.deleteMany();
   await prisma.configuracionAplicacion.deleteMany();
   await prisma.usuario.deleteMany();
-}
-
-async function createRoles(userId: string) {
-  const roles = [
-    { nombre: 'ADMIN', descripcion: 'Administrador del sistema', userCreateId: userId },
-    { nombre: 'CLIENT', descripcion: 'Cliente del sistema', userCreateId: userId },
-    { nombre: 'MANAGER', descripcion: 'Gerente de sucursal', userCreateId: userId },
-    { nombre: 'CLEANING_STAFF', descripcion: 'Personal de limpieza', userCreateId: userId },
-    { nombre: 'CONTENT_CREATOR', descripcion: 'Creador de contenido', userCreateId: userId },
-  ];
-
-  const createdRoles = [];
-
-  for (const role of roles) {
-    const createdRole = await prisma.rol.create({
-      data: role,
-    });
-    createdRoles.push(createdRole);
-  }
-
-  const adminRole = createdRoles.find((r) => r.nombre === 'ADMIN');
-  const clientRole = createdRoles.find((r) => r.nombre === 'CLIENT');
-
-  return { adminRole, clientRole, allRoles: createdRoles };
-}
-
-async function createPermisos() {
-  // Elimina todos los permisos existentes y crea solo los definidos en permisos.data.ts
-  await prisma.permiso.deleteMany();
-  // Permiso model doesn't have userCreateId field, only userUpdateId
-  await prisma.permiso.createMany({ data: permisosSeed });
-  return await prisma.permiso.findMany();
-}
-
-async function assignPermisosToRoles(roleIds: number[]) {
-  const permisos = await prisma.permiso.findMany();
-
-  // Asignar permisos a los roles especificados usando createMany para mejor rendimiento
-  const rolPermisosData = [];
-  for (const roleId of roleIds) {
-    for (const permiso of permisos) {
-      rolPermisosData.push({
-        rolId: roleId,
-        permisoId: permiso.id,
-      });
-    }
-  }
-
-  // Insertar todos los registros de una vez
-  await prisma.rolPermiso.createMany({
-    data: rolPermisosData,
-    skipDuplicates: true,
-  });
-
-  console.info(`Assigned ${rolPermisosData.length} permissions to ${roleIds.length} roles`);
-}
-
-async function createUsuarios() {
-  const password = await bcrypt.hash('Cambiar123@', 10);
-  const adminUser = await prisma.usuario.create({
-    data: {
-      email: 'admin@gmail.com',
-      password,
-      nombre: 'Admin',
-      apellidos: 'Sistema',
-      telefono: '12345678',
-      emailVerificado: true,
-    },
-  });
-
-  const clientUser = await prisma.usuario.create({
-    data: {
-      email: 'cliente@gmail.com',
-      password,
-      nombre: 'Cliente',
-      apellidos: 'Ejemplo',
-      telefono: '87654321',
-      emailVerificado: true,
-    },
-  });
-
-  const managerUser = await prisma.usuario.create({
-    data: {
-      email: 'gerente@gmail.com',
-      password,
-      nombre: 'María',
-      apellidos: 'González',
-      telefono: '22334477',
-      emailVerificado: true,
-    },
-  });
-
-  const vetUser = await prisma.usuario.create({
-    data: {
-      email: 'veterinario@gmail.com',
-      password,
-      nombre: 'Dr. Carlos',
-      apellidos: 'Rodríguez',
-      telefono: '22334488',
-      emailVerificado: true,
-    },
-  });
-
-  const groomerUser = await prisma.usuario.create({
-    data: {
-      email: 'peluquero@gmail.com',
-      password,
-      nombre: 'Ana',
-      apellidos: 'Martínez',
-      telefono: '22334499',
-      emailVerificado: true,
-    },
-  });
-
-  return { adminUser, clientUser, managerUser, vetUser, groomerUser };
-}
-
-async function assignRolesToUsers(userId: string, rolId: number) {
-  await prisma.usuarioRol.create({
-    data: {
-      usuarioId: userId,
-      rolId: rolId,
-    },
-  });
-}
-
-async function assignAllRolesToAdmin(userId: string, allRoles: any[]) {
-  for (const role of allRoles) {
-    await prisma.usuarioRol.create({
-      data: {
-        usuarioId: userId,
-        rolId: role.id,
-      },
-    });
-  }
-}
-
-async function createCategorias(userId: string) {
-  const categorias = [
-    { nombre: 'Alimentos', descripcion: 'Alimentos para mascotas', userCreateId: userId },
-    { nombre: 'Accesorios', descripcion: 'Accesorios para mascotas', userCreateId: userId },
-    { nombre: 'Higiene', descripcion: 'Productos de higiene para mascotas', userCreateId: userId },
-    { nombre: 'Juguetes', descripcion: 'Juguetes para mascotas', userCreateId: userId },
-  ];
-
-  const categoriasCreadas = [];
-
-  for (const categoria of categorias) {
-    const categoriaCreada = await prisma.categoria.create({
-      data: categoria,
-    });
-    categoriasCreadas.push(categoriaCreada);
-  }
-
-  return categoriasCreadas;
-}
-
-async function createEstadosTramite(userId: string) {
-  const estadosTramite = [
-    {
-      nombre: 'Recibido',
-      descripcion: 'El trámite ha sido recibido y está en espera de revisión',
-      colorHex: '#3498db',
-      orden: 1,
-      estaActivo: true,
-      userCreateId: userId,
-    },
-    {
-      nombre: 'En Revisión',
-      descripcion: 'El trámite está siendo revisado por el personal',
-      colorHex: '#f39c12',
-      orden: 2,
-      estaActivo: true,
-      userCreateId: userId,
-    },
-    {
-      nombre: 'Observado',
-      descripcion: 'El trámite tiene observaciones que deben ser corregidas',
-      colorHex: '#e74c3c',
-      orden: 3,
-      estaActivo: true,
-      userCreateId: userId,
-    },
-    {
-      nombre: 'En Proceso',
-      descripcion: 'El trámite está siendo procesado',
-      colorHex: '#9b59b6',
-      orden: 4,
-      estaActivo: true,
-      userCreateId: userId,
-    },
-    {
-      nombre: 'Pendiente de Firma',
-      descripcion: 'El trámite está listo y pendiente de firma',
-      colorHex: '#e67e22',
-      orden: 5,
-      estaActivo: true,
-      userCreateId: userId,
-    },
-    {
-      nombre: 'Finalizado',
-      descripcion: 'El trámite ha sido completado exitosamente',
-      colorHex: '#27ae60',
-      orden: 6,
-      estaActivo: true,
-      userCreateId: userId,
-    },
-    {
-      nombre: 'Cancelado',
-      descripcion: 'El trámite ha sido cancelado',
-      colorHex: '#95a5a6',
-      orden: 7,
-      estaActivo: true,
-      userCreateId: userId,
-    },
-    {
-      nombre: 'Rechazado',
-      descripcion: 'El trámite ha sido rechazado',
-      colorHex: '#c0392b',
-      orden: 8,
-      estaActivo: true,
-      userCreateId: userId,
-    },
-  ];
-
-  const estadosCreados = [];
-
-  for (const estado of estadosTramite) {
-    const estadoCreado = await prisma.estadoTramite.create({
-      data: estado,
-    });
-    estadosCreados.push(estadoCreado);
-  }
-
-  console.info(`Created ${estadosCreados.length} estados de trámite`);
-  return estadosCreados;
 }
 
 async function createConfiguracionAplicacion(userId: string) {
