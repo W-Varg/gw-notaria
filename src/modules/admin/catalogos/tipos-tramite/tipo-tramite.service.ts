@@ -45,6 +45,25 @@ export class TipoTramiteService {
     return dataResponseSuccess<TipoTramite>({ data: result });
   }
 
+  async select() {
+    const list = await this.prismaService.tipoTramite.findMany({
+      where: { estaActiva: true },
+      orderBy: { nombre: 'asc' },
+      select: {
+        id: true,
+        nombre: true,
+        costoBase: true,
+        tipoDocumento: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
+      },
+    });
+    return dataResponseSuccess<{ id: string; nombre: string }[]>({ data: list });
+  }
+
   async findAll(query: ListFindAllQueryDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(query);
 

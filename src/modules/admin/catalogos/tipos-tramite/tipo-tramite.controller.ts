@@ -51,12 +51,20 @@ export class TipoTramiteController {
     return this.tipoTramiteService.create(inputDto, session);
   }
 
+  // @Get()
+  // @BearerAuthPermision([PermisoEnum.TIPOS_TRAMITE_VER])
+  // @ApiDescription('Listar todos los tipos de trámite', [PermisoEnum.TIPOS_TRAMITE_VER])
+  // @ApiResponse({ type: ResponseTiposTramiteType })
+  // findAll(@Query() query: ListFindAllQueryDto) {
+  //   return this.tipoTramiteService.findAll(query);
+  // }
+
   @Get()
-  @BearerAuthPermision([PermisoEnum.TIPOS_TRAMITE_VER])
-  @ApiDescription('Listar todos los tipos de trámite', [PermisoEnum.TIPOS_TRAMITE_VER])
+  @BearerAuthPermision()
+  @ApiDescription('Listar todos los tipos de trámite')
   @ApiResponse({ type: ResponseTiposTramiteType })
-  findAll(@Query() query: ListFindAllQueryDto) {
-    return this.tipoTramiteService.findAll(query);
+  findAll() {
+    return this.tipoTramiteService.select();
   }
 
   @Post('list')
