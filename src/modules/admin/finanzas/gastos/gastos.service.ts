@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CreateGastosDto, UpdateGastosDto, ListGastosArgsDto } from './dto/gastos.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { Gastos } from './gastos.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -19,7 +23,7 @@ export class GastosService {
         where: { id: inputDto.usuarioId },
         select: { id: true },
       });
-      if (!usuarioExists) return dataResponseError('El usuario no existe');
+      if (!usuarioExists) return dataErrorValidations({ usuarioId: ['El usuario no existe'] });
     }
 
     // Calcular saldo

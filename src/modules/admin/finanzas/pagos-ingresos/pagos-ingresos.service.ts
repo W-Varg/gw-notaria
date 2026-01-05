@@ -5,7 +5,11 @@ import {
   ListPagosIngresosArgsDto,
 } from './dto/pagos-ingresos.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { PagosIngresos } from './pagos-ingresos.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -23,7 +27,7 @@ export class PagosIngresosService {
         where: { id: inputDto.servicioId },
         select: { id: true, saldoPendiente: true },
       });
-      if (!servicioExists) return dataResponseError('El servicio no existe');
+      if (!servicioExists) return dataErrorValidations({ servicioId: ['El servicio no existe'] });
     }
 
     // Validar cuenta bancaria si se proporciona
@@ -32,7 +36,8 @@ export class PagosIngresosService {
         where: { id: inputDto.cuentaBancariaId },
         select: { id: true },
       });
-      if (!cuentaExists) return dataResponseError('La cuenta bancaria no existe');
+      if (!cuentaExists)
+        return dataErrorValidations({ cuentaBancariaId: ['La cuenta bancaria no existe'] });
     }
 
     // Validar usuario de registro si se proporciona
@@ -41,7 +46,8 @@ export class PagosIngresosService {
         where: { id: inputDto.usuarioRegistroId },
         select: { id: true },
       });
-      if (!usuarioExists) return dataResponseError('El usuario de registro no existe');
+      if (!usuarioExists)
+        return dataErrorValidations({ usuarioRegistroId: ['El usuario de registro no existe'] });
     }
 
     const result = await this.prismaService.pagosIngresos.create({

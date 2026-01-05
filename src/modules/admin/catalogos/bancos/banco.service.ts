@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CreateBancoDto, UpdateBancoDto, ListBancoArgsDto } from './dto/banco.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { Banco } from './banco.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -17,7 +21,7 @@ export class BancoService {
       where: { nombre: inputDto.nombre },
       select: { id: true },
     });
-    if (exists) return dataResponseError('El banco ya existe');
+    if (exists) return dataErrorValidations({ nombre: ['El banco ya existe'] });
 
     const result = await this.prismaService.banco.create({
       data: {
@@ -106,7 +110,8 @@ export class BancoService {
         where: { nombre: updateBancoDto.nombre, id: { not: id } },
         select: { id: true },
       });
-      if (nameExists) return dataResponseError('Ya existe un banco con ese nombre');
+      if (nameExists)
+        return dataErrorValidations({ nombre: ['Ya existe un banco con ese nombre'] });
     }
 
     const result = await this.prismaService.banco.update({

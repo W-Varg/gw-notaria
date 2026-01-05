@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CreateClienteDto, UpdateClienteDto, ListClienteArgsDto } from './dto/cliente.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { Cliente } from './cliente.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -19,14 +23,19 @@ export class ClienteService {
       where: { email: inputDto.email },
       select: { id: true },
     });
-    if (emailExists) return dataResponseError('El correo electrónico ya está registrado');
+    if (emailExists)
+      return dataErrorValidations({ email: ['El correo electrónico ya está registrado'] });
 
     // Validar que se proporcionen los datos específicos según el tipo
     if (inputDto.tipo === TipoClienteEnum.NATURAL && !inputDto.personaNatural) {
-      return dataResponseError('Debe proporcionar los datos de persona natural');
+      return dataErrorValidations({
+        personaNatural: ['Debe proporcionar los datos de persona natural'],
+      });
     }
     if (inputDto.tipo === TipoClienteEnum.JURIDICA && !inputDto.personaJuridica) {
-      return dataResponseError('Debe proporcionar los datos de persona jurídica');
+      return dataErrorValidations({
+        personaJuridica: ['Debe proporcionar los datos de persona jurídica'],
+      });
     }
 
     // Validar CI único si se proporciona
@@ -35,7 +44,8 @@ export class ClienteService {
         where: { ci: inputDto.personaNatural.ci },
         select: { clienteId: true },
       });
-      if (ciExists) return dataResponseError('El CI ya está registrado');
+      if (ciExists)
+        return dataErrorValidations({ 'personaNatural.ci': ['El CI ya está registrado'] });
     }
 
     // Validar NIT único si se proporciona
@@ -44,7 +54,8 @@ export class ClienteService {
         where: { nit: inputDto.personaJuridica.nit },
         select: { clienteId: true },
       });
-      if (nitExists) return dataResponseError('El NIT ya está registrado');
+      if (nitExists)
+        return dataErrorValidations({ 'personaJuridica.nit': ['El NIT ya está registrado'] });
     }
 
     const result = await this.prismaService.cliente.create({
@@ -162,7 +173,8 @@ export class ClienteService {
         },
         select: { id: true },
       });
-      if (emailDup) return dataResponseError('El correo electrónico ya está registrado');
+      if (emailDup)
+        return dataErrorValidations({ email: ['El correo electrónico ya está registrado'] });
     }
 
     // Validar CI único si se actualiza
@@ -174,7 +186,8 @@ export class ClienteService {
         },
         select: { clienteId: true },
       });
-      if (ciExists) return dataResponseError('El CI ya está registrado');
+      if (ciExists)
+        return dataErrorValidations({ 'personaNatural.ci': ['El CI ya está registrado'] });
     }
 
     // Validar NIT único si se actualiza
@@ -186,7 +199,8 @@ export class ClienteService {
         },
         select: { clienteId: true },
       });
-      if (nitExists) return dataResponseError('El NIT ya está registrado');
+      if (nitExists)
+        return dataErrorValidations({ 'personaJuridica.nit': ['El NIT ya está registrado'] });
     }
 
     const result = await this.prismaService.cliente.update({

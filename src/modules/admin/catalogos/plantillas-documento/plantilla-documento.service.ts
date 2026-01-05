@@ -5,7 +5,11 @@ import {
   ListPlantillaDocumentoArgsDto,
 } from './dto/plantilla-documento.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { PlantillaDocumento } from './plantilla-documento.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -21,7 +25,8 @@ export class PlantillaDocumentoService {
       where: { id: inputDto.tipoDocumentoId },
       select: { id: true },
     });
-    if (!tipoDocExists) return dataResponseError('El tipo de documento no existe');
+    if (!tipoDocExists)
+      return dataErrorValidations({ tipoDocumentoId: ['El tipo de documento no existe'] });
 
     const exists = await this.prismaService.plantillaDocumento.findFirst({
       where: {
@@ -30,7 +35,10 @@ export class PlantillaDocumentoService {
       },
       select: { id: true },
     });
-    if (exists) return dataResponseError('Ya existe una plantilla con ese nombre para este tipo');
+    if (exists)
+      return dataErrorValidations({
+        nombrePlantilla: ['Ya existe una plantilla con ese nombre para este tipo'],
+      });
 
     const result = await this.prismaService.plantillaDocumento.create({
       data: {
@@ -116,7 +124,8 @@ export class PlantillaDocumentoService {
         where: { id: updateDto.tipoDocumentoId },
         select: { id: true },
       });
-      if (!tipoDocExists) return dataResponseError('El tipo de documento no existe');
+      if (!tipoDocExists)
+        return dataErrorValidations({ tipoDocumentoId: ['El tipo de documento no existe'] });
     }
 
     const result = await this.prismaService.plantillaDocumento.update({

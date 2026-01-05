@@ -5,7 +5,11 @@ import {
   ListTipoDocumentoArgsDto,
 } from './dto/tipo-documento.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { TipoDocumento } from './tipo-documento.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -21,7 +25,7 @@ export class TipoDocumentoService {
       where: { nombre: inputDto.nombre },
       select: { id: true },
     });
-    if (exists) return dataResponseError('El tipo de documento ya existe');
+    if (exists) return dataErrorValidations({ nombre: ['El tipo de documento ya existe'] });
 
     const result = await this.prismaService.tipoDocumento.create({
       data: {
@@ -101,7 +105,8 @@ export class TipoDocumentoService {
         where: { nombre: updateDto.nombre, id: { not: id } },
         select: { id: true },
       });
-      if (nameExists) return dataResponseError('Ya existe un tipo de documento con ese nombre');
+      if (nameExists)
+        return dataErrorValidations({ nombre: ['Ya existe un tipo de documento con ese nombre'] });
     }
 
     const result = await this.prismaService.tipoDocumento.update({

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRolDto, ListRoleArgsDto, UpdateRoleDto } from './dto/roles.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { Role } from './role.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -20,7 +24,7 @@ export class RolesService {
     });
 
     if (permisosIds && permisosExist.length !== permisosIds.length) {
-      return dataResponseError('No existen los permisos indicados');
+      return dataErrorValidations({ permisosIds: ['No existen los permisos indicados'] });
     }
 
     const existingRole = await this.prismaService.rol.findUnique({
@@ -28,7 +32,7 @@ export class RolesService {
       select: { id: true },
     });
 
-    if (existingRole) return dataResponseError('El rol ya existe');
+    if (existingRole) return dataErrorValidations({ nombre: ['El rol ya existe'] });
 
     const result = await this.prismaService.rol.create({
       data: {
@@ -116,7 +120,7 @@ export class RolesService {
       });
 
       if (permisosExist.length !== permisosIds.length) {
-        return dataResponseError('No existen los permisos indicados');
+        return dataErrorValidations({ permisosIds: ['No existen los permisos indicados'] });
       }
     }
 

@@ -5,7 +5,11 @@ import {
   ListEstadoTramiteArgsDto,
 } from './dto/estado-tramite.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { EstadoTramite } from './estado-tramite.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -21,7 +25,7 @@ export class EstadoTramiteService {
       where: { nombre: inputDto.nombre },
       select: { id: true },
     });
-    if (exists) return dataResponseError('Ya existe un estado con ese nombre');
+    if (exists) return dataErrorValidations({ nombre: ['Ya existe un estado con ese nombre'] });
 
     const result = await this.prismaService.estadoTramite.create({
       data: {
@@ -102,7 +106,8 @@ export class EstadoTramiteService {
         },
         select: { id: true },
       });
-      if (duplicated) return dataResponseError('Ya existe un estado con ese nombre');
+      if (duplicated)
+        return dataErrorValidations({ nombre: ['Ya existe un estado con ese nombre'] });
     }
 
     const result = await this.prismaService.estadoTramite.update({

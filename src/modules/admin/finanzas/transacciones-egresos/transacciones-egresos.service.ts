@@ -5,7 +5,11 @@ import {
   ListTransaccionesEgresosArgsDto,
 } from './dto/transacciones-egresos.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { TransaccionesEgresos } from './transacciones-egresos.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -21,14 +25,16 @@ export class TransaccionesEgresosService {
       where: { id: inputDto.gastoId },
       select: { id: true, montoTotal: true, montoPagado: true },
     });
-    if (!gastoExists) return dataResponseError('El gasto no existe');
+    if (!gastoExists) return dataErrorValidations({ gastoId: ['El gasto no existe'] });
 
     // Validar que no se exceda el monto total del gasto
     const nuevoMontoPagado = new Prisma.Decimal(gastoExists.montoPagado).plus(
       new Prisma.Decimal(inputDto.monto),
     );
     if (nuevoMontoPagado.greaterThan(new Prisma.Decimal(gastoExists.montoTotal))) {
-      return dataResponseError('El monto de la transacción excede el saldo pendiente del gasto');
+      return dataErrorValidations({
+        monto: ['El monto de la transacción excede el saldo pendiente del gasto'],
+      });
     }
 
     // Validar cuenta bancaria si se proporciona
@@ -37,7 +43,8 @@ export class TransaccionesEgresosService {
         where: { id: inputDto.cuentaBancariaId },
         select: { id: true },
       });
-      if (!cuentaExists) return dataResponseError('La cuenta bancaria no existe');
+      if (!cuentaExists)
+        return dataErrorValidations({ cuentaBancariaId: ['La cuenta bancaria no existe'] });
     }
 
     const result = await this.prismaService.transaccionesEgresos.create({

@@ -5,7 +5,11 @@ import {
   ListServicioArgsDto,
 } from './dto/servicio.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { Servicio } from './servicio.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -28,14 +32,15 @@ export class ServicioService {
       where: { id: inputDto.clienteId },
       select: { id: true },
     });
-    if (!clienteExists) return dataResponseError('El cliente no existe');
+    if (!clienteExists) return dataErrorValidations({ clienteId: ['El cliente no existe'] });
 
     // Validar que el tipo de documento existe
     const tipoDocExists = await this.prismaService.tipoDocumento.findUnique({
       where: { id: inputDto.tipoDocumentoId },
       select: { id: true, precioBase: true },
     });
-    if (!tipoDocExists) return dataResponseError('El tipo de documento no existe');
+    if (!tipoDocExists)
+      return dataErrorValidations({ tipoDocumentoId: ['El tipo de documento no existe'] });
 
     const codigoTicket = this.generateCodigoTicket();
 

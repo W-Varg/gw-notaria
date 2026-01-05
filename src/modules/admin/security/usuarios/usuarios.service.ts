@@ -6,7 +6,11 @@ import {
   UpdateUsuarioDto,
 } from './dto/usuarios.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { Usuario } from './usuario.entity';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
@@ -38,12 +42,12 @@ export class UsuariosService {
       // 1. Validaciones usando UserValidationService
       const isEmailUnique = await this.userValidationService.isEmailUnique(usuarioData.email);
       if (!isEmailUnique) {
-        return dataResponseError('El email ya está registrado');
+        return dataErrorValidations({ email: ['El email ya está registrado'] });
       }
 
       const areRolesValid = await this.userValidationService.doRolesExist(rolesIds);
       if (!areRolesValid) {
-        return dataResponseError('Uno o más roles no existen');
+        return dataErrorValidations({ rolesIds: ['Uno o más roles no existen'] });
       }
 
       // 2. Procesar avatar usando FileStorageService
