@@ -42,6 +42,16 @@ export class ServicioService {
     if (!tipoDocExists)
       return dataErrorValidations({ tipoDocumentoId: ['El tipo de documento no existe'] });
 
+    // Validar que el tipo de trámite existe (si se proporciona)
+    if (inputDto.tipoTramiteId) {
+      const tipoTramiteExists = await this.prismaService.tipoTramite.findUnique({
+        where: { id: inputDto.tipoTramiteId },
+        select: { id: true },
+      });
+      if (!tipoTramiteExists)
+        return dataErrorValidations({ tipoTramiteId: ['El tipo de trámite no existe'] });
+    }
+
     const codigoTicket = this.generateCodigoTicket();
 
     const result = await this.prismaService.servicio.create({
@@ -49,9 +59,7 @@ export class ServicioService {
         codigoTicket,
         clienteId: inputDto.clienteId,
         tipoDocumentoId: inputDto.tipoDocumentoId,
-        claseTramite: inputDto.claseTramite,
-        tipoTramite: inputDto.tipoTramite,
-        negocio: inputDto.negocio,
+        tipoTramiteId: inputDto.tipoTramiteId,
         observaciones: inputDto.observaciones,
         contenidoFinal: inputDto.contenidoFinal,
         montoTotal: inputDto.montoTotal,
@@ -61,6 +69,7 @@ export class ServicioService {
       include: {
         cliente: true,
         tipoDocumento: true,
+        tipoTramite: true,
       },
     });
 
@@ -83,6 +92,7 @@ export class ServicioService {
             },
           },
           tipoDocumento: true,
+          tipoTramite: true,
         },
       }),
       pagination ? this.prismaService.servicio.count() : undefined,
@@ -98,24 +108,14 @@ export class ServicioService {
 
   async filter(inputDto: ListServicioArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
-    const {
-      codigoTicket,
-      clienteId,
-      tipoDocumentoId,
-      claseTramite,
-      tipoTramite,
-      negocio,
-      montoTotal,
-      saldoPendiente,
-    } = inputDto.where || {};
+    const { codigoTicket, clienteId, tipoDocumentoId, tipoTramiteId, montoTotal, saldoPendiente } =
+      inputDto.where || {};
     const whereInput: Prisma.ServicioWhereInput = {};
 
     if (codigoTicket) whereInput.codigoTicket = codigoTicket;
     if (clienteId) whereInput.clienteId = clienteId;
     if (tipoDocumentoId) whereInput.tipoDocumentoId = tipoDocumentoId;
-    if (claseTramite) whereInput.claseTramite = claseTramite;
-    if (tipoTramite) whereInput.tipoTramite = tipoTramite;
-    if (negocio) whereInput.negocio = negocio;
+    if (tipoTramiteId) whereInput.tipoTramiteId = tipoTramiteId;
     if (montoTotal !== undefined) whereInput.montoTotal = montoTotal;
     if (saldoPendiente !== undefined) whereInput.saldoPendiente = saldoPendiente;
 
@@ -133,6 +133,7 @@ export class ServicioService {
             },
           },
           tipoDocumento: true,
+          tipoTramite: true,
         },
       }),
       this.prismaService.servicio.count({ where: whereInput }),
@@ -155,6 +156,7 @@ export class ServicioService {
           },
         },
         tipoDocumento: true,
+        tipoTramite: true,
         historialEstadosServicio: {
           include: {
             estado: true,

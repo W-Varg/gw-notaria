@@ -15,13 +15,7 @@ export class Servicio {
   tipoDocumentoId: string;
 
   @ApiPropertyOptional()
-  claseTramite?: string;
-
-  @ApiPropertyOptional()
-  tipoTramite?: string;
-
-  @ApiPropertyOptional()
-  negocio?: string;
+  tipoTramiteId?: string;
 
   @ApiProperty()
   fechaInicio: Date;
@@ -46,4 +40,23 @@ export class Servicio {
 
   @ApiProperty()
   fechaActualizacion: Date;
+
+  // Relaciones
+  @ApiPropertyOptional()
+  cliente?: any;
+
+  @ApiPropertyOptional()
+  tipoDocumento?: any;
+
+  @ApiPropertyOptional()
+  tipoTramite?: any;
+
+  @ApiPropertyOptional()
+  historialEstadosServicio?: any[];
+
+  @ApiPropertyOptional()
+  responsablesServicio?: any[];
+
+  @ApiPropertyOptional()
+  pagosIngresos?: any[];
 }

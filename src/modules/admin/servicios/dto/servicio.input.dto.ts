@@ -29,24 +29,8 @@ export class CreateServicioDto {
 
   @Expose()
   @IsOptional()
-  @IsString()
-  @MaxLength(50)
   @ApiPropertyOptional({ type: String })
-  claseTramite?: string;
-
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  @ApiPropertyOptional({ type: String })
-  tipoTramite?: string;
-
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  @ApiPropertyOptional({ type: String })
-  negocio?: string;
+  tipoTramiteId?: string;
 
   @Expose()
   @IsOptional()
@@ -93,19 +77,7 @@ class ServicioWhereInput {
   @ApiPropertyOptional({ type: StringNullableFilter })
   @IsOptional()
   @Type(() => StringNullableFilter)
-  claseTramite?: StringNullableFilter;
-
-  @Expose()
-  @ApiPropertyOptional({ type: StringNullableFilter })
-  @IsOptional()
-  @Type(() => StringNullableFilter)
-  tipoTramite?: StringNullableFilter;
-
-  @Expose()
-  @ApiPropertyOptional({ type: StringNullableFilter })
-  @IsOptional()
-  @Type(() => StringNullableFilter)
-  negocio?: StringNullableFilter;
+  tipoTramiteId?: StringNullableFilter;
 
   @Expose()
   @ApiPropertyOptional({ type: FloatFilter })
@@ -143,11 +115,7 @@ class ServicioSelectInput {
 
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
-  tipoTramite?: boolean;
-
-  @Expose()
-  @ApiPropertyOptional({ type: Boolean })
-  negocio?: boolean;
+  tipoTramiteId?: boolean;
 
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
