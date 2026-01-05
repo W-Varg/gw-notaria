@@ -125,7 +125,7 @@ export class DerivacionService {
       },
     });
 
-    return dataResponseSuccess<DerivacionServicio>(
+    return dataResponseSuccess<any>(
       { data: derivacion },
       { message: 'Derivación creada exitosamente' },
     );
@@ -261,7 +261,7 @@ export class DerivacionService {
       return derivacionActualizada;
     });
 
-    return dataResponseSuccess<DerivacionServicio>(
+    return dataResponseSuccess<any>(
       { data: result },
       { message: 'Derivación aceptada exitosamente' },
     );
@@ -424,7 +424,7 @@ export class DerivacionService {
       this.prismaService.derivacionServicio.count({ where: whereInput }),
     ]);
 
-    return dataResponseSuccess<DerivacionServicio[]>({
+    return dataResponseSuccess<any[]>({
       data: list,
       pagination: { ...pagination, total },
     });
@@ -476,7 +476,7 @@ export class DerivacionService {
       },
     });
 
-    return dataResponseSuccess<DerivacionServicio[]>({
+    return dataResponseSuccess<any[]>({
       data: derivaciones,
       pagination: {
         total: derivaciones.length,
@@ -532,7 +532,7 @@ export class DerivacionService {
       },
     });
 
-    return dataResponseSuccess<DerivacionServicio[]>({
+    return dataResponseSuccess<any[]>({
       data: derivaciones,
       pagination: {
         total: derivaciones.length,
@@ -585,7 +585,7 @@ export class DerivacionService {
       return dataResponseError('Derivación no encontrada');
     }
 
-    return dataResponseSuccess<DerivacionServicio>({ data: derivacion });
+    return dataResponseSuccess({ data: derivacion });
   }
 
   /**
@@ -619,7 +619,7 @@ export class DerivacionService {
       },
     });
 
-    return dataResponseSuccess<DerivacionServicio[]>({
+    return dataResponseSuccess<any[]>({
       data: derivaciones,
       pagination: {
         total: derivaciones.length,

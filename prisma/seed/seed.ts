@@ -18,6 +18,13 @@ import {
   createTiposDocumento,
   createEstadosTramite,
 } from './catalogos.seed';
+import {
+  crearClientes,
+  crearServicios,
+  crearHistorialEstados,
+  crearResponsables,
+  crearDerivaciones,
+} from './clientes-servicios.seed';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 export const prisma = new PrismaClient({ adapter });
@@ -73,16 +80,39 @@ async function main() {
   const tiposDocumento = await createTiposDocumento(prisma, adminUserId);
 
   // Crear tipos de trámite
-  await createTiposTramite(prisma, adminUserId, tiposDocumento);
+  const tiposTramite = await createTiposTramite(prisma, adminUserId, tiposDocumento);
 
   // Crear estados de trámite
-  await createEstadosTramite(prisma, adminUserId);
+  const estadosTramite = await createEstadosTramite(prisma, adminUserId);
 
   // Crear configuraciones de aplicación
   await createConfiguracionAplicacion(adminUserId);
 
   // Crear FAQs
   await createFaqs(adminUserId);
+
+  // Crear clientes (personas naturales y jurídicas)
+  const clientes = await crearClientes(prisma, adminUserId);
+
+  // Crear servicios
+  const servicios = await crearServicios(
+    prisma,
+    adminUserId,
+    clientes,
+    tiposDocumento,
+    tiposTramite,
+    estadosTramite,
+    usuarios,
+  );
+
+  // Crear historial de estados de los servicios
+  await crearHistorialEstados(prisma, servicios, estadosTramite, usuarios);
+
+  // Crear responsables de servicios
+  await crearResponsables(prisma, servicios, usuarios);
+
+  // Crear derivaciones entre usuarios
+  await crearDerivaciones(prisma, servicios, usuarios);
   
   await crearGastos(prisma, adminUserId);
 

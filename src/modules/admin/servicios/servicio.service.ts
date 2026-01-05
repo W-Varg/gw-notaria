@@ -1,9 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import {
   CreateServicioDto,
   UpdateServicioDto,
   ListServicioArgsDto,
 } from './dto/servicio.input.dto';
+import {
+  ServiciosDashboardFilterDto,
+  ServiciosStatsDto,
+  UpdateServicioProgresoDto,
+  RegistrarPagoServicioDto,
+} from './dto/servicio.input-extended.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
 import {
   dataErrorValidations,
@@ -225,5 +231,256 @@ export class ServicioService {
 
     await this.prismaService.servicio.delete({ where: { id } });
     return dataResponseSuccess({ data: 'Servicio eliminado' });
+  }
+
+  /**
+   * Obtener estadísticas del dashboard
+   */
+  async getStats(): Promise<any> {
+    const [enProceso, pendientePago, finalizados, total, financials] = await Promise.all([
+      this.prismaService.servicio.count({
+        where: {
+          estaActivo: true,
+          estadoActual: { nombre: 'En Proceso' },
+        },
+      }),
+      this.prismaService.servicio.count({
+        where: {
+          estaActivo: true,
+          saldoPendiente: { gt: 0 },
+          NOT: { estadoActual: { nombre: 'Finalizado' } },
+        },
+      }),
+      this.prismaService.servicio.count({
+        where: {
+          estaActivo: true,
+          estadoActual: { nombre: 'Finalizado' },
+        },
+      }),
+      this.prismaService.servicio.count({ where: { estaActivo: true } }),
+      this.prismaService.servicio.aggregate({
+        where: { estaActivo: true },
+        _sum: {
+          saldoPendiente: true,
+          montoTotal: true,
+        },
+      }),
+    ]);
+
+    const stats: ServiciosStatsDto = {
+      enProceso,
+      pendientePago,
+      finalizados,
+      total,
+      totalPendienteCobro: Number(financials._sum.saldoPendiente) || 0,
+      totalIngresos: (Number(financials._sum.montoTotal) || 0) - (Number(financials._sum.saldoPendiente) || 0),
+    };
+
+    return dataResponseSuccess<ServiciosStatsDto>({ data: stats });
+  }
+
+  /**
+   * Listar servicios para el dashboard con filtros simplificados
+   */
+  async findAllDashboard(filters: ServiciosDashboardFilterDto) {
+    const { estadoFiltro, search, page = 1, pageSize = 6 } = filters;
+
+    let where: Prisma.ServicioWhereInput = { estaActivo: true };
+
+    // Aplicar filtro por estado
+    switch (estadoFiltro) {
+      case 'EN_PROCESO':
+        where.estadoActual = { nombre: 'En Proceso' };
+        break;
+      case 'PENDIENTE_PAGO':
+        where.saldoPendiente = { gt: 0 };
+        where.NOT = { estadoActual: { nombre: 'Finalizado' } };
+        break;
+      case 'FINALIZADO':
+        where.estadoActual = { nombre: 'Finalizado' };
+        break;
+      // 'TODOS' no agrega filtro
+    }
+
+    // Aplicar búsqueda de texto
+    if (search) {
+      where.OR = [
+        { codigoTicket: { contains: search, mode: 'insensitive' } },
+        { observaciones: { contains: search, mode: 'insensitive' } },
+        {
+          cliente: {
+            OR: [
+              {
+                personaNatural: {
+                  OR: [
+                    { nombres: { contains: search, mode: 'insensitive' } },
+                    { apellidos: { contains: search, mode: 'insensitive' } },
+                  ],
+                },
+              },
+              {
+                personaJuridica: {
+                  razonSocial: { contains: search, mode: 'insensitive' },
+                },
+              },
+            ],
+          },
+        },
+      ];
+    }
+
+    const [data, total] = await Promise.all([
+      this.prismaService.servicio.findMany({
+        where,
+        include: {
+          cliente: {
+            include: {
+              personaNatural: true,
+              personaJuridica: true,
+            },
+          },
+          tipoDocumento: true,
+          tipoTramite: true,
+          estadoActual: true,
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { fechaInicio: 'desc' },
+      }),
+      this.prismaService.servicio.count({ where }),
+    ]);
+
+    return dataResponseSuccess<Servicio[]>({
+      data,
+      pagination: {
+        total,
+        page,
+        size: pageSize,
+        from: (page - 1) * pageSize,
+      },
+    });
+  }
+
+  /**
+   * Actualizar el estado/progreso de un servicio
+   */
+  async updateProgreso(id: string, dto: UpdateServicioProgresoDto, usuarioId: string) {
+    const servicio = await this.prismaService.servicio.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!servicio) return dataResponseError('Servicio no encontrado');
+
+    // Validar que el estado existe
+    const estadoExists = await this.prismaService.estadoTramite.findUnique({
+      where: { id: dto.estadoActualId },
+      select: { id: true },
+    });
+
+    if (!estadoExists) return dataResponseError('El estado no existe');
+
+    // Actualizar el servicio
+    const updated = await this.prismaService.servicio.update({
+      where: { id },
+      data: { estadoActualId: dto.estadoActualId },
+      include: {
+        cliente: true,
+        tipoDocumento: true,
+        tipoTramite: true,
+        estadoActual: true,
+      },
+    });
+
+    // Crear registro en historial
+    await this.prismaService.historialEstadosServicio.create({
+      data: {
+        servicioId: id,
+        estadoId: dto.estadoActualId,
+        comentario: dto.comentario,
+        fechaCambio: new Date(),
+        usuarioId: usuarioId,
+      },
+    });
+
+    return dataResponseSuccess<Servicio>({ data: updated });
+  }
+
+  /**
+   * Registrar un pago para un servicio
+   */
+  async registrarPago(id: string, dto: RegistrarPagoServicioDto, usuarioId: string) {
+    const servicio = await this.prismaService.servicio.findUnique({
+      where: { id },
+      select: { id: true, saldoPendiente: true },
+    });
+
+    if (!servicio) return dataResponseError('Servicio no encontrado');
+
+    const saldoPendienteNum = Number(servicio.saldoPendiente);
+    
+    if (dto.monto > saldoPendienteNum) {
+      return dataErrorValidations({
+        monto: ['El monto del pago no puede ser mayor al saldo pendiente'],
+      });
+    }
+
+    const nuevoSaldo = saldoPendienteNum - dto.monto;
+
+    // Buscar o crear estado "Pagado" o "En Proceso"
+    const estadoPagado = await this.prismaService.estadoTramite.findFirst({
+      where: { nombre: { in: ['Pagado', 'En Proceso'] } },
+      orderBy: { nombre: 'desc' }, // Preferir "Pagado" sobre "En Proceso"
+    });
+
+    // Registrar pago y actualizar saldo en una transacción
+    const result = await this.prismaService.$transaction(async (prisma) => {
+      // Registrar pago
+      await prisma.pagosIngresos.create({
+        data: {
+          monto: dto.monto,
+          tipoPago: dto.tipoPago,
+          cuentaBancariaId: dto.cuentaBancariaId,
+          numeroConstancia: dto.numeroConstancia,
+          concepto: dto.concepto || `Pago de servicio ${id}`,
+          servicioId: id,
+          usuarioRegistroId: usuarioId,
+        },
+      });
+
+      // Actualizar saldo
+      const updated = await prisma.servicio.update({
+        where: { id },
+        data: { saldoPendiente: nuevoSaldo },
+        include: {
+          cliente: true,
+          tipoDocumento: true,
+          tipoTramite: true,
+          estadoActual: true,
+        },
+      });
+
+      // Si el saldo llegó a 0 y hay un estado disponible, cambiar estado
+      if (nuevoSaldo === 0 && estadoPagado) {
+        await prisma.servicio.update({
+          where: { id },
+          data: { estadoActualId: estadoPagado.id },
+        });
+
+        await prisma.historialEstadosServicio.create({
+          data: {
+            servicioId: id,
+            estadoId: estadoPagado.id,
+            comentario: 'Pago completado',
+            fechaCambio: new Date(),
+            usuarioId: usuarioId,
+          },
+        });
+      }
+
+      return updated;
+    });
+
+    return dataResponseSuccess<Servicio>({ data: result });
   }
 }

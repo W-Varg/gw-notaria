@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Prisma } from 'src/generated/prisma/client';
+import { Cliente } from '../clientes/cliente.entity';
+import { TipoDocumento } from '../catalogos/tipos-documento/tipo-documento.entity';
+import { TipoTramite } from '../catalogos/tipos-tramite/tipo-tramite.entity';
+import { EstadoTramite } from '../catalogos/estados-tramite/estado-tramite.entity';
+import { HistorialEstadosServicio } from './historial-estados-servicio/historial-estados-servicio.entity';
+import { ResponsableServicio } from './responsable-servicio/responsable-servicio.entity';
+import { DerivacionServicio } from './derivaciones/derivacion.entity';
+import { PagosIngresos } from '../finanzas/pagos-ingresos/pagos-ingresos.entity';
 
 export class Servicio {
   @ApiProperty()
@@ -61,26 +69,26 @@ export class Servicio {
 
   // Relaciones
   @ApiPropertyOptional()
-  cliente?: any;
+  cliente?: Cliente;
 
   @ApiPropertyOptional()
-  tipoDocumento?: any;
+  tipoDocumento?: TipoDocumento;
 
   @ApiPropertyOptional()
-  tipoTramite?: any;
+  tipoTramite?: TipoTramite;
 
   @ApiPropertyOptional()
-  estadoActual?: any;
+  estadoActual?: EstadoTramite;
 
   @ApiPropertyOptional()
-  historialEstadosServicio?: any[];
+  historialEstadosServicio?: HistorialEstadosServicio[];
 
   @ApiPropertyOptional()
-  responsablesServicio?: any[];
+  responsablesServicio?: ResponsableServicio[];
 
   @ApiPropertyOptional()
-  derivaciones?: any[];
+  derivaciones?: DerivacionServicio[];
 
   @ApiPropertyOptional()
-  pagosIngresos?: any[];
+  pagosIngresos?: PagosIngresos[];
 }

@@ -11,7 +11,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { BaseFilterDto } from 'src/common/dtos/filters.dto';
-import { IntFilter } from 'src/common/dtos/prisma/int-filter.input';
 import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
 import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
 import { FloatFilter } from 'src/common/dtos/prisma/float-filter.input';
