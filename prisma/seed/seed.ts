@@ -12,7 +12,7 @@ import {
   assignAllRolesToAdmin,
 } from './auth.seed';
 import {
-  createCategorias,
+  createTiposTramite,
   createBancos,
   createCuentasBancarias,
   createTiposDocumento,
@@ -69,11 +69,11 @@ async function main() {
   // Crear cuentas bancarias
   await createCuentasBancarias(prisma, adminUserId, bancos);
 
-  // Crear categorías
-  await createCategorias(prisma, adminUserId);
-
   // Crear tipos de documento
-  await createTiposDocumento(prisma, adminUserId);
+  const tiposDocumento = await createTiposDocumento(prisma, adminUserId);
+
+  // Crear tipos de trámite
+  await createTiposTramite(prisma, adminUserId, tiposDocumento);
 
   // Crear estados de trámite
   await createEstadosTramite(prisma, adminUserId);
@@ -103,11 +103,11 @@ async function clearDatabase() {
   await prisma.personaNatural.deleteMany();
   await prisma.cliente.deleteMany();
   await prisma.plantillaDocumento.deleteMany();
+  await prisma.tipoTramite.deleteMany();
   await prisma.tipoDocumento.deleteMany();
   await prisma.estadoTramite.deleteMany();
   await prisma.cuentaBancaria.deleteMany();
   await prisma.banco.deleteMany();
-  await prisma.categoria.deleteMany();
   await prisma.rolPermiso.deleteMany();
   await prisma.permiso.deleteMany();
   await prisma.usuarioRol.deleteMany();

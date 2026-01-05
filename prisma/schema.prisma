@@ -320,13 +320,16 @@ model ConfiguracionAplicacion {
 }
 
 // ============================================
-// MÓDULO DE CATEGORÍAS
+// MÓDULO DE TIPOS DE TRÁMITE
 // ============================================
 
-model Categoria {
+model TipoTramite {
   id                 String   @id @default(cuid())
+  tipoDocumentoId    String
   nombre             String   @unique
   descripcion        String?
+  claseTramite       String?  @db.VarChar(50)
+  negocio            String?  @db.VarChar(50)
   imagen             String?
   estaActiva         Boolean  @default(true)
   userCreateId       String
@@ -334,7 +337,10 @@ model Categoria {
   fechaCreacion      DateTime @default(now())
   fechaActualizacion DateTime @updatedAt
 
-  @@map("cat_categorias")
+  tipoDocumento TipoDocumento @relation(fields: [tipoDocumentoId], references: [id])
+  servicios     Servicio[]
+
+  @@map("cat_tipos_tramite")
   @@schema("public")
 }
 
@@ -450,6 +456,7 @@ model TipoDocumento {
 
   plantillasDocumento PlantillaDocumento[]
   servicios           Servicio[]
+  tiposTramite        TipoTramite[]
 
   @@map("tipos_documento")
   @@schema("public")
@@ -557,9 +564,7 @@ model Servicio {
   codigoTicket       String   @unique @db.VarChar(20)
   clienteId          String
   tipoDocumentoId    String
-  claseTramite       String?  @db.VarChar(50)
-  tipoTramite        String?  @db.VarChar(50)
-  negocio            String?  @db.VarChar(50)
+  tipoTramiteId      String
   fechaInicio        DateTime @default(now()) @db.Timestamptz()
   observaciones      String?  @db.Text
   contenidoFinal     String?  @db.Text
@@ -571,6 +576,7 @@ model Servicio {
 
   cliente                  Cliente                    @relation(fields: [clienteId], references: [id])
   tipoDocumento            TipoDocumento              @relation(fields: [tipoDocumentoId], references: [id])
+  tipoTramite              TipoTramite               @relation(fields: [tipoTramiteId], references: [id])
   historialEstadosServicio HistorialEstadosServicio[]
   responsablesServicio     ResponsableServicio[]
   pagosIngresos            PagosIngresos[]

@@ -1,50 +1,65 @@
 import { PrismaClient } from '../../src/generated/prisma/client';
 
-export async function createCategorias(prisma: PrismaClient, userId: string) {
-  const categorias = [
-    { 
-      nombre: 'Documentos Legales', 
-      descripcion: 'Categoría para documentos y trámites legales generales', 
-      userCreateId: userId 
+export async function createTiposTramite(
+  prisma: PrismaClient,
+  userId: string,
+  tiposDocumento: any[],
+) {
+  const tiposTramite = [
+    {
+      tipoDocumentoId: tiposDocumento.find((t) => t.nombre === 'Poder General')?.id,
+      nombre: 'Poder General Administrativo',
+      descripcion: 'Poder para gestiones administrativas y bancarias',
+      claseTramite: 'Poderes',
+      negocio: 'Administrativo',
+      userCreateId: userId,
     },
-    { 
-      nombre: 'Poderes Notariales', 
-      descripcion: 'Poderes generales, especiales y judiciales', 
-      userCreateId: userId 
+    {
+      tipoDocumentoId: tiposDocumento.find((t) => t.nombre === 'Poder Especial')?.id,
+      nombre: 'Poder Especial de Venta',
+      descripcion: 'Poder específico para venta de inmueble',
+      claseTramite: 'Poderes',
+      negocio: 'Inmobiliario',
+      userCreateId: userId,
     },
-    { 
-      nombre: 'Compraventa', 
-      descripcion: 'Contratos de compraventa de bienes muebles e inmuebles', 
-      userCreateId: userId 
+    {
+      tipoDocumentoId: tiposDocumento.find((t) => t.nombre === 'Compraventa de Inmueble')?.id,
+      nombre: 'Compraventa Casa',
+      descripcion: 'Compraventa de casa o departamento',
+      claseTramite: 'Compraventa',
+      negocio: 'Inmobiliario',
+      userCreateId: userId,
     },
-    { 
-      nombre: 'Testamentos', 
-      descripcion: 'Testamentos y últimas voluntades', 
-      userCreateId: userId 
+    {
+      tipoDocumentoId: tiposDocumento.find((t) => t.nombre === 'Compraventa de Inmueble')?.id,
+      nombre: 'Compraventa Terreno',
+      descripcion: 'Compraventa de terreno urbano o rural',
+      claseTramite: 'Compraventa',
+      negocio: 'Inmobiliario',
+      userCreateId: userId,
     },
-    { 
-      nombre: 'Certificaciones', 
-      descripcion: 'Certificaciones y autenticaciones de documentos', 
-      userCreateId: userId 
-    },
-    { 
-      nombre: 'Actas Notariales', 
-      descripcion: 'Levantamiento de actas para hechos y circunstancias', 
-      userCreateId: userId 
+    {
+      tipoDocumentoId: tiposDocumento.find((t) => t.nombre === 'Testamento Abierto')?.id,
+      nombre: 'Testamento Público',
+      descripcion: 'Testamento abierto ante notario',
+      claseTramite: 'Testamentos',
+      negocio: 'Sucesorio',
+      userCreateId: userId,
     },
   ];
 
-  const categoriasCreadas = [];
-
-  for (const categoria of categorias) {
-    const categoriaCreada = await prisma.categoria.create({
-      data: categoria,
-    });
-    categoriasCreadas.push(categoriaCreada);
+  const tiposTramiteCreados = [];
+  for (const tipoTramite of tiposTramite) {
+    if (tipoTramite.tipoDocumentoId) {
+      const tipoTramiteCreado = await prisma.tipoTramite.create({
+        data: tipoTramite,
+      });
+      tiposTramiteCreados.push(tipoTramiteCreado);
+    }
   }
 
-  console.info(`Created ${categoriasCreadas.length} categorías`);
-  return categoriasCreadas;
+  console.info(`Created ${tiposTramiteCreados.length} tipos de trámite`);
+  return tiposTramiteCreados;
 }
 
 export async function createBancos(prisma: PrismaClient, userId: string) {

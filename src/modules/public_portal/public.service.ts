@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { CategoriaPublica } from './dto/public.response';
+// import { CategoriaPublica } from './dto/public.response';
 import { ContactoMensajeDto, FAQsDto } from './dto/public.input';
 import { dataResponseSuccess } from 'src/common/dtos/response.dto';
 import dayjs from 'dayjs';
@@ -10,18 +10,18 @@ import { ConfiguracionAplicacionClaveEnum } from 'src/enums/configuraciones.enum
 export class PublicService {
   constructor(private readonly prisma: PrismaService) {}
 
-  getCategorias(): Promise<CategoriaPublica[]> {
-    return this.prisma.categoria.findMany({
-      where: { estaActiva: true },
-      select: {
-        id: true,
-        nombre: true,
-        descripcion: true,
-        imagen: true,
-      },
-      orderBy: { nombre: 'asc' },
-    });
-  }
+  // getCategorias(): Promise<CategoriaPublica[]> {
+  //   return this.prisma.categoria.findMany({
+  //     where: { estaActiva: true },
+  //     select: {
+  //       id: true,
+  //       nombre: true,
+  //       descripcion: true,
+  //       imagen: true,
+  //     },
+  //     orderBy: { nombre: 'asc' },
+  //   });
+  // }
 
   /* ---------------------------------------------------------------------------------------------------------------- */
   /*                                                     Contacto                                                     */

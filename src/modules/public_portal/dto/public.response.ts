@@ -1,25 +1,25 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { ApiOkResponseDto } from 'src/common/dtos/response.dto';
-import { Categoria } from 'src/modules/admin/catalogos/categorias/categoria.entity';
+import { TipoTramite } from 'src/modules/admin/catalogos/tipos-tramite/tipo-tramite.entity';
 import { Expose, Type } from 'class-transformer';
 
 /* ------------------------------------------------------------------------------------------------------------------ */
-/*                                                   categoria types                                                  */
+/*                                                   TipoTramite types                                                */
 /* ------------------------------------------------------------------------------------------------------------------ */
-export class CategoriaPublica extends OmitType(Categoria, [
+export class TipoTramitePublico extends OmitType(TipoTramite, [
   'estaActiva',
   'fechaCreacion',
   'fechaActualizacion',
 ]) {}
 
-class CategoriaDataPublic {
-  @ApiProperty({ type: [CategoriaPublica] })
-  data: CategoriaPublica[];
+class TipoTramiteDataPublic {
+  @ApiProperty({ type: [TipoTramitePublico] })
+  data: TipoTramitePublico[];
 }
 
-export class CategoriasTypePublic extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: CategoriaDataPublic })
-  response: CategoriaDataPublic;
+export class TiposTramiteTypePublic extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: TipoTramiteDataPublic })
+  response: TipoTramiteDataPublic;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
