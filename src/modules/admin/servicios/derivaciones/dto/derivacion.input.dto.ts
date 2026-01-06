@@ -118,13 +118,13 @@ class DerivacionWhereInput {
   aceptada?: BoolFilter;
 
   @Expose()
-  @ApiPropertyOptional({ type: BoolFilter, description: 'Filtrar por estado de activación' })
+  @ApiPropertyOptional({ type: BoolFilter, description: 'Filtrar por derivación activa' })
   @IsOptional()
   @Type(() => BoolFilter)
   estaActiva?: BoolFilter;
 
   @Expose()
-  @ApiPropertyOptional({ type: BoolFilter, description: 'Filtrar por estado de visualización' })
+  @ApiPropertyOptional({ type: BoolFilter, description: 'Filtrar por derivación visualizada' })
   @IsOptional()
   @Type(() => BoolFilter)
   visualizada?: BoolFilter;
