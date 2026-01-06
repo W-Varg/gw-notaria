@@ -50,9 +50,6 @@ importers:
       axios:
         specifier: ^1.13.2
         version: 1.13.2
-      backend_notaria:
-        specifier: 'link:'
-        version: 'link:'
       cache-manager:
         specifier: ^7.2.5
         version: 7.2.5
