@@ -575,7 +575,7 @@ model ResponsableServicio {
 model DerivacionServicio {
   id                   Int       @id @default(autoincrement())
   servicioId           String
-  usuarioOrigenId      String
+  usuarioOrigenId      String?
   usuarioDestinoId     String
   fechaDerivacion      DateTime  @default(now()) @db.Timestamptz()
   motivo               String?   @db.Text
@@ -592,7 +592,7 @@ model DerivacionServicio {
   usuarioCancelacionId String? // Quién canceló
 
   servicio       Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
-  usuarioOrigen  Usuario  @relation("DerivacionesOrigen", fields: [usuarioOrigenId], references: [id])
+  usuarioOrigen  Usuario? @relation("DerivacionesOrigen", fields: [usuarioOrigenId], references: [id])
   usuarioDestino Usuario  @relation("DerivacionesDestino", fields: [usuarioDestinoId], references: [id])
 
   @@index([servicioId])

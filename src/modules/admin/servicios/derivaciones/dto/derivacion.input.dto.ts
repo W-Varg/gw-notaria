@@ -76,7 +76,7 @@ export class MarcarVisualizadaDto {
   derivacionId: number;
 }
 
-export class AceptarDerivacionDto {
+export class NotaDerivacionDto {
   @Expose()
   @IsOptional()
   @IsString()
@@ -85,6 +85,12 @@ export class AceptarDerivacionDto {
 }
 
 export class RechazarDerivacionDto {
+  @Expose()
+  @IsDefined()
+  @IsInt()
+  @ApiProperty({ type: Number, description: 'ID de la derivación a rechazar' })
+  derivacionId: number;
+
   @Expose()
   @IsDefined()
   @IsString()

@@ -10,6 +10,7 @@ import { ResponsableServicioModule } from './servicios/responsable-servicio/resp
 import { HistorialEstadosServicioModule } from './servicios/historial-estados-servicio/historial-estados-servicio.module';
 import { FinanzasModule } from './finanzas/finanzas.module';
 import { MensajeContactoModule } from './contacto/mensajes-contacto/mensaje-contacto.module';
+import { DerivacionModule } from './servicios/derivaciones/derivacion.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { MensajeContactoModule } from './contacto/mensajes-contacto/mensaje-cont
     ClienteModule,
     // modulo de servicios
     ServicioModule,
+    DerivacionModule,
     ResponsableServicioModule,
     HistorialEstadosServicioModule,
 

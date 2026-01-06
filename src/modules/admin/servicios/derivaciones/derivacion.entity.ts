@@ -32,7 +32,9 @@ export class DerivacionEntity {
 
   @ApiPropertyOptional()
   fechaAceptacion?: Date;
+}
 
+export class DerivacionDetail extends DerivacionEntity {
   // Relaciones
   @ApiPropertyOptional()
   servicio?: Servicio;

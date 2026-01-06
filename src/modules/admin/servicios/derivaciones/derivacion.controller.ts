@@ -1,19 +1,8 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Param,
-  Body,
-  Query,
-  ParseIntPipe,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiResponse } from '@nestjs/swagger';
 import { DerivacionService } from './derivacion.service';
 import {
   CreateDerivacionDto,
-  AceptarDerivacionDto,
   RechazarDerivacionDto,
   CancelarDerivacionDto,
   MarcarVisualizadaDto,
@@ -24,8 +13,8 @@ import {
   ResponseDerivacionDetailType,
   ResponseDerivacionesType,
   PaginateDerivacionesType,
+  ResponseDerivacionesStatsType,
 } from './dto/derivacion.response';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken, AuthUser } from 'src/common/decorators/token.decorator';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { PermisoEnum } from 'src/enums/permisos.enum';
@@ -33,6 +22,7 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
 import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Derivaciones de Servicios')
 @Controller('admin/derivaciones')
@@ -54,28 +44,20 @@ export class DerivacionController {
     return this.derivacionService.create(createDerivacionDto, session);
   }
 
-  @Post('cancelar')
-  @BearerAuthPermision([PermisoEnum.SERVICIOS_EDITAR])
-  @ApiDescription('Cancelar una derivación (solo si no ha sido visualizada)', [
-    PermisoEnum.SERVICIOS_EDITAR,
-  ])
-  @ApiResponse({ status: 200, type: () => ResponseDerivacionType })
-  @Audit({
-    accion: TipoAccionEnum.UPDATE,
-    modulo: 'servicios',
-    tabla: 'DerivacionServicio',
-    descripcion: 'Cancelar derivación de servicio',
-  })
-  cancelar(@Body() cancelarDto: CancelarDerivacionDto, @AuthUser() session: IToken) {
-    return this.derivacionService.cancelar(cancelarDto, session);
+  @Get(':id')
+  @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
+  @ApiDescription('Obtener detalle de una derivación', [PermisoEnum.SERVICIOS_VER])
+  @ApiResponse({ status: 200, type: () => ResponseDerivacionDetailType })
+  findOne(@Param() params: CommonParamsDto.Id, @AuthUser() session: IToken) {
+    return this.derivacionService.findOne(params.id, session);
   }
 
-  @Post('marcar-visualizada')
+  @Get('stats/dashboard')
   @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
-  @ApiDescription('Marcar una derivación como visualizada', [PermisoEnum.SERVICIOS_VER])
-  @ApiResponse({ status: 200, type: () => ResponseDerivacionType })
-  marcarVisualizada(@Body() marcarDto: MarcarVisualizadaDto, @AuthUser() session: IToken) {
-    return this.derivacionService.marcarVisualizada(marcarDto, session);
+  @ApiDescription('Obtener estadísticas de derivaciones', [PermisoEnum.SERVICIOS_VER])
+  @ApiResponse({ status: 200, type: () => ResponseDerivacionesStatsType })
+  getStats(@AuthUser() session: IToken) {
+    return this.derivacionService.getStats(session);
   }
 
   @Post('list')
@@ -94,31 +76,23 @@ export class DerivacionController {
     return this.derivacionService.findMisDerivacionesPendientes(session);
   }
 
-  @Get('mis-derivaciones/enviadas')
-  @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
-  @ApiDescription('Obtener mis derivaciones enviadas', [PermisoEnum.SERVICIOS_VER])
-  @ApiResponse({ status: 200, type: () => ResponseDerivacionesType })
-  findMisDerivacionesEnviadas(@AuthUser() session: IToken) {
-    return this.derivacionService.findMisDerivacionesEnviadas(session);
+  @Post('cancelar')
+  @BearerAuthPermision([PermisoEnum.SERVICIOS_EDITAR])
+  @ApiDescription('Cancelar una derivación (solo si no ha sido visualizada)', [
+    PermisoEnum.SERVICIOS_EDITAR,
+  ])
+  @ApiResponse({ status: 200, type: () => ResponseDerivacionType })
+  @Audit({
+    accion: TipoAccionEnum.UPDATE,
+    modulo: 'servicios',
+    tabla: 'DerivacionServicio',
+    descripcion: 'Cancelar derivación de servicio',
+  })
+  cancelar(@Body() cancelarDto: CancelarDerivacionDto, @AuthUser() session: IToken) {
+    return this.derivacionService.cancelar(cancelarDto, session);
   }
 
-  @Get(':id')
-  @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
-  @ApiDescription('Obtener detalle de una derivación', [PermisoEnum.SERVICIOS_VER])
-  @ApiResponse({ status: 200, type: () => ResponseDerivacionDetailType })
-  findOne(@Param('id', ParseIntPipe) id: number, @AuthUser() session: IToken) {
-    return this.derivacionService.findOne(id, session);
-  }
-
-  @Get('servicio/:servicioId')
-  @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
-  @ApiDescription('Obtener historial de derivaciones de un servicio', [PermisoEnum.SERVICIOS_VER])
-  @ApiResponse({ status: 200, type: () => ResponseDerivacionesType })
-  findByServicio(@Param('servicioId') servicioId: string) {
-    return this.derivacionService.findByServicio(servicioId);
-  }
-
-  @Patch(':id/rechazar')
+  @Patch('rechazar')
   @BearerAuthPermision([PermisoEnum.SERVICIOS_EDITAR])
   @ApiDescription('Rechazar una derivación recibida', [PermisoEnum.SERVICIOS_EDITAR])
   @ApiResponse({ status: 200, type: () => ResponseDerivacionType })
@@ -128,11 +102,31 @@ export class DerivacionController {
     tabla: 'DerivacionServicio',
     descripcion: 'Rechazar derivación de servicio',
   })
-  rechazar(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() rechazarDto: RechazarDerivacionDto,
-    @AuthUser() session: IToken,
-  ) {
-    return this.derivacionService.rechazar(id, rechazarDto, session);
+  rechazar(@Body() rechazarDto: RechazarDerivacionDto, @AuthUser() session: IToken) {
+    return this.derivacionService.rechazar(rechazarDto, session);
+  }
+
+  @Post('marcar-visualizada')
+  @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
+  @ApiDescription('Marcar una derivación como visualizada', [PermisoEnum.SERVICIOS_VER])
+  @ApiResponse({ status: 200, type: () => ResponseDerivacionType })
+  marcarVisualizada(@Body() marcarDto: MarcarVisualizadaDto, @AuthUser() session: IToken) {
+    return this.derivacionService.marcarVisualizada(marcarDto, session);
+  }
+
+  @Get('mis-derivaciones/enviadas')
+  @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
+  @ApiDescription('Obtener mis derivaciones enviadas', [PermisoEnum.SERVICIOS_VER])
+  @ApiResponse({ status: 200, type: () => ResponseDerivacionesType })
+  findMisDerivacionesEnviadas(@AuthUser() session: IToken) {
+    return this.derivacionService.findMisDerivacionesEnviadas(session);
+  }
+
+  @Get('historial/:servicioId')
+  @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
+  @ApiDescription('Obtener historial de derivaciones de un servicio', [PermisoEnum.SERVICIOS_VER])
+  @ApiResponse({ status: 200, type: () => ResponseDerivacionesType })
+  findByServicio(@Param('servicioId') servicioId: string) {
+    return this.derivacionService.findByServicio(servicioId);
   }
 }

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import {
   CreateDerivacionDto,
-  AceptarDerivacionDto,
   CancelarDerivacionDto,
   MarcarVisualizadaDto,
   ListDerivacionArgsDto,
   RechazarDerivacionDto,
 } from './dto/derivacion.input.dto';
+import { DerivacionesStatsDto } from './dto/derivacion.response';
 import { PrismaService } from 'src/global/database/prisma.service';
 import {
   dataErrorValidations,
@@ -431,6 +431,62 @@ export class DerivacionService {
   }
 
   /**
+   * Obtener estadísticas de derivaciones
+   */
+  async getStats(session: IToken) {
+    const [recibidas, enviadas, pendientesPago, finalizados, total] = await Promise.all([
+      // Derivaciones pendientes de visualizar (recibidas por el usuario, activas y no visualizadas)
+      this.prismaService.derivacionServicio.count({
+        where: {
+          usuarioDestinoId: session.usuarioId,
+          estaActiva: true,
+        },
+      }),
+      // Derivaciones enviadas activas (enviadas por el usuario y aún activas)
+      this.prismaService.derivacionServicio.count({
+        where: {
+          usuarioOrigenId: session.usuarioId,
+          estaActiva: true,
+        },
+      }),
+      // Derivaciones aceptadas/visualizadas (totales en el sistema)
+      this.prismaService.derivacionServicio.count({
+        where: {
+          estaActiva: true,
+          servicio: {
+            estaActivo: true,
+            saldoPendiente: { gt: 0 },
+          },
+        },
+      }),
+      // Derivaciones finalizadas (totales en el sistema)
+      this.prismaService.derivacionServicio.count({
+        where: {
+          OR: [{ usuarioDestinoId: session.usuarioId }, { usuarioOrigenId: session.usuarioId }],
+          estaActiva: false,
+        },
+      }),
+      // Total de derivaciones en el sistema
+      this.prismaService.derivacionServicio.count({
+        where: {
+          estaActiva: true,
+          OR: [{ usuarioDestinoId: session.usuarioId }, { usuarioOrigenId: session.usuarioId }],
+        },
+      }),
+    ]);
+
+    const stats: DerivacionesStatsDto = {
+      recibidas: recibidas,
+      enviadas: enviadas,
+      pendientesPago: pendientesPago,
+      finalizados: finalizados,
+      total,
+    };
+
+    return dataResponseSuccess<DerivacionesStatsDto>({ data: stats });
+  }
+
+  /**
    * Obtener mis derivaciones pendientes de aceptar
    */
   async findMisDerivacionesPendientes(session: IToken) {
@@ -687,10 +743,10 @@ export class DerivacionService {
    * - Similar a cancelar pero desde el punto de vista del receptor
    * - Restaura el responsable al emisor original
    */
-  async rechazar(id: number, inputDto: RechazarDerivacionDto, session: IToken) {
+  async rechazar(inputDto: RechazarDerivacionDto, session: IToken) {
     // Buscar la derivación
     const derivacion = await this.prismaService.derivacionServicio.findUnique({
-      where: { id },
+      where: { id: inputDto.derivacionId },
       include: {
         servicio: {
           select: {
@@ -731,7 +787,7 @@ export class DerivacionService {
     const resultado = await this.prismaService.$transaction(async (prisma) => {
       // Marcar derivación como rechazada (inactiva)
       const derivacionRechazada = await prisma.derivacionServicio.update({
-        where: { id },
+        where: { id: inputDto.derivacionId },
         data: {
           estaActiva: false,
           motivoCancelacion: `Rechazado por receptor: ${inputDto.motivoRechazo}`,
