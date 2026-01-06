@@ -7,7 +7,7 @@ import {
   dataResponseSuccess,
 } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
-import { Banco } from './banco.entity';
+import { BancoEntity } from './banco.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken } from 'src/common/decorators/token.decorator';
@@ -29,7 +29,7 @@ export class BancoService {
         userCreateId: session.usuarioId,
       },
     });
-    return dataResponseSuccess<Banco>({ data: result });
+    return dataResponseSuccess<BancoEntity>({ data: result });
   }
 
   /**
@@ -54,7 +54,7 @@ export class BancoService {
 
     if (pagination && total !== undefined) pagination.total = total;
 
-    return dataResponseSuccess<Banco[]>({
+    return dataResponseSuccess<BancoEntity[]>({
       data: list,
       pagination,
     });
@@ -97,7 +97,7 @@ export class BancoService {
       this.prismaService.banco.count({ where: whereInput }),
     ]);
 
-    return dataResponseSuccess<Banco[]>({
+    return dataResponseSuccess<BancoEntity[]>({
       data: list,
       pagination: { ...pagination, total },
     });
@@ -109,7 +109,7 @@ export class BancoService {
       include: { cuentasBancarias: true },
     });
     if (!item) return dataResponseError('Banco no encontrado');
-    return dataResponseSuccess<Banco>({ data: item });
+    return dataResponseSuccess<BancoEntity>({ data: item });
   }
 
   async update(id: number, updateBancoDto: UpdateBancoDto, session: IToken) {
@@ -136,7 +136,7 @@ export class BancoService {
       },
     });
 
-    return dataResponseSuccess<Banco>({ data: result });
+    return dataResponseSuccess<BancoEntity>({ data: result });
   }
 
   async remove(id: number) {

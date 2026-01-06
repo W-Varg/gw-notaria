@@ -1,10 +1,10 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { Banco, BancoDetail } from '../banco.entity';
+import { BancoEntity, BancoDetail } from '../banco.entity';
 import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
 
 class BancoData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: Banco })
-  data: Banco;
+  @ApiProperty({ type: BancoEntity })
+  data: BancoEntity;
 }
 
 export class ResponseBancoType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -27,8 +27,8 @@ export class ResponseBancoDetailType extends OmitType(ApiOkResponseDto, ['cache'
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 class BancosData {
-  @ApiProperty({ type: [Banco] })
-  data?: Banco[];
+  @ApiProperty({ type: [BancoEntity] })
+  data?: BancoEntity[];
 }
 
 export class ResponseBancosType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -39,8 +39,8 @@ export class ResponseBancosType extends OmitType(ApiOkResponseDto, ['cache']) {
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 class PaginateBancosData extends OmitType(ResponseStructDTO, ['validationErrors']) {
-  @ApiProperty({ type: [Banco] })
-  data?: Banco[];
+  @ApiProperty({ type: [BancoEntity] })
+  data?: BancoEntity[];
 }
 
 export class PaginateBancosType extends OmitType(ApiOkResponseDto, ['cache']) {

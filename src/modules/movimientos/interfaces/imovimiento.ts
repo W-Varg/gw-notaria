@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Decimal } from '@prisma/client/runtime/client';
 import { MetodoPagoEnum } from 'src/enums/metodo-pago.enum';
 import { ConstanciaEnum } from 'src/generated/prisma/enums';
-import { Banco } from 'src/modules/admin/catalogos/bancos/banco.entity';
+import { BancoEntity } from 'src/modules/admin/catalogos/bancos/banco.entity';
 export class IMovimiento {
   @ApiProperty()
   gastoId?: number;
@@ -27,6 +27,6 @@ export class IMovimiento {
   @ApiProperty({ type: Number })
   egreso: Decimal;
 
-  @ApiProperty({ type: Banco })
-  banco?: Banco;
+  @ApiProperty({ type: BancoEntity })
+  banco?: BancoEntity;
 }
