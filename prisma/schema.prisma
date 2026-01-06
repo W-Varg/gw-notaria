@@ -241,7 +241,7 @@ model TokenTemporal {
   @@index([usuarioId])
   @@index([fechaExpiracion])
   @@index([tipo])
-  @@map("_tokens_temporales")
+  @@map("auth_tokens_temporales")
   @@schema("public")
 }
 
@@ -259,7 +259,7 @@ model ConfiguracionAplicacion {
   fechaActualizacion DateTime @updatedAt
 
   @@index([categoria])
-  @@map("_configuracion_aplicacion")
+  @@map("int_configuracion_aplicacion")
   @@schema("public")
 }
 
@@ -315,7 +315,7 @@ model Notificacion {
   @@index([usuarioId])
   @@index([leida])
   @@index([fechaCreacion])
-  @@map("notificaciones")
+  @@map("int_notificaciones")
   @@schema("public")
 }
 
@@ -363,7 +363,7 @@ model Banco {
 
   cuentasBancarias CuentaBancaria[] @relation(name: "BancoCuenta")
 
-  @@map("bancos")
+  @@map("cat_bancos")
   @@schema("public")
 }
 
@@ -382,7 +382,7 @@ model CuentaBancaria {
   pagosIngresos        PagosIngresos[]
   transaccionesEgresos TransaccionesEgresos[]
 
-  @@map("cuentas_bancarias")
+  @@map("cont_cuentas_bancarias")
   @@schema("public")
 }
 
@@ -405,7 +405,7 @@ model TipoDocumento {
   servicios           Servicio[]
   tiposTramite        TipoTramite[]
 
-  @@map("tipos_documento")
+  @@map("cat_tipos_documento")
   @@schema("public")
 }
 
@@ -423,7 +423,7 @@ model PlantillaDocumento {
 
   tipoDocumento TipoDocumento @relation(fields: [tipoDocumentoId], references: [id])
 
-  @@map("plantillas_documento")
+  @@map("cat_plantillas_documento")
   @@schema("public")
 }
 
@@ -441,7 +441,7 @@ model EstadoTramite {
   historialEstadosServicio HistorialEstadosServicio[]
   serviciosEstadoActual    Servicio[]                 @relation("EstadoActualServicio")
 
-  @@map("estados_tramite")
+  @@map("cat_estados_tramite")
   @@schema("public")
 }
 
@@ -465,7 +465,7 @@ model Cliente {
   personaJuridica PersonaJuridica?
   servicios       Servicio[]
 
-  @@map("clientes")
+  @@map("cat_clientes")
   @@schema("public")
 }
 
@@ -483,7 +483,7 @@ model PersonaNatural {
 
   cliente Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
 
-  @@map("personas_naturales")
+  @@map("cat_personas_naturales")
   @@schema("public")
 }
 
@@ -499,7 +499,7 @@ model PersonaJuridica {
 
   cliente Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
 
-  @@map("personas_juridicas")
+  @@map("cat_personas_juridicas")
   @@schema("public")
 }
 
@@ -537,7 +537,7 @@ model Servicio {
   derivaciones             DerivacionServicio[]
   pagosIngresos            PagosIngresos[]
 
-  @@map("servicios")
+  @@map("core_servicios")
   @@schema("public")
 }
 
@@ -553,7 +553,7 @@ model HistorialEstadosServicio {
   servicio Servicio      @relation(fields: [servicioId], references: [id], onDelete: Cascade)
   estado   EstadoTramite @relation(fields: [estadoId], references: [id])
 
-  @@map("historial_estados_servicio")
+  @@map("core_historial_estados_servicio")
   @@schema("public")
 }
 
@@ -568,7 +568,7 @@ model ResponsableServicio {
   usuario  Usuario  @relation(fields: [usuarioId], references: [id])
   servicio Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
 
-  @@map("responsables_servicio")
+  @@map("core_responsables_servicio")
   @@schema("public")
 }
 
@@ -600,7 +600,7 @@ model DerivacionServicio {
   @@index([fechaDerivacion])
   @@index([estaActiva])
   @@index([visualizada])
-  @@map("derivaciones_servicio")
+  @@map("core_derivaciones_servicio")
   @@schema("public")
 }
 
@@ -624,7 +624,7 @@ model PagosIngresos {
   cuentaBancaria  CuentaBancaria? @relation(fields: [cuentaBancariaId], references: [id])
   usuarioRegistro Usuario?        @relation(fields: [usuarioRegistroId], references: [id])
 
-  @@map("pagos_ingresos")
+  @@map("cont_pagos_ingresos")
   @@schema("public")
 }
 
@@ -651,7 +651,7 @@ model Gastos {
   usuario              Usuario?               @relation(fields: [usuarioId], references: [id])
   transaccionesEgresos TransaccionesEgresos[]
 
-  @@map("gastos")
+  @@map("cont_gastos")
   @@schema("public")
 }
 
@@ -666,7 +666,7 @@ model TransaccionesEgresos {
   gasto          Gastos          @relation(fields: [gastoId], references: [id])
   cuentaBancaria CuentaBancaria? @relation(fields: [cuentaBancariaId], references: [id])
 
-  @@map("transacciones_egresos")
+  @@map("cont_transacciones_egresos")
   @@schema("public")
 }
 
@@ -688,7 +688,7 @@ model ArqueosDiarios {
 
   usuarioCierre Usuario? @relation(fields: [usuarioCierreId], references: [id])
 
-  @@map("arqueos_diarios")
+  @@map("cont_arqueos_diarios")
   @@schema("public")
 }
 
@@ -733,7 +733,7 @@ model AuditLog {
   @@index([tabla])
   @@index([registroId])
   @@index([fechaCreacion])
-  @@map("logs_audit_logs")
+  @@map("logs_audit")
   @@schema("logs")
 }
 
@@ -763,7 +763,7 @@ model SystemLog {
   @@index([modulo])
   @@index([fechaCreacion])
   @@index([usuarioId])
-  @@map("logs_system_logs")
+  @@map("logs_system")
   @@schema("logs")
 }
 
@@ -821,7 +821,7 @@ model AccessLog {
   @@index([metodoHttp])
   @@index([responseCode])
   @@index([fechaAcceso])
-  @@map("logs_access_logs")
+  @@map("logs_access")
   @@schema("logs")
 }
 
@@ -849,7 +849,7 @@ model DataChangeLog {
   @@index([usuarioId])
   @@index([fechaCambio])
   @@index([campo])
-  @@map("logs_data_change_logs")
+  @@map("logs_data_changes")
   @@schema("logs")
 }
 
@@ -884,6 +884,6 @@ model ErrorLog {
   @@index([resuelto])
   @@index([fechaError])
   @@index([modulo])
-  @@map("logs_error_logs")
+  @@map("logs_errors")
   @@schema("logs")
 }
