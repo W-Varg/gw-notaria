@@ -18,13 +18,15 @@ export class ClienteService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(inputDto: CreateClienteDto, session: IToken) {
-    // Validar correo único
-    const emailExists = await this.prismaService.cliente.findFirst({
-      where: { email: inputDto.email },
-      select: { id: true },
-    });
-    if (emailExists)
-      return dataErrorValidations({ email: ['El correo electrónico ya está registrado'] });
+    // Validar correo único solo si se proporciona
+    if (inputDto.email) {
+      const emailExists = await this.prismaService.cliente.findFirst({
+        where: { email: inputDto.email },
+        select: { id: true },
+      });
+      if (emailExists)
+        return dataErrorValidations({ email: ['El correo electrónico ya está registrado'] });
+    }
 
     // Validar que se proporcionen los datos específicos según el tipo
     if (inputDto.tipo === TipoClienteEnum.NATURAL && !inputDto.personaNatural) {

@@ -68,12 +68,15 @@ export class DerivacionController {
     return this.derivacionService.filter(inputDto);
   }
 
-  @Get('mis-derivaciones/pendientes')
-  @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
-  @ApiDescription('Obtener mis derivaciones pendientes de aceptar', [PermisoEnum.SERVICIOS_VER])
+  @Post('mis-derivaciones/recibidas')
+  @BearerAuthPermision()
+  @ApiDescription('Obtener mis derivaciones recibidas')
   @ApiResponse({ status: 200, type: () => ResponseDerivacionesType })
-  findMisDerivacionesPendientes(@AuthUser() session: IToken) {
-    return this.derivacionService.findMisDerivacionesPendientes(session);
+  misDerivacionesRecibidas(
+    @Body() filters: ListDerivacionArgsDto,
+    @AuthUser() session: IToken,
+  ) {
+    return this.derivacionService.misDerivacionesRecibidas(filters, session);
   }
 
   @Post('cancelar')

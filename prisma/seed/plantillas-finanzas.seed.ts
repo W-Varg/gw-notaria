@@ -391,6 +391,9 @@ export async function crearTransaccionesEgresos(
 }
 
 export async function crearArqueosDiarios(prisma: PrismaClient, adminUserId: string) {
+  // Eliminar arqueos existentes para evitar conflictos
+  await prisma.arqueosDiarios.deleteMany({});
+
   await prisma.arqueosDiarios.createMany({
     data: [
       // Arqueo de diciembre 2025

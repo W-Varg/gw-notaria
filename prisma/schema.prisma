@@ -458,7 +458,6 @@ model Cliente {
   userCreateId       String
   userUpdateId       String?
   fechaCreacion      DateTime @default(now())
-  fechaRegistro      DateTime @default(now()) @db.Timestamptz()
   fechaActualizacion DateTime @updatedAt
 
   personaNatural  PersonaNatural?

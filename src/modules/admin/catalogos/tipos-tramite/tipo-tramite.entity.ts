@@ -35,6 +35,12 @@ export class TipoTramiteEntity {
   @ApiProperty({ type: Boolean })
   estaActiva: boolean = true;
 
+  @ApiProperty({ type: String })
+  userCreateId: string;
+
+  @ApiPropertyOptional({ type: String })
+  userUpdateId?: string;
+
   @ApiProperty({ type: Date })
   fechaCreacion: Date;
 

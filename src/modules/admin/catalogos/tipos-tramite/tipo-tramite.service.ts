@@ -21,13 +21,15 @@ export class TipoTramiteService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(inputDto: CreateTipoTramiteDto, session: IToken) {
-    // Verificar que el tipo de documento existe
-    const tipoDocumento = await this.prismaService.tipoDocumento.findUnique({
-      where: { id: inputDto.tipoDocumentoId },
-      select: { id: true },
-    });
-    if (!tipoDocumento) {
-      return dataErrorValidations({ tipoDocumentoId: ['El tipo de documento no existe'] });
+    // Verificar que el tipo de documento existe si se proporciona
+    if (inputDto.tipoDocumentoId) {
+      const tipoDocumento = await this.prismaService.tipoDocumento.findUnique({
+        where: { id: inputDto.tipoDocumentoId },
+        select: { id: true },
+      });
+      if (!tipoDocumento) {
+        return dataErrorValidations({ tipoDocumentoId: ['El tipo de documento no existe'] });
+      }
     }
 
     const exists = await this.prismaService.tipoTramite.findUnique({

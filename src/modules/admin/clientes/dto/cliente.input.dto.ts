@@ -87,11 +87,11 @@ export class CreateClienteDto {
   tipo: TipoClienteEnum;
 
   @Expose()
-  @IsDefined()
   @IsEmail()
   @MaxLength(100)
-  @ApiProperty({ type: String })
-  email: string;
+  @IsOptional()
+  @ApiPropertyOptional({ type: String })
+  email?: string;
 
   @Expose()
   @IsOptional()

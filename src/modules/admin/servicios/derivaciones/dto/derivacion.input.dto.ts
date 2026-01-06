@@ -100,6 +100,12 @@ export class RechazarDerivacionDto {
 
 class DerivacionWhereInput {
   @Expose()
+  @ApiPropertyOptional({ type: String, description: 'Filtrar por texto de búsqueda' })
+  @IsOptional()
+  @Type(() => String)
+  searchText?: string;
+
+  @Expose()
   @ApiPropertyOptional({ type: StringFilter, description: 'Filtrar por ID del servicio' })
   @IsOptional()
   @Type(() => StringFilter)

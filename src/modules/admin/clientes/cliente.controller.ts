@@ -29,7 +29,7 @@ import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
 import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 
 @ApiTags('[admin] Clientes')
-@Controller('clientes')
+@Controller('admin/clientes')
 @UseInterceptors(AuditInterceptor)
 export class ClienteController {
   constructor(private readonly clienteService: ClienteService) {}

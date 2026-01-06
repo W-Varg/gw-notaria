@@ -15,6 +15,7 @@ import {
 } from 'src/common/dtos/response.dto';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { IToken } from 'src/common/decorators/token.decorator';
+import { Prisma } from 'src/generated/prisma/client';
 
 @Injectable()
 export class DerivacionService {
@@ -339,7 +340,7 @@ export class DerivacionService {
    */
   async filter(filters: ListDerivacionArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(filters, true);
-    const whereInput: any = {};
+    const whereInput: Prisma.DerivacionServicioWhereInput = {};
 
     // Aplicar filtros del where si existen
     if (filters.where) {
@@ -489,72 +490,62 @@ export class DerivacionService {
   /**
    * Obtener mis derivaciones pendientes de aceptar
    */
-  async findMisDerivacionesPendientes(session: IToken) {
-    const derivaciones = await this.prismaService.derivacionServicio.findMany({
-      where: {
-        usuarioDestinoId: session.usuarioId,
-        estaActiva: true,
-        aceptada: false,
-      },
-      orderBy: {
-        fechaDerivacion: 'desc',
-      },
-      include: {
-        servicio: {
-          select: {
-            id: true,
-            codigoTicket: true,
-            tipoTramite: {
-              select: {
-                nombre: true,
-                colorHex: true,
-                icon: true,
-              },
-            },
-            cliente: {
-              select: {
-                id: true,
-                tipo: true,
-                personaNatural: {
-                  select: {
-                    nombres: true,
-                    apellidos: true,
-                  },
-                },
-                personaJuridica: {
-                  select: {
-                    razonSocial: true,
-                  },
-                },
-              },
-            },
-            estadoActual: {
-              select: {
-                nombre: true,
-                colorHex: true,
-              },
-            },
-          },
-        },
-        usuarioOrigen: {
-          select: {
-            id: true,
-            nombre: true,
-            apellidos: true,
-            email: true,
-          },
-        },
-      },
-    });
+  async misDerivacionesRecibidas(filters: ListDerivacionArgsDto, session: IToken) {
+    const { skip, take, orderBy, pagination } = paginationParamsFormat(filters, true);
+    const whereInput: Prisma.DerivacionServicioWhereInput = {
+      usuarioDestinoId: session.usuarioId,
+      estaActiva: true,
+    };
 
-    return dataResponseSuccess<any[]>({
+    // Aplicar filtros del where si existen
+    if (filters.where) {
+      const { servicioId, prioridad, searchText } = filters.where;
+
+      if (servicioId) whereInput.servicioId = servicioId;
+      if (prioridad) whereInput.prioridad = prioridad;
+      if (searchText && searchText.length > 0) {
+        whereInput.OR = [
+          { servicio: { codigoTicket: { startsWith: searchText } } },
+          { servicio: { cliente: { personaNatural: { nombres: { startsWith: searchText } } } } },
+          { servicio: { cliente: { personaNatural: { apellidos: { contains: searchText } } } } },
+          { servicio: { cliente: { personaJuridica: { razonSocial: { contains: searchText } } } } },
+        ];
+      }
+    }
+    const [total, derivaciones] = await Promise.all([
+      this.prismaService.derivacionServicio.count({
+        where: whereInput,
+      }), // total de derivaciones
+      this.prismaService.derivacionServicio.findMany({
+        where: whereInput,
+        orderBy: orderBy,
+        select: {
+          id: true,
+          servicio: {
+            select: {
+              id: true,
+              codigoTicket: true,
+              tipoTramite: { select: { nombre: true, colorHex: true } },
+              cliente: {
+                select: {
+                  tipo: true,
+                  personaNatural: { select: { nombres: true, apellidos: true } },
+                  personaJuridica: { select: { razonSocial: true } },
+                },
+              },
+              estadoActual: { select: { nombre: true, colorHex: true } },
+            },
+          },
+          usuarioOrigen: { select: { nombre: true, apellidos: true } },
+        },
+        take,
+        skip,
+      }),
+    ]);
+
+    return dataResponseSuccess({
       data: derivaciones,
-      pagination: {
-        total: derivaciones.length,
-        page: 1,
-        size: derivaciones.length,
-        from: 0,
-      },
+      pagination: { ...pagination, total },
     });
   }
 
