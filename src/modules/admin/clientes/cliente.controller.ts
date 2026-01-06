@@ -27,6 +27,7 @@ import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
 import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Clientes')
 @Controller('admin/clientes')
@@ -108,7 +109,7 @@ export class ClienteController {
     tabla: 'Cliente',
     descripcion: 'Eliminar cliente',
   })
-  remove(@Param('id', ParseIntPipe) id: string) {
-    return this.clienteService.remove(id);
+  remove(@Param() params: CommonParamsDto.IdString) {
+    return this.clienteService.remove(params.id);
   }
 }

@@ -27,6 +27,7 @@ import {
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Bancos')
 @Controller('bancos')
@@ -76,8 +77,8 @@ export class BancoController {
   @BearerAuthPermision([PermisoEnum.BANCOS_VER])
   @ApiResponse({ status: 200, type: () => ResponseBancoDetailType })
   @ApiDescription('Obtener un banco por ID', [PermisoEnum.BANCOS_VER])
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.bancoService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.bancoService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -91,11 +92,11 @@ export class BancoController {
     descripcion: 'Actualización de banco',
   })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateBancoDto: UpdateBancoDto,
     @AuthUser() session: IToken,
   ) {
-    return this.bancoService.update(id, updateBancoDto, session);
+    return this.bancoService.update(params.id, updateBancoDto, session);
   }
 
   @Delete(':id')
@@ -108,7 +109,7 @@ export class BancoController {
     tabla: 'Banco',
     descripcion: 'Eliminación de banco',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.bancoService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.bancoService.remove(params.id);
   }
 }

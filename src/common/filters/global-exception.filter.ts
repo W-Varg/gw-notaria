@@ -47,6 +47,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       };
     }
 
+    console.log(error);
+
     if (error instanceof BadRequestException) {
       resp.message = `Excepción de solicitud incorrecta, ${
         (error.getResponse() as { message?: string }).message

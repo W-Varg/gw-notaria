@@ -30,6 +30,7 @@ import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
 import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Historial Estados Servicio')
 @Controller('historial-estados-servicio')
@@ -79,8 +80,8 @@ export class HistorialEstadosServicioController {
   @ApiDescription('Obtener un historial de estado por ID', [
     PermisoEnum.HISTORIAL_ESTADOS_SERVICIO_VER,
   ])
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.historialEstadosServicioService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.historialEstadosServicioService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -96,10 +97,10 @@ export class HistorialEstadosServicioController {
     descripcion: 'Actualizar historial de estado',
   })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateDto: UpdateHistorialEstadosServicioDto,
   ) {
-    return this.historialEstadosServicioService.update(id, updateDto);
+    return this.historialEstadosServicioService.update(params.id, updateDto);
   }
 
   @Delete(':id')
@@ -114,7 +115,7 @@ export class HistorialEstadosServicioController {
     tabla: 'HistorialEstadosServicio',
     descripcion: 'Eliminar historial de estado',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.historialEstadosServicioService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.historialEstadosServicioService.remove(params.id);
   }
 }

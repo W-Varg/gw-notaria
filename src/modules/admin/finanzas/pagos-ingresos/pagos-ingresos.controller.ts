@@ -31,6 +31,7 @@ import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
 import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Pagos e Ingresos')
 @Controller('pagos-ingresos')
@@ -74,8 +75,8 @@ export class PagosIngresosController {
   @BearerAuthPermision([PermisoEnum.PAGOS_INGRESOS_VER])
   @ApiResponse({ status: 200, type: () => ResponsePagosIngresosDetailType })
   @ApiDescription('Obtener un pago/ingreso por ID', [PermisoEnum.PAGOS_INGRESOS_VER])
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.pagosIngresosService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.pagosIngresosService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -89,11 +90,11 @@ export class PagosIngresosController {
     descripcion: 'Actualizar pago/ingreso',
   })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateDto: UpdatePagosIngresosDto,
     @AuthUser() session: IToken,
   ) {
-    return this.pagosIngresosService.update(id, updateDto, session);
+    return this.pagosIngresosService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')
@@ -106,7 +107,7 @@ export class PagosIngresosController {
     tabla: 'PagosIngresos',
     descripcion: 'Eliminar pago/ingreso',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.pagosIngresosService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.pagosIngresosService.remove(params.id);
   }
 }
