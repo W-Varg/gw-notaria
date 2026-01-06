@@ -22,6 +22,7 @@ import { Usuario as UserModel } from '../../generated/prisma/client';
 import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 import { TokenTemporalTipoEnum, TokenTemporalClaveEnum } from 'src/enums';
 import { AuditService } from 'src/global/services/audit.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly tokenService: TokenService,
     private readonly emailService: EmailService,
     private readonly auditService: AuditService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -257,6 +259,9 @@ export class AuthService {
   async login(inputDto: LoginUserInput) {
     const { email, password, userAgent, ipAddress } = inputDto;
 
+    // Obtener configuración global de 2FA
+    const twoFactorGlobalEnabled = this.configService.get<boolean>('twoFactorEnabled');
+
     // Buscar usuario por email con todas las relaciones necesarias
     const user = await this.prismaService.usuario.findUnique({
       where: { email },
@@ -366,6 +371,69 @@ export class AuthService {
       });
 
       return dataResponseError('Tu cuenta se encuentra inactiva. Contacta al administrador.');
+    }
+
+    // Si 2FA está deshabilitado globalmente, hacer login directo sin verificaciones adicionales
+    if (!twoFactorGlobalEnabled) {
+      const tokens = await this.tokenService.generateTokens(user);
+
+      // Registrar historial de login exitoso
+      await this.registrarHistorialLogin(user.id, true, userAgent, ipAddress);
+
+      // Registrar en audit log
+      await this.auditService.logLoginAttempt({
+        email: user.email,
+        exitoso: true,
+        ip: ipAddress,
+        userAgent,
+      });
+
+      await this.auditService.logAudit({
+        usuarioId: user.id,
+        accion: TipoAccionEnum.LOGIN,
+        modulo: 'auth',
+        tabla: 'Usuario',
+        registroId: user.id,
+        descripcion: `Usuario ${user.email} inició sesión (2FA deshabilitado globalmente)`,
+        usuarioIp: ipAddress,
+        userAgent,
+      });
+
+      // Crear sesión activa
+      await this.crearSesion(user.id, tokens.refreshToken, userAgent, ipAddress);
+
+      // Construir perfil de usuario
+      const userProfile: AuthUsuario = {
+        id: user.id,
+        email: user.email,
+        nombre: user.nombre,
+        apellidos: user.apellidos,
+        estaActivo: user.estaActivo,
+        emailVerificado: user.emailVerificado,
+        telefono: user.telefono || null,
+        direccion: user.direccion || null,
+        avatar: user.avatar || null,
+        twoFactorEnabled: user.twoFactorEnabled,
+      };
+
+      // Extraer permisos únicos
+      const permissions = new Set<string>();
+      user.roles.forEach((userRole) => {
+        userRole.rol.rolPermisos.forEach((rolPermiso) => {
+          permissions.add(rolPermiso.permiso.nombre);
+        });
+      });
+
+      // Construir respuesta de autenticación
+      const response: AuthResponse = {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        user: userProfile,
+        permissions: Array.from(permissions),
+        roles: user.roles.map((userRole) => userRole.rol.nombre),
+      };
+
+      return dataResponseSuccess<AuthResponse>({ data: response });
     }
 
     // Verificar si es un dispositivo de confianza

@@ -7,7 +7,7 @@ import {
   dataResponseSuccess,
 } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
-import { Cliente } from './cliente.entity';
+import { ClienteEntity } from './cliente.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken } from 'src/common/decorators/token.decorator';
@@ -39,9 +39,9 @@ export class ClienteService {
     }
 
     // Validar CI único si se proporciona
-    if (inputDto.personaNatural?.ci) {
+    if (inputDto.personaNatural?.numeroDocumento) {
       const ciExists = await this.prismaService.personaNatural.findUnique({
-        where: { ci: inputDto.personaNatural.ci },
+        where: { numeroDocumento: inputDto.personaNatural.numeroDocumento },
         select: { clienteId: true },
       });
       if (ciExists)
@@ -88,7 +88,7 @@ export class ClienteService {
       },
     });
 
-    return dataResponseSuccess<Cliente>({ data: result });
+    return dataResponseSuccess<ClienteEntity>({ data: result });
   }
 
   async findAll(query: ListFindAllQueryDto) {
@@ -109,7 +109,7 @@ export class ClienteService {
 
     if (pagination && total !== undefined) pagination.total = total;
 
-    return dataResponseSuccess<Cliente[]>({
+    return dataResponseSuccess<ClienteEntity[]>({
       data: list,
       pagination,
     });
@@ -139,7 +139,7 @@ export class ClienteService {
       this.prismaService.cliente.count({ where: whereInput }),
     ]);
 
-    return dataResponseSuccess<Cliente[]>({
+    return dataResponseSuccess<ClienteEntity[]>({
       data: list,
       pagination: { ...pagination, total },
     });
@@ -154,7 +154,7 @@ export class ClienteService {
       },
     });
     if (!item) return dataResponseError('Cliente no encontrado');
-    return dataResponseSuccess<Cliente>({ data: item });
+    return dataResponseSuccess<ClienteEntity>({ data: item });
   }
 
   async update(id: string, updateDto: UpdateClienteDto, session: IToken) {
@@ -178,10 +178,10 @@ export class ClienteService {
     }
 
     // Validar CI único si se actualiza
-    if (updateDto.personaNatural?.ci) {
+    if (updateDto.personaNatural?.numeroDocumento) {
       const ciExists = await this.prismaService.personaNatural.findFirst({
         where: {
-          ci: updateDto.personaNatural.ci,
+          numeroDocumento: updateDto.personaNatural.numeroDocumento,
           NOT: { clienteId: id },
         },
         select: { clienteId: true },
@@ -234,7 +234,7 @@ export class ClienteService {
       },
     });
 
-    return dataResponseSuccess<Cliente>({ data: result });
+    return dataResponseSuccess<ClienteEntity>({ data: result });
   }
 
   async remove(id: string) {

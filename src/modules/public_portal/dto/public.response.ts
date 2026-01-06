@@ -1,12 +1,12 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { ApiOkResponseDto } from 'src/common/dtos/response.dto';
-import { TipoTramite } from 'src/modules/admin/catalogos/tipos-tramite/tipo-tramite.entity';
+import { TipoTramiteEntity } from 'src/modules/admin/catalogos/tipos-tramite/tipo-tramite.entity';
 import { Expose, Type } from 'class-transformer';
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 /*                                                   TipoTramite types                                                */
 /* ------------------------------------------------------------------------------------------------------------------ */
-export class TipoTramitePublico extends OmitType(TipoTramite, [
+export class TipoTramitePublico extends OmitType(TipoTramiteEntity, [
   'estaActiva',
   'fechaCreacion',
   'fechaActualizacion',

@@ -11,8 +11,8 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
       userCreateId: adminUserId,
       personaNatural: {
         create: {
-          ci: '7654321',
-          expedido: 'LP',
+          numeroDocumento: '7654321',
+          tipoDocumento: 'CI',
           nombres: 'Juan Carlos',
           apellidos: 'Pérez Rodríguez',
           fechaNacimiento: new Date('1985-05-15'),
@@ -31,8 +31,8 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
       userCreateId: adminUserId,
       personaNatural: {
         create: {
-          ci: '8765432',
-          expedido: 'CB',
+          numeroDocumento: '8765432',
+          tipoDocumento: 'PASS',
           nombres: 'María Fernanda',
           apellidos: 'López Gutiérrez',
           fechaNacimiento: new Date('1990-08-22'),
@@ -51,8 +51,8 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
       userCreateId: adminUserId,
       personaNatural: {
         create: {
-          ci: '9876543',
-          expedido: 'SC',
+          numeroDocumento: '9876543',
+          tipoDocumento: 'C-EXT',
           nombres: 'Carlos Alberto',
           apellidos: 'Méndez Vargas',
           fechaNacimiento: new Date('1978-11-30'),
@@ -108,8 +108,8 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
       userCreateId: adminUserId,
       personaNatural: {
         create: {
-          ci: '6543210',
-          expedido: 'LP',
+          numeroDocumento: '6543210',
+          tipoDocumento: 'CI',
           nombres: 'Ana Lucía',
           apellidos: 'Martínez Sánchez',
           fechaNacimiento: new Date('1992-03-10'),

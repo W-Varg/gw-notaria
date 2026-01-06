@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Prisma } from 'src/generated/prisma/client';
-import { Cliente } from '../clientes/cliente.entity';
+import { ClienteEntity } from '../clientes/cliente.entity';
 import { TipoDocumento } from '../catalogos/tipos-documento/tipo-documento.entity';
-import { TipoTramite } from '../catalogos/tipos-tramite/tipo-tramite.entity';
+import { TipoTramiteEntity } from '../catalogos/tipos-tramite/tipo-tramite.entity';
 import { EstadoTramite } from '../catalogos/estados-tramite/estado-tramite.entity';
 import { HistorialEstadosServicio } from './historial-estados-servicio/historial-estados-servicio.entity';
 import { ResponsableServicio } from './responsable-servicio/responsable-servicio.entity';
@@ -69,13 +69,13 @@ export class Servicio {
 
   // Relaciones
   @ApiPropertyOptional()
-  cliente?: Cliente;
+  cliente?: ClienteEntity;
 
   @ApiPropertyOptional()
   tipoDocumento?: TipoDocumento;
 
   @ApiPropertyOptional()
-  tipoTramite?: TipoTramite;
+  tipoTramite?: TipoTramiteEntity;
 
   @ApiPropertyOptional()
   estadoActual?: EstadoTramite;

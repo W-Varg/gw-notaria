@@ -1,10 +1,10 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
-import { Cliente } from '../cliente.entity';
+import { ClienteEntity } from '../cliente.entity';
 
 class ClienteData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: Cliente })
-  data: Cliente;
+  @ApiProperty({ type: ClienteEntity })
+  data: ClienteEntity;
 }
 
 export class ResponseClienteType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -18,8 +18,8 @@ export class ResponseClienteDetailType extends OmitType(ApiOkResponseDto, ['cach
 }
 
 class ClientesData {
-  @ApiProperty({ type: [Cliente] })
-  data?: Cliente[];
+  @ApiProperty({ type: [ClienteEntity] })
+  data?: ClienteEntity[];
 }
 
 export class ResponseClientesType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -28,8 +28,8 @@ export class ResponseClientesType extends OmitType(ApiOkResponseDto, ['cache']) 
 }
 
 class PaginateClientesData extends OmitType(ResponseStructDTO, ['validationErrors']) {
-  @ApiProperty({ type: [Cliente] })
-  data?: Cliente[];
+  @ApiProperty({ type: [ClienteEntity] })
+  data?: ClienteEntity[];
 }
 
 export class PaginateClientesType extends OmitType(ApiOkResponseDto, ['cache']) {

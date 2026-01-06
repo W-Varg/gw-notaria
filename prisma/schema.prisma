@@ -269,9 +269,11 @@ model ConfiguracionAplicacion {
 
 model TipoTramite {
   id                 String   @id @default(cuid())
-  tipoDocumentoId    String?
+  tipoDocumentoId    String?  @db.VarChar(26)
   nombre             String   @unique
-  descripcion        String?
+  colorHex           String   @default("#1abc9c") @db.VarChar(15)
+  icon               String   @default("pi pi-code") @db.VarChar(15)
+  descripcion        String?  @db.VarChar(500)
   claseTramite       String?  @db.VarChar(50)
   negocio            String?  @db.VarChar(50)
   imagen             String?
@@ -389,7 +391,7 @@ model CuentaBancaria {
 // ============================================================================
 
 model TipoDocumento {
-  id                 String   @id @default(cuid())
+  id                 String   @id @default(cuid()) @db.VarChar(26)
   nombre             String   @unique @db.VarChar(100)
   descripcion        String   @db.Text
   precioBase         Decimal  @default(0.00) @db.Decimal(10, 2)
@@ -409,7 +411,7 @@ model TipoDocumento {
 
 model PlantillaDocumento {
   id                 Int      @id @default(autoincrement())
-  tipoDocumentoId    String
+  tipoDocumentoId    String   @db.VarChar(26)
   nombrePlantilla    String?  @db.VarChar(100)
   descripcion        String?  @db.Text
   contenidoHtml      String?  @db.Text
@@ -448,16 +450,16 @@ model EstadoTramite {
 // ============================================================================
 
 model Cliente {
-  id                 String          @id @default(cuid())
-  tipo               Int             // 1 = NATURAL, 2 = JURIDICA
-  direccion          String?         @db.VarChar(255)
-  telefono           String?         @db.VarChar(20)
-  email              String?         @db.VarChar(100)
+  id                 String   @id @default(cuid())
+  tipo               Int // 1 = NATURAL, 2 = JURIDICA
+  direccion          String?  @db.VarChar(255)
+  telefono           String?  @db.VarChar(20)
+  email              String?  @db.VarChar(100)
   userCreateId       String
   userUpdateId       String?
-  fechaCreacion      DateTime        @default(now())
-  fechaRegistro      DateTime        @default(now()) @db.Timestamptz()
-  fechaActualizacion DateTime        @updatedAt
+  fechaCreacion      DateTime @default(now())
+  fechaRegistro      DateTime @default(now()) @db.Timestamptz()
+  fechaActualizacion DateTime @updatedAt
 
   personaNatural  PersonaNatural?
   personaJuridica PersonaJuridica?
@@ -469,8 +471,8 @@ model Cliente {
 
 model PersonaNatural {
   clienteId          String    @id
-  ci                 String?   @unique @db.VarChar(20)
-  expedido           String?   @db.VarChar(10)
+  tipoDocumento      String    @db.VarChar(20) // cedula identidad, pasaporte, c-extrangero
+  numeroDocumento    String    @unique @db.VarChar(20)
   nombres            String    @db.VarChar(100)
   apellidos          String    @db.VarChar(100)
   fechaNacimiento    DateTime? @db.Date
@@ -488,7 +490,7 @@ model PersonaNatural {
 model PersonaJuridica {
   clienteId          String   @id
   nit                String?  @unique @db.VarChar(20)
-  razonSocial        String   @db.VarChar(150)
+  razonSocial        String   @unique @db.VarChar(150)
   representanteLegal String?  @db.VarChar(150)
   userCreateId       String
   userUpdateId       String?
@@ -509,7 +511,7 @@ model Servicio {
   id                   String    @id @default(cuid())
   codigoTicket         String    @unique @db.VarChar(20)
   clienteId            String
-  tipoDocumentoId      String
+  tipoDocumentoId      String    @db.VarChar(26)
   tipoTramiteId        String
   estadoActualId       String?
   fechaInicio          DateTime  @default(now()) @db.Timestamptz()
@@ -602,7 +604,7 @@ model PagosIngresos {
   servicioId        String?
   fecha             DateTime        @default(now()) @db.Timestamptz()
   monto             Decimal         @db.Decimal(10, 2)
-  tipoPago          Int             // 1 = EFECTIVO, 2 = QR, 3 = TRANSFERENCIA, 4 = CHEQUE, 5 = DEPOSITO
+  tipoPago          Int // 1 = EFECTIVO, 2 = QR, 3 = TRANSFERENCIA, 4 = CHEQUE, 5 = DEPOSITO
   cuentaBancariaId  Int?
   constanciaTipo    ConstanciaEnum?
   numeroConstancia  String?         @db.VarChar(50)
@@ -645,12 +647,12 @@ model Gastos {
 }
 
 model TransaccionesEgresos {
-  id               Int            @id @default(autoincrement())
+  id               Int      @id @default(autoincrement())
   gastoId          Int
-  monto            Decimal        @db.Decimal(10, 2)
-  fecha            DateTime       @default(now()) @db.Timestamptz()
+  monto            Decimal  @db.Decimal(10, 2)
+  fecha            DateTime @default(now()) @db.Timestamptz()
   cuentaBancariaId Int?
-  metodoPago       Int            // 1 = EFECTIVO, 2 = QR, 3 = TRANSFERENCIA, 4 = CHEQUE, 5 = DEPOSITO
+  metodoPago       Int // 1 = EFECTIVO, 2 = QR, 3 = TRANSFERENCIA, 4 = CHEQUE, 5 = DEPOSITO
 
   gasto          Gastos          @relation(fields: [gastoId], references: [id])
   cuentaBancaria CuentaBancaria? @relation(fields: [cuentaBancariaId], references: [id])
@@ -689,9 +691,9 @@ model ArqueosDiarios {
 // NivelLog: 1 = INFO, 2 = WARNING, 3 = ERROR, 4 = CRITICAL, 5 = DEBUG
 
 model AuditLog {
-  id                String         @id @default(cuid())
+  id                String   @id @default(cuid())
   // Información de la acción
-  accion            Int            // 1 = CREATE, 2 = UPDATE, 3 = DELETE, 4 = READ, etc.
+  accion            Int // 1 = CREATE, 2 = UPDATE, 3 = DELETE, 4 = READ, etc.
   modulo            String // Ej: "usuarios", "categorias", "faqs", "pedidos"
   tabla             String? // Nombre de la tabla afectada
   registroId        String? // ID del registro afectado
@@ -709,12 +711,12 @@ model AuditLog {
   // Contexto adicional
   metadatos         Json? // Información adicional contextual
   duracionMs        Int? // Duración de la operación en ms
-  exitoso           Boolean        @default(true) // Si la operación fue exitosa
+  exitoso           Boolean  @default(true) // Si la operación fue exitosa
   mensajeError      String? // Mensaje de error si falló
   // Timestamps
-  fechaCreacion     DateTime       @default(now())
+  fechaCreacion     DateTime @default(now())
   // Relaciones opcionales
-  usuario           Usuario?       @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  usuario           Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
 
   @@index([usuarioId])
   @@index([modulo])
@@ -727,14 +729,14 @@ model AuditLog {
 }
 
 model SystemLog {
-  id            String       @id @default(cuid())
+  id            String   @id @default(cuid())
   // Información del log
-  nivel         Int          @default(1) // 1 = INFO, 2 = WARNING, 3 = ERROR, 4 = CRITICAL, 5 = DEBUG
+  nivel         Int      @default(1) // 1 = INFO, 2 = WARNING, 3 = ERROR, 4 = CRITICAL, 5 = DEBUG
   mensaje       String
   contexto      String? // Contexto donde ocurrió (clase, método, etc.)
   modulo        String? // Módulo del sistema
   // Detalles técnicos
-  stackTrace    String?      @db.Text // Stack trace completo del error
+  stackTrace    String?  @db.Text // Stack trace completo del error
   metadatos     Json? // Información adicional
   // Usuario relacionado (opcional)
   usuarioId     String?
@@ -746,7 +748,7 @@ model SystemLog {
   responseCode  Int? // Código de respuesta HTTP
   duracionMs    Int? // Duración de la petición
   // Timestamps
-  fechaCreacion DateTime     @default(now())
+  fechaCreacion DateTime @default(now())
 
   @@index([nivel])
   @@index([modulo])

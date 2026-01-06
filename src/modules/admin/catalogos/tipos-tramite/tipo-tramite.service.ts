@@ -11,7 +11,7 @@ import {
   dataResponseSuccess,
 } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
-import { TipoTramite, TipoTramiteDetail } from './tipo-tramite.entity';
+import { TipoTramiteEntity, TipoTramiteDetail } from './tipo-tramite.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken } from 'src/common/decorators/token.decorator';
@@ -42,7 +42,7 @@ export class TipoTramiteService {
         userCreateId: session.usuarioId,
       },
     });
-    return dataResponseSuccess<TipoTramite>({ data: result });
+    return dataResponseSuccess<TipoTramiteEntity>({ data: result });
   }
 
   async select() {
@@ -52,7 +52,12 @@ export class TipoTramiteService {
       select: {
         id: true,
         nombre: true,
+        colorHex: true,
+        icon: true,
+        descripcion: true,
+        imagen: true,
         costoBase: true,
+        estaActiva: true,
         tipoDocumento: {
           select: {
             id: true,
@@ -182,7 +187,7 @@ export class TipoTramiteService {
       },
     });
 
-    return dataResponseSuccess<TipoTramite>({ data: result });
+    return dataResponseSuccess<TipoTramiteEntity>({ data: result });
   }
 
   async remove(id: string) {

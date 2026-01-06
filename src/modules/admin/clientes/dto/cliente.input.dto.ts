@@ -21,18 +21,17 @@ import { TipoClienteEnum } from 'src/enums/tipo-cliente.enum';
 // DTOs para PersonaNatural
 export class CreatePersonaNaturalDto {
   @Expose()
-  @IsOptional()
   @IsString()
   @MaxLength(20)
-  @ApiPropertyOptional({ type: String })
-  ci?: string;
+  @ApiProperty({ type: String })
+  tipoDocumento: string;
 
   @Expose()
-  @IsOptional()
   @IsString()
-  @MaxLength(10)
-  @ApiPropertyOptional({ type: String })
-  expedido?: string;
+  @IsDefined()
+  @MaxLength(20)
+  @ApiProperty({ type: String })
+  numeroDocumento: string;
 
   @Expose()
   @IsDefined()

@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Prisma } from 'src/generated/prisma/client';
 
-export class TipoTramite {
+export class TipoTramiteEntity {
   @ApiProperty({ type: String })
   id: string;
 
@@ -10,6 +10,12 @@ export class TipoTramite {
 
   @ApiProperty({ type: String })
   nombre: string;
+
+  @ApiProperty({ type: String })
+  colorHex: string;
+
+  @ApiProperty({ type: String })
+  icon: string;
 
   @ApiPropertyOptional({ type: String })
   descripcion?: string;
@@ -36,7 +42,7 @@ export class TipoTramite {
   fechaActualizacion: Date;
 }
 
-export class TipoTramiteDetail extends TipoTramite {
+export class TipoTramiteDetail extends TipoTramiteEntity {
   @ApiPropertyOptional()
   tipoDocumento?: any;
 }

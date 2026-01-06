@@ -1,9 +1,9 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { ApiOkResponseDto, ResponseDTO, ResponseStructDTO } from 'src/common/dtos/response.dto';
-import { TipoTramite, TipoTramiteDetail } from '../tipo-tramite.entity';
+import { TipoTramiteEntity, TipoTramiteDetail } from '../tipo-tramite.entity';
 class TipoTramiteData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: TipoTramite })
-  data: TipoTramite;
+  @ApiProperty({ type: TipoTramiteEntity })
+  data: TipoTramiteEntity;
 }
 
 export class ResponseTipoTramiteType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -25,8 +25,8 @@ export class ResponseTipoTramiteDetailType extends OmitType(ApiOkResponseDto, ['
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 class TiposTramiteData {
-  @ApiProperty({ type: [TipoTramite] })
-  data?: TipoTramite[];
+  @ApiProperty({ type: [TipoTramiteEntity] })
+  data?: TipoTramiteEntity[];
 }
 
 export class ResponseTiposTramiteType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -37,8 +37,8 @@ export class ResponseTiposTramiteType extends OmitType(ApiOkResponseDto, ['cache
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 class PaginateTiposTramiteData extends OmitType(ResponseStructDTO, ['validationErrors']) {
-  @ApiProperty({ type: [TipoTramite] })
-  data?: TipoTramite[];
+  @ApiProperty({ type: [TipoTramiteEntity] })
+  data?: TipoTramiteEntity[];
 }
 
 export class PaginateTiposTramiteType extends OmitType(ApiOkResponseDto, ['cache']) {

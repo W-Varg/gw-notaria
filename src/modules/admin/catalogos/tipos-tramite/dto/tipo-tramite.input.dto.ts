@@ -33,6 +33,20 @@ export class CreateTipoTramiteDto {
   @Expose()
   @IsOptional()
   @IsString()
+  @MaxLength(15)
+  @ApiPropertyOptional({ type: String, default: '#1abc9c' })
+  colorHex?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(15)
+  @ApiPropertyOptional({ type: String, default: 'pi pi-code' })
+  icon?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
   @MaxLength(300)
   @ApiPropertyOptional({ type: String })
   descripcion?: string;
@@ -126,6 +140,16 @@ class TipoTramiteSelectInput {
   @ApiPropertyOptional({ type: Boolean })
   @IsBoolean()
   nombre?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  colorHex?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  icon?: boolean;
 
   @Expose()
   @ApiPropertyOptional({ type: Boolean })

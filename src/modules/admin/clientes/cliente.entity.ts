@@ -5,11 +5,11 @@ export class PersonaNatural {
   @ApiProperty()
   clienteId: string;
 
-  @ApiPropertyOptional()
-  ci?: string;
+  @ApiProperty()
+  tipoDocumento: string;
 
-  @ApiPropertyOptional()
-  expedido?: string;
+  @ApiProperty()
+  numeroDocumento: string;
 
   @ApiProperty()
   nombres: string;
@@ -59,7 +59,7 @@ export class PersonaJuridica {
   fechaActualizacion: Date;
 }
 
-export class Cliente {
+export class ClienteEntity {
   @ApiProperty()
   id: string;
 
