@@ -1,11 +1,11 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
-import { TipoDocumento } from '../tipo-documento.entity';
+import { TipoDocumentoEntity } from '../tipo-documento.entity';
 
 // Respuesta individual
 class TipoDocumentoData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: TipoDocumento })
-  data: TipoDocumento;
+  @ApiProperty({ type: TipoDocumentoEntity })
+  data: TipoDocumentoEntity;
 }
 
 export class ResponseTipoDocumentoType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -21,8 +21,8 @@ export class ResponseTipoDocumentoDetailType extends OmitType(ApiOkResponseDto, 
 
 // Respuesta lista simple
 class TipoDocumentosData {
-  @ApiProperty({ type: [TipoDocumento] })
-  data?: TipoDocumento[];
+  @ApiProperty({ type: [TipoDocumentoEntity] })
+  data?: TipoDocumentoEntity[];
 }
 
 export class ResponseTipoDocumentosType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -32,8 +32,8 @@ export class ResponseTipoDocumentosType extends OmitType(ApiOkResponseDto, ['cac
 
 // Respuesta lista paginada
 class PaginateTipoDocumentosData extends OmitType(ResponseStructDTO, ['validationErrors']) {
-  @ApiProperty({ type: [TipoDocumento] })
-  data?: TipoDocumento[];
+  @ApiProperty({ type: [TipoDocumentoEntity] })
+  data?: TipoDocumentoEntity[];
 }
 
 export class PaginateTipoDocumentosType extends OmitType(ApiOkResponseDto, ['cache']) {

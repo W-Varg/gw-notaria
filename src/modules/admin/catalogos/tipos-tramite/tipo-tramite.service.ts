@@ -93,7 +93,7 @@ export class TipoTramiteService {
 
     if (pagination && total !== undefined) pagination.total = total;
 
-    return dataResponseSuccess<TipoTramiteDetail[]>({
+    return dataResponseSuccess<TipoTramiteEntity[]>({
       data: list,
       pagination,
     });
@@ -130,7 +130,7 @@ export class TipoTramiteService {
       this.prismaService.tipoTramite.count({ where: whereInput }),
     ]);
 
-    return dataResponseSuccess<TipoTramiteDetail[]>({
+    return dataResponseSuccess<TipoTramiteEntity[]>({
       data: list,
       pagination: { ...pagination, total },
     });
@@ -150,7 +150,7 @@ export class TipoTramiteService {
       },
     });
     if (!item) return dataResponseError('Tipo de trámite no encontrado');
-    return dataResponseSuccess<TipoTramiteDetail>({ data: item });
+    return dataResponseSuccess<TipoTramiteEntity>({ data: item });
   }
 
   async update(id: string, updateTipoTramiteDto: UpdateTipoTramiteDto, session: IToken) {

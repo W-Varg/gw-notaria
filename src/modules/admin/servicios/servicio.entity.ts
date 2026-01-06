@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Prisma } from 'src/generated/prisma/client';
 import { ClienteEntity } from '../clientes/cliente.entity';
-import { TipoDocumento } from '../catalogos/tipos-documento/tipo-documento.entity';
+import { TipoDocumentoEntity } from '../catalogos/tipos-documento/tipo-documento.entity';
 import { TipoTramiteEntity } from '../catalogos/tipos-tramite/tipo-tramite.entity';
 import { EstadoTramite } from '../catalogos/estados-tramite/estado-tramite.entity';
 import { HistorialEstadosServicio } from './historial-estados-servicio/historial-estados-servicio.entity';
@@ -72,7 +72,7 @@ export class Servicio {
   cliente?: ClienteEntity;
 
   @ApiPropertyOptional()
-  tipoDocumento?: TipoDocumento;
+  tipoDocumento?: TipoDocumentoEntity;
 
   @ApiPropertyOptional()
   tipoTramite?: TipoTramiteEntity;

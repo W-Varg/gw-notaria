@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Prisma } from 'src/generated/prisma/client';
 
-export class TipoDocumento {
+export class TipoDocumentoEntity {
   @ApiProperty()
   id: string;
 

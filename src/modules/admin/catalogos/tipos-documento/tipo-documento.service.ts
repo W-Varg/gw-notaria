@@ -11,7 +11,7 @@ import {
   dataResponseSuccess,
 } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
-import { TipoDocumento } from './tipo-documento.entity';
+import { TipoDocumentoEntity } from './tipo-documento.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken } from 'src/common/decorators/token.decorator';
@@ -36,7 +36,7 @@ export class TipoDocumentoService {
         userCreateId: session.usuarioId,
       },
     });
-    return dataResponseSuccess<TipoDocumento>({ data: result });
+    return dataResponseSuccess<TipoDocumentoEntity>({ data: result });
   }
 
   async findAll(query: ListFindAllQueryDto) {
@@ -53,7 +53,7 @@ export class TipoDocumentoService {
 
     if (pagination && total !== undefined) pagination.total = total;
 
-    return dataResponseSuccess<TipoDocumento[]>({
+    return dataResponseSuccess<TipoDocumentoEntity[]>({
       data: list,
       pagination,
     });
@@ -79,7 +79,7 @@ export class TipoDocumentoService {
       this.prismaService.tipoDocumento.count({ where: whereInput }),
     ]);
 
-    return dataResponseSuccess<TipoDocumento[]>({
+    return dataResponseSuccess<TipoDocumentoEntity[]>({
       data: list,
       pagination: { ...pagination, total },
     });
@@ -90,7 +90,7 @@ export class TipoDocumentoService {
       where: { id },
     });
     if (!item) return dataResponseError('Tipo de documento no encontrado');
-    return dataResponseSuccess<TipoDocumento>({ data: item });
+    return dataResponseSuccess<TipoDocumentoEntity>({ data: item });
   }
 
   async update(id: string, updateDto: UpdateTipoDocumentoDto, session: IToken) {
@@ -117,7 +117,7 @@ export class TipoDocumentoService {
       },
     });
 
-    return dataResponseSuccess<TipoDocumento>({ data: result });
+    return dataResponseSuccess<TipoDocumentoEntity>({ data: result });
   }
 
   async remove(id: string) {
