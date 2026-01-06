@@ -31,56 +31,56 @@ export class CreateServicioDto {
   @IsString()
   @MinLength(5)
   @MaxLength(20)
-  @ApiProperty({ 
+  @ApiProperty({
     type: String,
     description: 'Código único del ticket/servicio',
-    example: 'TKT-2026-001'
+    example: 'TKT-2026-001',
   })
   codigoTicket: string;
 
   @Expose()
   @IsDefined()
   @IsString()
-  @ApiProperty({ 
+  @ApiProperty({
     type: String,
-    description: 'ID del cliente'
+    description: 'ID del cliente',
   })
   clienteId: string;
 
   @Expose()
   @IsDefined()
   @IsString()
-  @ApiProperty({ 
+  @ApiProperty({
     type: String,
-    description: 'ID del tipo de documento'
+    description: 'ID del tipo de documento',
   })
   tipoDocumentoId: string;
 
   @Expose()
   @IsDefined()
   @IsString()
-  @ApiProperty({ 
+  @ApiProperty({
     type: String,
-    description: 'ID del tipo de trámite'
+    description: 'ID del tipo de trámite',
   })
   tipoTramiteId: string;
 
   @Expose()
   @IsOptional()
   @IsString()
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     type: String,
-    description: 'ID del estado actual'
+    description: 'ID del estado actual',
   })
   estadoActualId?: string;
 
   @Expose()
   @IsOptional()
   @IsDateString()
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     type: String,
     format: 'date-time',
-    example: '2026-01-15T00:00:00Z'
+    example: '2026-01-15T00:00:00Z',
   })
   fechaEstimadaEntrega?: string;
 
@@ -88,9 +88,9 @@ export class CreateServicioDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     type: Number,
-    example: 7
+    example: 7,
   })
   plazoEntregaDias?: number;
 
@@ -115,9 +115,9 @@ export class CreateServicioDto {
   @IsDefined()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  @ApiProperty({ 
+  @ApiProperty({
     type: Number,
-    example: 1500.00
+    example: 1500.0,
   })
   montoTotal: number;
 
@@ -125,9 +125,9 @@ export class CreateServicioDto {
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     type: Number,
-    example: 750.00
+    example: 750.0,
   })
   saldoPendiente?: number;
 }
@@ -140,9 +140,9 @@ export class UpdateServicioDto extends PartialType(CreateServicioDto) {
   @Expose()
   @IsOptional()
   @IsDateString()
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     type: String,
-    format: 'date-time'
+    format: 'date-time',
   })
   fechaFinalizacion?: string;
 
@@ -224,9 +224,9 @@ class ServicioWhereInput {
   estaActivo?: BoolFilter;
 
   @Expose()
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     type: String,
-    description: 'Búsqueda de texto libre'
+    description: 'Búsqueda de texto libre',
   })
   @IsOptional()
   @IsString()
@@ -354,14 +354,13 @@ export class ListServiciosArgsDto extends BaseFilterDto {
  */
 export class ServiciosDashboardFilterDto {
   @Expose()
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     type: String,
-    enum: ['EN_PROCESO', 'PENDIENTE_PAGO', 'FINALIZADO', 'TODOS']
+    enum: ['EN_PROCESO', 'ENVIADOS', 'PENDIENTE_PAGO', 'FINALIZADO', 'TODOS'],
   })
   @IsOptional()
   @IsString()
-  estadoFiltro?: 'EN_PROCESO' | 'PENDIENTE_PAGO' | 'FINALIZADO' | 'TODOS';
-
+  estadoFiltro?: 'EN_PROCESO' | 'ENVIADOS' | 'PENDIENTE_PAGO' | 'FINALIZADO' | 'TODOS';
   @Expose()
   @ApiPropertyOptional({ type: String })
   @IsOptional()
@@ -369,10 +368,10 @@ export class ServiciosDashboardFilterDto {
   search?: string;
 
   @Expose()
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     type: Number,
     default: 1,
-    minimum: 1
+    minimum: 1,
   })
   @IsOptional()
   @IsInt()
@@ -380,11 +379,11 @@ export class ServiciosDashboardFilterDto {
   page?: number;
 
   @Expose()
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     type: Number,
     default: 6,
     minimum: 1,
-    maximum: 100
+    maximum: 100,
   })
   @IsOptional()
   @IsInt()
@@ -455,9 +454,9 @@ export class RegistrarPagoServicioDto {
   @IsDefined()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  @ApiProperty({ 
+  @ApiProperty({
     type: Number,
-    example: 500.00
+    example: 500.0,
   })
   monto: number;
 
@@ -466,10 +465,10 @@ export class RegistrarPagoServicioDto {
   @IsInt()
   @Min(1)
   @Max(5)
-  @ApiProperty({ 
+  @ApiProperty({
     type: Number,
     description: '1=EFECTIVO, 2=QR, 3=TRANSFERENCIA, 4=CHEQUE, 5=DEPOSITO',
-    enum: [1, 2, 3, 4, 5]
+    enum: [1, 2, 3, 4, 5],
   })
   tipoPago: number;
 
