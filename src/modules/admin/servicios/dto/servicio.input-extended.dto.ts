@@ -404,6 +404,10 @@ export class ServiciosStatsDto {
 
   @Expose()
   @ApiProperty({ type: Number })
+  enviados: number;
+
+  @Expose()
+  @ApiProperty({ type: Number })
   pendientePago: number;
 
   @Expose()

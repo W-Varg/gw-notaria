@@ -237,13 +237,16 @@ export class ServicioService {
    * Obtener estadísticas del dashboard
    */
   async getStats(): Promise<any> {
-    const [enProceso, pendientePago, finalizados, total, financials] = await Promise.all([
+    const [enProceso, enviados, pendientePago, finalizados, total, financials] = await Promise.all([
       this.prismaService.servicio.count({
         where: {
           estaActivo: true,
           estadoActual: { nombre: 'En Proceso' },
         },
       }),
+      this.prismaService.servicio.count({
+        where: { estaActivo: true, estadoActual: { nombre: 'Enviado' } },
+      }), // RECODE -  no esta correcto el filtro
       this.prismaService.servicio.count({
         where: {
           estaActivo: true,
@@ -269,11 +272,13 @@ export class ServicioService {
 
     const stats: ServiciosStatsDto = {
       enProceso,
+      enviados,
       pendientePago,
       finalizados,
       total,
       totalPendienteCobro: Number(financials._sum.saldoPendiente) || 0,
-      totalIngresos: (Number(financials._sum.montoTotal) || 0) - (Number(financials._sum.saldoPendiente) || 0),
+      totalIngresos:
+        (Number(financials._sum.montoTotal) || 0) - (Number(financials._sum.saldoPendiente) || 0),
     };
 
     return dataResponseSuccess<ServiciosStatsDto>({ data: stats });
@@ -418,7 +423,7 @@ export class ServicioService {
     if (!servicio) return dataResponseError('Servicio no encontrado');
 
     const saldoPendienteNum = Number(servicio.saldoPendiente);
-    
+
     if (dto.monto > saldoPendienteNum) {
       return dataErrorValidations({
         monto: ['El monto del pago no puede ser mayor al saldo pendiente'],
