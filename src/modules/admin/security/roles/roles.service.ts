@@ -69,6 +69,22 @@ export class RolesService {
     });
   }
 
+  async getForSelect() {
+    const list = await this.prismaService.rol.findMany({
+      where: { estaActivo: true },
+      select: {
+        id: true,
+        nombre: true,
+        descripcion: true,
+      },
+      orderBy: { nombre: 'asc' },
+    });
+
+    return dataResponseSuccess({
+      data: list,
+    });
+  }
+
   async filter(inputDto: ListRoleArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
     const { nombre, descripcion, estaActivo } = inputDto?.where || {};

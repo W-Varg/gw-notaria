@@ -290,7 +290,7 @@ export class ServicioService {
   async findAllDashboard(filters: ServiciosDashboardFilterDto) {
     const { estadoFiltro, search, page = 1, pageSize = 6 } = filters;
 
-    let where: Prisma.ServicioWhereInput = { estaActivo: true };
+    const where: Prisma.ServicioWhereInput = { estaActivo: true };
 
     // Aplicar filtro por estado
     switch (estadoFiltro) {

@@ -60,6 +60,20 @@ export class BancoService {
     });
   }
 
+  async getForSelect() {
+    const list = await this.prismaService.banco.findMany({
+      select: {
+        id: true,
+        nombre: true,
+      },
+      orderBy: { nombre: 'asc' },
+    });
+
+    return dataResponseSuccess({
+      data: list,
+    });
+  }
+
   async filter(inputDto: ListBancoArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
     const { nombre } = inputDto.where || {};

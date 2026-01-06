@@ -56,6 +56,23 @@ export class EstadoTramiteService {
     });
   }
 
+  async getForSelect() {
+    const list = await this.prismaService.estadoTramite.findMany({
+      where: { estaActivo: true },
+      select: {
+        id: true,
+        nombre: true,
+        colorHex: true,
+        orden: true,
+      },
+      orderBy: { orden: 'asc' },
+    });
+
+    return dataResponseSuccess({
+      data: list,
+    });
+  }
+
   async filter(inputDto: ListEstadoTramiteArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
     const { nombre, descripcion, colorHex, orden, estaActivo } = inputDto.where || {};

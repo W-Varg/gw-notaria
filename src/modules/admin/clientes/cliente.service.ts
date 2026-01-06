@@ -115,6 +115,35 @@ export class ClienteService {
     });
   }
 
+  async getForSelect() {
+    const list = await this.prismaService.cliente.findMany({
+      select: {
+        id: true,
+        tipo: true,
+        email: true,
+        telefono: true,
+        personaNatural: {
+          select: {
+            nombres: true,
+            apellidos: true,
+            numeroDocumento: true,
+          },
+        },
+        personaJuridica: {
+          select: {
+            razonSocial: true,
+            nit: true,
+          },
+        },
+      },
+      orderBy: { fechaCreacion: 'desc' },
+    });
+
+    return dataResponseSuccess({
+      data: list,
+    });
+  }
+
   async filter(inputDto: ListClienteArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
     const { tipo, email, telefono, direccion } = inputDto.where || {};

@@ -76,6 +76,27 @@ export class CuentaBancariaService {
     });
   }
 
+  async getForSelect() {
+    const list = await this.prismaService.cuentaBancaria.findMany({
+      select: {
+        id: true,
+        numeroCuenta: true,
+        tipoCuenta: true,
+        banco: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
+      },
+      orderBy: { id: 'desc' },
+    });
+
+    return dataResponseSuccess({
+      data: list,
+    });
+  }
+
   async filter(inputDto: ListCuentaBancariaArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
     const { numeroCuenta, tipoCuenta } = inputDto.where || {};

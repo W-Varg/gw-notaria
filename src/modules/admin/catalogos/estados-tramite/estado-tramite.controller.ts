@@ -51,6 +51,14 @@ export class EstadoTramiteController {
     return this.estadoTramiteService.create(inputDto, session);
   }
 
+  @Get('select')
+  @BearerAuthPermision()
+  @ApiDescription('Obtener estados de trámite para select')
+  @ApiResponse({ type: ResponseEstadosTramiteType })
+  getForSelect() {
+    return this.estadoTramiteService.getForSelect();
+  }
+
   @Get()
   @BearerAuthPermision([PermisoEnum.ESTADOS_TRAMITE_VER])
   @ApiDescription('Listar todos los estados de trámite', [PermisoEnum.ESTADOS_TRAMITE_VER])

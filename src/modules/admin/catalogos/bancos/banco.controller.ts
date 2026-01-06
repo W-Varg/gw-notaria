@@ -48,6 +48,14 @@ export class BancoController {
     return this.bancoService.create(inputDto, session);
   }
 
+  @Get('select')
+  @BearerAuthPermision()
+  @ApiDescription('Obtener bancos para select')
+  @ApiResponse({ type: ResponseBancosType })
+  getForSelect() {
+    return this.bancoService.getForSelect();
+  }
+
   @Get()
   @BearerAuthPermision([PermisoEnum.BANCOS_VER])
   @ApiDescription('Listar todos los bancos', [PermisoEnum.BANCOS_VER])

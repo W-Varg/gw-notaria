@@ -136,6 +136,24 @@ export class UsuariosService {
     });
   }
 
+  async getForSelect() {
+    const list = await this.prismaService.usuario.findMany({
+      where: { estaActivo: true },
+      select: {
+        id: true,
+        nombre: true,
+        apellidos: true,
+        email: true,
+        avatar: true,
+      },
+      orderBy: { nombre: 'asc' },
+    });
+
+    return dataResponseSuccess({
+      data: list,
+    });
+  }
+
   async filter(inputDto: ListUsuarioArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
     const { email, nombre, estaActivo, apellidos, telefono, direccion, emailVerificado } =

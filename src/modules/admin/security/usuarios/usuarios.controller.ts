@@ -56,6 +56,14 @@ export class UsuariosController {
     return this.usuariosService.create(inputDto, avatar);
   }
 
+  @Get('select')
+  @BearerAuthPermision([PermisoEnum.USUARIOS_VER])
+  @ApiDescription('Obtener usuarios para select', [PermisoEnum.USUARIOS_VER])
+  @ApiResponse({ type: ResponseUsuariosType })
+  getForSelect() {
+    return this.usuariosService.getForSelect();
+  }
+
   @Get()
   @BearerAuthPermision([PermisoEnum.USUARIOS_VER])
   @ApiDescription('Listar todos los usuarios', [PermisoEnum.USUARIOS_VER])

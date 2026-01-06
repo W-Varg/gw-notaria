@@ -48,6 +48,14 @@ export class ClienteController {
     return this.clienteService.create(inputDto, session);
   }
 
+  @Get('select')
+  @BearerAuthPermision([PermisoEnum.CLIENTES_VER])
+  @ApiDescription('Obtener clientes para select', [PermisoEnum.CLIENTES_VER])
+  @ApiResponse({ type: ResponseClientesType })
+  getForSelect() {
+    return this.clienteService.getForSelect();
+  }
+
   @Get()
   @BearerAuthPermision([PermisoEnum.CLIENTES_VER])
   @ApiDescription('Listar todos los clientes', [PermisoEnum.CLIENTES_VER])

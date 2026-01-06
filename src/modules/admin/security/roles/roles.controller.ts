@@ -47,6 +47,14 @@ export class RolesController {
     return this.rolesService.create(inputDto, session);
   }
 
+  @Get('select')
+  @BearerAuthPermision([PermisoEnum.ROLES_VER])
+  @ApiDescription('Obtener roles para select', [PermisoEnum.ROLES_VER])
+  @ApiResponse({ status: 200, type: () => ResponseRolesType })
+  getForSelect() {
+    return this.rolesService.getForSelect();
+  }
+
   @Get()
   @BearerAuthPermision([PermisoEnum.ROLES_VER])
   @ApiDescription('Listar todos los roles', [PermisoEnum.ROLES_VER])

@@ -52,6 +52,14 @@ export class CuentaBancariaController {
     return this.cuentaBancariaService.create(inputDto, session);
   }
 
+  @Get('select')
+  @BearerAuthPermision([PermisoEnum.CUENTAS_BANCARIAS_VER])
+  @ApiDescription('Obtener cuentas bancarias para select', [PermisoEnum.CUENTAS_BANCARIAS_VER])
+  @ApiResponse({ type: ResponseCuentasBancariasType })
+  getForSelect() {
+    return this.cuentaBancariaService.getForSelect();
+  }
+
   @Get()
   @BearerAuthPermision([PermisoEnum.CUENTAS_BANCARIAS_VER])
   @ApiDescription('Listar todas las cuentas bancarias', [PermisoEnum.CUENTAS_BANCARIAS_VER])
