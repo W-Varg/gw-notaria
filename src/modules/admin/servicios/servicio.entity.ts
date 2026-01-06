@@ -6,7 +6,7 @@ import { TipoTramiteEntity } from '../catalogos/tipos-tramite/tipo-tramite.entit
 import { EstadoTramite } from '../catalogos/estados-tramite/estado-tramite.entity';
 import { HistorialEstadosServicio } from './historial-estados-servicio/historial-estados-servicio.entity';
 import { ResponsableServicio } from './responsable-servicio/responsable-servicio.entity';
-import { DerivacionServicio } from './derivaciones/derivacion.entity';
+import { DerivacionEntity } from './derivaciones/derivacion.entity';
 import { PagosIngresos } from '../finanzas/pagos-ingresos/pagos-ingresos.entity';
 
 export class Servicio {
@@ -87,7 +87,7 @@ export class Servicio {
   responsablesServicio?: ResponsableServicio[];
 
   @ApiPropertyOptional()
-  derivaciones?: DerivacionServicio[];
+  derivaciones?: DerivacionEntity[];
 
   @ApiPropertyOptional()
   pagosIngresos?: PagosIngresos[];

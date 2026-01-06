@@ -25,6 +25,15 @@ import {
   crearResponsables,
   crearDerivaciones,
 } from './clientes-servicios.seed';
+import {
+  crearNotificaciones,
+  crearMensajesContacto,
+} from './notificaciones-mensajes.seed';
+import {
+  crearPlantillasDocumento,
+  crearTransaccionesEgresos,
+  crearArqueosDiarios,
+} from './plantillas-finanzas.seed';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 export const prisma = new PrismaClient({ adapter });
@@ -74,7 +83,7 @@ async function main() {
   const bancos = await createBancos(prisma, adminUserId);
 
   // Crear cuentas bancarias
-  await createCuentasBancarias(prisma, adminUserId, bancos);
+  const cuentasBancarias = await createCuentasBancarias(prisma, adminUserId, bancos);
 
   // Crear tipos de documento
   const tiposDocumento = await createTiposDocumento(prisma, adminUserId);
@@ -113,10 +122,27 @@ async function main() {
 
   // Crear derivaciones entre usuarios
   await crearDerivaciones(prisma, servicios, usuarios);
-  
-  await crearGastos(prisma, adminUserId);
 
+  // Crear gastos
+  const gastos = await crearGastos(prisma, adminUserId);
+
+  // Crear pagos e ingresos
   await crearPagosIngresos(prisma, adminUserId);
+
+  // Crear transacciones de egresos
+  await crearTransaccionesEgresos(prisma, gastos, cuentasBancarias);
+
+  // Crear arqueos diarios
+  await crearArqueosDiarios(prisma, adminUserId);
+
+  // Crear plantillas de documentos
+  await crearPlantillasDocumento(prisma, adminUserId, tiposDocumento);
+
+  // Crear notificaciones
+  await crearNotificaciones(prisma, adminUserId, usuarios, servicios);
+
+  // Crear mensajes de contacto
+  await crearMensajesContacto(prisma, adminUserId, usuarios);
 
   console.info('Seeding finished');
 }

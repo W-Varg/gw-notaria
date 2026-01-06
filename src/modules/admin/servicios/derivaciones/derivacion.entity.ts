@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Usuario } from '../../security/usuarios/usuario.entity';
 import { Servicio } from '../servicio.entity';
 
-export class DerivacionServicio {
+export class DerivacionEntity {
   @ApiProperty()
   id: number;
 

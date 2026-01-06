@@ -1,11 +1,11 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
-import { DerivacionServicio } from '../derivacion.entity';
+import { DerivacionEntity } from '../derivacion.entity';
 
 // Respuesta individual
 class DerivacionData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: DerivacionServicio })
-  data: DerivacionServicio;
+  @ApiProperty({ type: DerivacionEntity })
+  data: DerivacionEntity;
 }
 
 export class ResponseDerivacionType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -21,8 +21,8 @@ export class ResponseDerivacionDetailType extends OmitType(ApiOkResponseDto, ['c
 
 // Respuesta lista simple
 class DerivacionesData {
-  @ApiProperty({ type: [DerivacionServicio] })
-  data?: DerivacionServicio[];
+  @ApiProperty({ type: [DerivacionEntity] })
+  data?: DerivacionEntity[];
 }
 
 export class ResponseDerivacionesType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -32,8 +32,8 @@ export class ResponseDerivacionesType extends OmitType(ApiOkResponseDto, ['cache
 
 // Respuesta lista paginada
 class PaginateDerivacionesData extends OmitType(ResponseStructDTO, ['validationErrors']) {
-  @ApiProperty({ type: [DerivacionServicio] })
-  data?: DerivacionServicio[];
+  @ApiProperty({ type: [DerivacionEntity] })
+  data?: DerivacionEntity[];
 }
 
 export class PaginateDerivacionesType extends OmitType(ApiOkResponseDto, ['cache']) {

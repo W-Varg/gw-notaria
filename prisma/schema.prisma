@@ -573,16 +573,23 @@ model ResponsableServicio {
 }
 
 model DerivacionServicio {
-  id               Int       @id @default(autoincrement())
-  servicioId       String
-  usuarioOrigenId  String
-  usuarioDestinoId String
-  fechaDerivacion  DateTime  @default(now()) @db.Timestamptz()
-  motivo           String?   @db.Text
-  prioridad        String    @default("normal") @db.VarChar(20)
-  comentario       String?   @db.Text
-  aceptada         Boolean   @default(false)
-  fechaAceptacion  DateTime?
+  id                   Int       @id @default(autoincrement())
+  servicioId           String
+  usuarioOrigenId      String
+  usuarioDestinoId     String
+  fechaDerivacion      DateTime  @default(now()) @db.Timestamptz()
+  motivo               String?   @db.Text
+  prioridad            String    @default("normal") @db.VarChar(20) // "baja", "normal", "alta", "urgente"
+  comentario           String?   @db.Text
+  aceptada             Boolean   @default(false)
+  fechaAceptacion      DateTime?
+  // Campos para control de derivación
+  estaActiva           Boolean   @default(true) // Para soft delete/cancelación
+  visualizada          Boolean   @default(false) // Si el usuario destino ya vio la derivación
+  fechaVisualizacion   DateTime? // Cuándo fue visualizada
+  motivoCancelacion    String?   @db.Text // Razón de cancelación si aplica
+  fechaCancelacion     DateTime? // Cuándo fue cancelada
+  usuarioCancelacionId String? // Quién canceló
 
   servicio       Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
   usuarioOrigen  Usuario  @relation("DerivacionesOrigen", fields: [usuarioOrigenId], references: [id])
@@ -591,6 +598,8 @@ model DerivacionServicio {
   @@index([servicioId])
   @@index([usuarioDestinoId])
   @@index([fechaDerivacion])
+  @@index([estaActiva])
+  @@index([visualizada])
   @@map("derivaciones_servicio")
   @@schema("public")
 }

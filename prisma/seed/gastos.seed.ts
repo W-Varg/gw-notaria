@@ -3,70 +3,65 @@ import { PrismaClient } from '../../src/generated/prisma/client';
 export async function crearGastos(prisma: PrismaClient, usuarioId: string) {
   const data = [
     {
-      id: 6,
+      nombre: 'Servicios Públicos',
+      descripcion: 'Luz, agua y gas del mes',
+      proveedor: 'CESSA/AAPOS',
+      montoTotal: 1300,
+      montoPagado: 1300,
+      saldo: 0,
+      fechaGasto: new Date('2025-12-05'),
+      categoria: 'Servicios',
+      usuarioId: usuarioId,
+      userCreateId: usuarioId,
+      userUpdateId: null,
+    },
+    {
       nombre: 'Compra de papelería',
       descripcion: 'Material de oficina mensual',
       proveedor: 'Librería Central',
-      montoTotal: '350',
-      montoPagado: '350',
-      saldo: '0',
-      fechaGasto: '2025-12-17T00:00:00.000Z',
+      montoTotal: 350,
+      montoPagado: 350,
+      saldo: 0,
+      fechaGasto: new Date('2025-12-10'),
       categoria: 'Oficina',
       usuarioId: usuarioId,
       userCreateId: usuarioId,
       userUpdateId: null,
     },
     {
-      id: 7,
-      nombre: 'Servicio de internet',
-      descripcion: 'Pago mensual de internet',
-      proveedor: 'ENTEL',
-      montoTotal: '500',
-      montoPagado: '300',
-      saldo: '200',
-      fechaGasto: '2025-12-17T00:00:00.000Z',
-      categoria: 'Servicios',
-      usuarioId: usuarioId,
-      userCreateId: usuarioId,
-      userUpdateId: usuarioId,
-    },
-    {
-      id: 8,
       nombre: 'Mantenimiento de equipos',
-      descripcion: 'Reparación de impresora',
+      descripcion: 'Reparación de computadoras y equipos de oficina',
       proveedor: 'TechService SRL',
-      montoTotal: '1200',
-      montoPagado: '0',
-      saldo: '1200',
-      fechaGasto: '2025-12-17T00:00:00.000Z',
+      montoTotal: 2500,
+      montoPagado: 2500,
+      saldo: 0,
+      fechaGasto: new Date('2025-12-08'),
       categoria: 'Mantenimiento',
       usuarioId: usuarioId,
       userCreateId: usuarioId,
       userUpdateId: null,
     },
     {
-      id: 9,
-      nombre: 'Compra de combustible',
-      descripcion: 'Combustible para vehículo institucional',
-      proveedor: 'YPFB',
-      montoTotal: '800',
-      montoPagado: '800',
-      saldo: '0',
-      fechaGasto: '2025-12-17T00:00:00.000Z',
-      categoria: 'Transporte',
+      nombre: 'Publicidad Digital',
+      descripcion: 'Campaña en redes sociales',
+      proveedor: 'Marketing Pro',
+      montoTotal: 2500,
+      montoPagado: 2500,
+      saldo: 0,
+      fechaGasto: new Date('2025-12-15'),
+      categoria: 'Marketing',
       usuarioId: usuarioId,
       userCreateId: usuarioId,
-      userUpdateId: null,
+      userUpdateId: usuarioId,
     },
     {
-      id: 10,
-      nombre: 'Capacitación',
-      descripcion: 'Curso de actualización técnica',
-      proveedor: 'Academia Dev',
-      montoTotal: '1500',
-      montoPagado: '500',
-      saldo: '1000',
-      fechaGasto: '2025-12-17T00:00:00.000Z',
+      nombre: 'Capacitación del personal',
+      descripcion: 'Curso de actualización en normativa notarial',
+      proveedor: 'Instituto de Capacitación Legal',
+      montoTotal: 1800,
+      montoPagado: 1800,
+      saldo: 0,
+      fechaGasto: new Date('2026-01-03'),
       categoria: 'Capacitación',
       usuarioId: usuarioId,
       userCreateId: usuarioId,
@@ -74,15 +69,15 @@ export async function crearGastos(prisma: PrismaClient, usuarioId: string) {
     },
   ];
 
-  await prisma.$executeRawUnsafe(`
-    TRUNCATE TABLE "gastos"
-    RESTART IDENTITY
-    CASCADE;
-  `);
-
-  await prisma.gastos.createMany({
-    data,
-  });
+  const gastosCreados = [];
+  for (const gasto of data) {
+    const gastoCreado = await prisma.gastos.create({
+      data: gasto,
+    });
+    gastosCreados.push(gastoCreado);
+  }
 
   console.info(`Created ${data.length} gastos`);
+  
+  return gastosCreados;
 }

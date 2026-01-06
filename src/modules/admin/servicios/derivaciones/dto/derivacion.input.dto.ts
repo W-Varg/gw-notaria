@@ -3,6 +3,7 @@ import { Expose, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsDefined,
+  IsInt,
   IsOptional,
   IsString,
   MaxLength,
@@ -52,6 +53,29 @@ export class CreateDerivacionDto {
   comentario?: string;
 }
 
+export class CancelarDerivacionDto {
+  @Expose()
+  @IsDefined()
+  @IsInt()
+  @ApiProperty({ type: Number, description: 'ID de la derivación a cancelar' })
+  derivacionId: number;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  @ApiPropertyOptional({ type: String, description: 'Motivo de la cancelación' })
+  motivoCancelacion?: string;
+}
+
+export class MarcarVisualizadaDto {
+  @Expose()
+  @IsDefined()
+  @IsInt()
+  @ApiProperty({ type: Number, description: 'ID de la derivación' })
+  derivacionId: number;
+}
+
 export class AceptarDerivacionDto {
   @Expose()
   @IsOptional()
@@ -92,6 +116,18 @@ class DerivacionWhereInput {
   @IsOptional()
   @Type(() => BoolFilter)
   aceptada?: BoolFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: BoolFilter, description: 'Filtrar por estado de activación' })
+  @IsOptional()
+  @Type(() => BoolFilter)
+  estaActiva?: BoolFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: BoolFilter, description: 'Filtrar por estado de visualización' })
+  @IsOptional()
+  @Type(() => BoolFilter)
+  visualizada?: BoolFilter;
 
   @Expose()
   @ApiPropertyOptional({ type: DateTimeFilter, description: 'Filtrar por fecha de derivación' })
