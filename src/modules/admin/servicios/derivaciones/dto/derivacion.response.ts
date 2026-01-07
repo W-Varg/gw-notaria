@@ -4,8 +4,8 @@ import { DerivacionDetail, DerivacionEntity } from '../derivacion.entity';
 
 // Respuesta individual
 class DerivacionData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: DerivacionEntity })
-  data: DerivacionEntity;
+  @ApiProperty({ type: DerivacionDetail })
+  data: DerivacionDetail;
 }
 
 export class ResponseDerivacionType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -15,8 +15,8 @@ export class ResponseDerivacionType extends OmitType(ApiOkResponseDto, ['cache']
 
 // Respuesta detallada
 export class ResponseDerivacionDetailType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: DerivacionDetail })
-  declare response: DerivacionDetail;
+  @ApiProperty({ type: DerivacionData })
+  declare response: DerivacionData;
 }
 
 // Respuesta lista simple

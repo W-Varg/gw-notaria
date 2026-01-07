@@ -11,7 +11,10 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import { DateTime } from 'luxon';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
 
 @ValidatorConstraint({ name: 'isDateFormatValid', async: false })
 export class IsDateFormatValid implements ValidatorConstraintInterface {
@@ -240,15 +243,15 @@ export class IsGreaterThanConstraint implements ValidatorConstraintInterface {
   validate(value: any, args: ValidationArguments) {
     const [field] = args.constraints;
 
-    const startDate = DateTime.fromISO(args.object[field]).setZone('utc').set({ second: 0 });
-    const endDate = DateTime.fromISO(value).setZone('utc').set({ second: 0 });
+    const startDate = dayjs(args.object[field]).utc().second(0);
+    const endDate = dayjs(value).utc().second(0);
 
     const firstField =
       args.constraints[1] && args.constraints[1].length ? args.constraints[1] : null;
     const secondField =
       args.constraints[2] && args.constraints[2].length ? args.constraints[2] : null;
 
-    if (endDate < startDate) {
+    if (endDate.isBefore(startDate)) {
       this.sms = `La ${secondField ?? args.property} debe ser mayor o igual que la ${firstField ?? field}`;
       return false;
     }
@@ -273,10 +276,10 @@ export function IsDateGreaterThanNow(minutesToSubtract = 1, validationOptions?: 
       options: validationOptions,
       validator: {
         validate(value: any, args: ValidationArguments) {
-          const date = DateTime.fromISO(value);
-          const now = DateTime.now().minus({ minutes: minutesToSubtract });
+          const date = dayjs(value);
+          const now = dayjs().subtract(minutesToSubtract, 'minutes');
 
-          return date.isValid && date > now;
+          return date.isValid() && date.isAfter(now);
         },
         defaultMessage(args: ValidationArguments) {
           return `${args.property} debe ser mayor o igual a la fecha actual`;
