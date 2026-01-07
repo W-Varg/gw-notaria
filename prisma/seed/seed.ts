@@ -12,6 +12,7 @@ import {
   assignAllRolesToAdmin,
 } from './auth.seed';
 import {
+  createSucursales,
   createTiposTramite,
   createBancos,
   createCuentasBancarias,
@@ -42,9 +43,30 @@ async function main() {
   // Limpiar la base de datos
   await clearDatabase();
 
+  // Crear sucursales temporalmente para asignar a usuarios
+  const sucursalesTemp = await createSucursales(prisma, 'temp-user-id');
+
   // Crear usuarios primero para obtener el ID del admin
-  const usuarios = await createUsuarios(prisma);
+  const usuarios = await createUsuarios(prisma, sucursalesTemp);
   const adminUserId = usuarios.adminUser.id;
+
+  // Actualizar sucursales con el userCreateId correcto y responsables
+  await prisma.sucursal.updateMany({
+    where: { userCreateId: 'temp-user-id' },
+    data: { userCreateId: adminUserId },
+  });
+  
+  // Asignar responsables a sucursales
+  await prisma.sucursal.update({
+    where: { id: sucursalesTemp[0].id },
+    data: { usuarioResponsableId: usuarios.managerUser.id },
+  });
+  await prisma.sucursal.update({
+    where: { id: sucursalesTemp[1].id },
+    data: { usuarioResponsableId: usuarios.notarioUser.id },
+  });
+
+  const sucursales = sucursalesTemp;
 
   // Crear roles básicos (incluye SUPERUSUARIO)
   const roles = await createRoles(prisma, adminUserId);
@@ -89,7 +111,7 @@ async function main() {
   const tiposDocumento = await createTiposDocumento(prisma, adminUserId);
 
   // Crear tipos de trámite
-  const tiposTramite = await createTiposTramite(prisma, adminUserId, tiposDocumento);
+  const tiposTramite = await createTiposTramite(prisma, adminUserId, tiposDocumento, sucursales);
 
   // Crear estados de trámite
   const estadosTramite = await createEstadosTramite(prisma, adminUserId);
@@ -112,6 +134,7 @@ async function main() {
     tiposTramite,
     estadosTramite,
     usuarios,
+    sucursales,
   );
 
   // Crear historial de estados de los servicios
@@ -171,6 +194,7 @@ async function clearDatabase() {
   await prisma.tokenTemporal.deleteMany();
   await prisma.configuracionAplicacion.deleteMany();
   await prisma.usuario.deleteMany();
+  await prisma.sucursal.deleteMany();
 }
 
 async function createConfiguracionAplicacion(userId: string) {

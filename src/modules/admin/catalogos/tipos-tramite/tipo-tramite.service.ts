@@ -21,6 +21,15 @@ export class TipoTramiteService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(inputDto: CreateTipoTramiteDto, session: IToken) {
+    // Verificar que la sucursal existe
+    const sucursal = await this.prismaService.sucursal.findUnique({
+      where: { id: inputDto.sucursalId },
+      select: { id: true },
+    });
+    if (!sucursal) {
+      return dataErrorValidations({ sucursalId: ['La sucursal no existe'] });
+    }
+
     // Verificar que el tipo de documento existe si se proporciona
     if (inputDto.tipoDocumentoId) {
       const tipoDocumento = await this.prismaService.tipoDocumento.findUnique({
@@ -32,11 +41,20 @@ export class TipoTramiteService {
       }
     }
 
+    // Verificar unicidad compuesta de sucursalId + nombre
     const exists = await this.prismaService.tipoTramite.findUnique({
-      where: { nombre: inputDto.nombre },
+      where: {
+        sucursalId_nombre: {
+          sucursalId: inputDto.sucursalId,
+          nombre: inputDto.nombre,
+        },
+      },
       select: { id: true },
     });
-    if (exists) return dataErrorValidations({ nombre: ['El tipo de trámite ya existe'] });
+    if (exists)
+      return dataErrorValidations({
+        nombre: ['Ya existe un tipo de trámite con ese nombre en esta sucursal'],
+      });
 
     const result = await this.prismaService.tipoTramite.create({
       data: {
@@ -60,10 +78,18 @@ export class TipoTramiteService {
         imagen: true,
         costoBase: true,
         estaActiva: true,
+        sucursalId: true,
         tipoDocumento: {
           select: {
             id: true,
             nombre: true,
+          },
+        },
+        sucursal: {
+          select: {
+            id: true,
+            nombre: true,
+            abreviacion: true,
           },
         },
       },
@@ -86,6 +112,13 @@ export class TipoTramiteService {
               nombre: true,
             },
           },
+          sucursal: {
+            select: {
+              id: true,
+              nombre: true,
+              abreviacion: true,
+            },
+          },
         },
       }),
       pagination ? this.prismaService.tipoTramite.count() : undefined,
@@ -101,10 +134,11 @@ export class TipoTramiteService {
 
   async filter(inputDto: ListTipoTramiteArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
-    const { nombre, estaActiva, descripcion, tipoDocumentoId, claseTramite, negocio } =
+    const { sucursalId, nombre, estaActiva, descripcion, tipoDocumentoId, claseTramite, negocio } =
       inputDto.where || {};
     const whereInput: Prisma.TipoTramiteWhereInput = {};
 
+    if (sucursalId) whereInput.sucursalId = sucursalId;
     if (nombre) whereInput.nombre = nombre;
     if (descripcion) whereInput.descripcion = descripcion;
     if (tipoDocumentoId) whereInput.tipoDocumentoId = tipoDocumentoId;
@@ -123,6 +157,13 @@ export class TipoTramiteService {
             select: {
               id: true,
               nombre: true,
+            },
+          },
+          sucursal: {
+            select: {
+              id: true,
+              nombre: true,
+              abreviacion: true,
             },
           },
         },
@@ -147,6 +188,14 @@ export class TipoTramiteService {
             descripcion: true,
           },
         },
+        sucursal: {
+          select: {
+            id: true,
+            nombre: true,
+            abreviacion: true,
+            departamento: true,
+          },
+        },
       },
     });
     if (!item) return dataResponseError('Tipo de trámite no encontrado');
@@ -156,9 +205,20 @@ export class TipoTramiteService {
   async update(id: string, updateTipoTramiteDto: UpdateTipoTramiteDto, session: IToken) {
     const exists = await this.prismaService.tipoTramite.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, sucursalId: true },
     });
     if (!exists) return dataResponseError('Tipo de trámite no encontrado');
+
+    // Verificar que la sucursal existe si se está actualizando
+    if (updateTipoTramiteDto.sucursalId) {
+      const sucursal = await this.prismaService.sucursal.findUnique({
+        where: { id: updateTipoTramiteDto.sucursalId },
+        select: { id: true },
+      });
+      if (!sucursal) {
+        return dataErrorValidations({ sucursalId: ['La sucursal no existe'] });
+      }
+    }
 
     // Verificar que el tipo de documento existe si se está actualizando
     if (updateTipoTramiteDto.tipoDocumentoId) {
@@ -171,13 +231,25 @@ export class TipoTramiteService {
       }
     }
 
-    if (updateTipoTramiteDto.nombre) {
-      const nameExists = await this.prismaService.tipoTramite.findFirst({
-        where: { nombre: updateTipoTramiteDto.nombre, id: { not: id } },
-        select: { id: true },
-      });
-      if (nameExists) {
-        return dataErrorValidations({ nombre: ['Ya existe un tipo de trámite con ese nombre'] });
+    // Validar unicidad compuesta de sucursalId + nombre si se actualiza alguno de estos campos
+    if (updateTipoTramiteDto.nombre || updateTipoTramiteDto.sucursalId) {
+      const sucursalIdToCheck = updateTipoTramiteDto.sucursalId ?? exists.sucursalId;
+      const nombreToCheck = updateTipoTramiteDto.nombre;
+
+      if (nombreToCheck) {
+        const nameExists = await this.prismaService.tipoTramite.findFirst({
+          where: {
+            sucursalId: sucursalIdToCheck,
+            nombre: nombreToCheck,
+            id: { not: id },
+          },
+          select: { id: true },
+        });
+        if (nameExists) {
+          return dataErrorValidations({
+            nombre: ['Ya existe un tipo de trámite con ese nombre en esta sucursal'],
+          });
+        }
       }
     }
 

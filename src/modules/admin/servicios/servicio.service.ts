@@ -51,10 +51,26 @@ export class ServicioService {
     // Validar que el tipo de trámite existe
     const tipoTramiteExists = await this.prismaService.tipoTramite.findUnique({
       where: { id: inputDto.tipoTramiteId },
-      select: { id: true },
+      select: { id: true, sucursalId: true },
     });
     if (!tipoTramiteExists)
       return dataErrorValidations({ tipoTramiteId: ['El tipo de trámite no existe'] });
+
+    // Validar sucursal si se proporciona
+    if (inputDto.sucursalId) {
+      const sucursalExists = await this.prismaService.sucursal.findUnique({
+        where: { id: inputDto.sucursalId },
+        select: { id: true },
+      });
+      if (!sucursalExists) return dataErrorValidations({ sucursalId: ['La sucursal no existe'] });
+
+      // Validar que el tipo de trámite pertenece a la sucursal
+      if (tipoTramiteExists.sucursalId !== inputDto.sucursalId) {
+        return dataErrorValidations({
+          tipoTramiteId: ['El tipo de trámite no pertenece a la sucursal seleccionada'],
+        });
+      }
+    }
 
     // Validar que el estado existe (si se proporciona)
     if (inputDto.estadoActualId) {
@@ -93,6 +109,7 @@ export class ServicioService {
           clienteId: inputDto.clienteId,
           tipoDocumentoId: inputDto.tipoDocumentoId,
           tipoTramiteId: inputDto.tipoTramiteId,
+          sucursalId: inputDto.sucursalId,
           estadoActualId: estadoInicialId,
           fechaEstimadaEntrega: inputDto.fechaEstimadaEntrega,
           plazoEntregaDias: inputDto.plazoEntregaDias,

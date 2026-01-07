@@ -425,6 +425,7 @@ export async function crearServicios(
   tiposTramite: any[],
   estadosTramite: any[],
   usuarios: any,
+  sucursales: any[],
 ) {
   // Obtener IDs de estados
   const estadoRecibido = estadosTramite.find((e) => e.nombre === 'Recibido');
@@ -432,13 +433,14 @@ export async function crearServicios(
   const estadoRevision = estadosTramite.find((e) => e.nombre === 'En Revisión');
   const estadoFinalizado = estadosTramite.find((e) => e.nombre === 'Finalizado');
 
-  // Servicio 1: Escritura Pública - FINALIZADO
+  // Servicio 1: Escritura Pública - FINALIZADO (Santa Cruz)
   const servicio1 = await prisma.servicio.create({
     data: {
       codigoTicket: 'TKT-2025-001',
       clienteId: clientes.cliente1.id,
       tipoDocumentoId: tiposDocumento[0].id,
       tipoTramiteId: tiposTramite[0].id,
+      sucursalId: sucursales[0]?.id, // Santa Cruz
       estadoActualId: estadoFinalizado?.id,
       fechaInicio: new Date('2025-11-01T09:00:00Z'),
       fechaFinalizacion: new Date('2025-11-15T16:30:00Z'),
@@ -455,13 +457,14 @@ export async function crearServicios(
     },
   });
 
-  // Servicio 2: Poder Notarial - EN PROCESO
+  // Servicio 2: Poder Notarial - EN PROCESO (Cochabamba)
   const servicio2 = await prisma.servicio.create({
     data: {
       codigoTicket: 'TKT-2025-002',
       clienteId: clientes.cliente2.id,
       tipoDocumentoId: tiposDocumento[1].id,
       tipoTramiteId: tiposTramite[1].id,
+      sucursalId: sucursales[1]?.id, // Cochabamba
       estadoActualId: estadoProceso?.id,
       fechaInicio: new Date('2025-12-10T10:30:00Z'),
       fechaEstimadaEntrega: new Date('2025-12-17'),
@@ -476,13 +479,14 @@ export async function crearServicios(
     },
   });
 
-  // Servicio 3: Certificación de Documentos - EN REVISION
+  // Servicio 3: Certificación de Documentos - EN REVISION (Santa Cruz)
   const servicio3 = await prisma.servicio.create({
     data: {
       codigoTicket: 'TKT-2025-003',
       clienteId: clientes.cliente3.id,
       tipoDocumentoId: tiposDocumento[2].id,
       tipoTramiteId: tiposTramite[2].id,
+      sucursalId: sucursales[0]?.id, // Santa Cruz
       estadoActualId: estadoRevision?.id,
       fechaInicio: new Date('2025-12-18T11:00:00Z'),
       fechaEstimadaEntrega: new Date('2025-12-20'),
@@ -558,13 +562,14 @@ export async function crearServicios(
     },
   });
 
-  // Servicio 7: Autenticación de Firmas - FINALIZADO
+  // Servicio 7: Autenticación de Firmas - FINALIZADO (Cochabamba)
   const servicio7 = await prisma.servicio.create({
     data: {
       codigoTicket: 'TKT-2025-007',
       clienteId: clientes.cliente1.id,
       tipoDocumentoId: tiposDocumento[6].id,
       tipoTramiteId: tiposTramite[0].id,
+      sucursalId: sucursales[1]?.id, // Cochabamba
       estadoActualId: estadoFinalizado?.id,
       fechaInicio: new Date('2025-12-05T15:00:00Z'),
       fechaFinalizacion: new Date('2025-12-05T15:45:00Z'),
@@ -580,13 +585,14 @@ export async function crearServicios(
     },
   });
 
-  // Servicio 8: Legalización Internacional - EN REVISION
+  // Servicio 8: Legalización Internacional - EN REVISION (Santa Cruz)
   const servicio8 = await prisma.servicio.create({
     data: {
       codigoTicket: 'TKT-2026-008',
       clienteId: clientes.cliente3.id,
       tipoDocumentoId: tiposDocumento[7].id,
       tipoTramiteId: tiposTramite[1].id,
+      sucursalId: sucursales[0]?.id, // Santa Cruz
       estadoActualId: estadoRevision?.id,
       fechaInicio: new Date('2026-01-03T09:30:00Z'),
       fechaEstimadaEntrega: new Date('2026-01-12'),
@@ -600,13 +606,14 @@ export async function crearServicios(
     },
   });
 
-  // Servicio 9: Contrato de Arrendamiento - RECIBIDO
+  // Servicio 9: Contrato de Arrendamiento - RECIBIDO (Cochabamba)
   const servicio9 = await prisma.servicio.create({
     data: {
       codigoTicket: 'TKT-2026-009',
       clienteId: clientes.cliente7.id,
       tipoDocumentoId: tiposDocumento[2].id,
       tipoTramiteId: tiposTramite[0].id,
+      sucursalId: sucursales[1]?.id, // Cochabamba
       estadoActualId: estadoRecibido?.id,
       fechaInicio: new Date('2026-01-04T11:00:00Z'),
       fechaEstimadaEntrega: new Date('2026-01-08'),
@@ -620,13 +627,14 @@ export async function crearServicios(
     },
   });
 
-  // Servicio 10: Certificación Académica - EN PROCESO
+  // Servicio 10: Certificación Académica - EN PROCESO (Santa Cruz)
   const servicio10 = await prisma.servicio.create({
     data: {
       codigoTicket: 'TKT-2026-010',
       clienteId: clientes.cliente8.id,
       tipoDocumentoId: tiposDocumento[6].id,
       tipoTramiteId: tiposTramite[2].id,
+      sucursalId: sucursales[0]?.id, // Santa Cruz
       estadoActualId: estadoProceso?.id,
       fechaInicio: new Date('2026-01-03T13:00:00Z'),
       fechaEstimadaEntrega: new Date('2026-01-10'),

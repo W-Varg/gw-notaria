@@ -33,6 +33,15 @@ export class CreateServicioDto {
 
   @Expose()
   @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({
+    type: Number,
+    description: 'ID de la sucursal donde se realiza el servicio',
+  })
+  sucursalId?: number;
+
+  @Expose()
+  @IsOptional()
   @ApiPropertyOptional({ type: String })
   estadoActualId?: string;
 

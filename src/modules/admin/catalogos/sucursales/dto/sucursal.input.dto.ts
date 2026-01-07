@@ -3,103 +3,79 @@ import { Expose, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsDefined,
-  IsNumber,
+  IsEmail,
   IsOptional,
   IsString,
   MaxLength,
-  Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 import { BaseFilterDto } from 'src/common/dtos/filters.dto';
 import { BoolFilter } from 'src/common/dtos/prisma/bool-filter.input';
 import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
 import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
 
-export class CreateTipoTramiteDto {
-  @Expose()
-  @IsDefined()
-  @IsNumber()
-  @ApiProperty({ type: Number })
-  sucursalId: number;
-
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @ApiPropertyOptional({ type: String })
-  tipoDocumentoId?: string;
-
+export class CreateSucursalDto {
   @Expose()
   @IsDefined()
   @IsString()
   @MinLength(3)
-  @MaxLength(100)
-  @ApiProperty({ type: String })
+  @MaxLength(150)
+  @ApiProperty({ type: String, description: 'Nombre de la sucursal' })
   nombre: string;
 
   @Expose()
-  @IsOptional()
+  @IsDefined()
   @IsString()
-  @MaxLength(15)
-  @ApiPropertyOptional({ type: String, default: '#1abc9c' })
-  colorHex?: string;
+  @MinLength(2)
+  @MaxLength(10)
+  @ApiProperty({ type: String, description: 'Abreviación de la sucursal' })
+  abreviacion: string;
+
+  @Expose()
+  @IsDefined()
+  @IsString()
+  @MaxLength(100)
+  @ApiProperty({ type: String, description: 'Departamento donde se ubica' })
+  departamento: string;
+
+  @Expose()
+  @IsDefined()
+  @IsString()
+  @MaxLength(255)
+  @ApiProperty({ type: String, description: 'Dirección de la sucursal' })
+  direccion: string;
 
   @Expose()
   @IsOptional()
   @IsString()
-  @MaxLength(15)
-  @ApiPropertyOptional({ type: String, default: 'pi pi-code' })
-  icon?: string;
+  @MaxLength(20)
+  @ApiPropertyOptional({ type: String, description: 'Teléfono de contacto' })
+  telefono?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(100)
+  @ApiPropertyOptional({ type: String, description: 'Email de contacto' })
+  email?: string;
 
   @Expose()
   @IsOptional()
   @IsString()
-  @MaxLength(300)
-  @ApiPropertyOptional({ type: String })
-  descripcion?: string;
-
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  @ApiPropertyOptional({ type: String })
-  claseTramite?: string;
-
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  @ApiPropertyOptional({ type: String })
-  negocio?: string;
-
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @ApiPropertyOptional({ type: String })
-  imagen?: string;
-
-  @Expose()
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @ApiPropertyOptional({ type: Number, default: 0 })
-  costoBase?: number;
+  @ApiPropertyOptional({ type: String, description: 'ID del usuario responsable' })
+  usuarioResponsableId?: string;
 
   @Expose()
   @IsOptional()
   @IsBoolean()
-  @ApiPropertyOptional({ type: Boolean })
+  @ApiPropertyOptional({ type: Boolean, default: true })
   estaActiva?: boolean;
 }
 
-export class UpdateTipoTramiteDto extends PartialType(CreateTipoTramiteDto) {}
+export class UpdateSucursalDto extends PartialType(CreateSucursalDto) {}
 
-class TipoTramiteWhereInput {
-  @Expose()
-  @ApiPropertyOptional({ type: Number })
-  @IsOptional()
-  @IsNumber()
-  sucursalId?: number;
-
+class SucursalWhereInput {
   @Expose()
   @ApiPropertyOptional({ type: StringFilter })
   @IsOptional()
@@ -110,25 +86,25 @@ class TipoTramiteWhereInput {
   @ApiPropertyOptional({ type: StringFilter })
   @IsOptional()
   @Type(() => StringFilter)
-  tipoDocumentoId?: StringNullableFilter;
+  abreviacion?: StringFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: StringFilter })
+  @IsOptional()
+  @Type(() => StringFilter)
+  departamento?: StringFilter;
 
   @Expose()
   @ApiPropertyOptional({ type: StringNullableFilter })
   @IsOptional()
   @Type(() => StringNullableFilter)
-  descripcion?: StringNullableFilter;
+  telefono?: StringNullableFilter;
 
   @Expose()
   @ApiPropertyOptional({ type: StringNullableFilter })
   @IsOptional()
   @Type(() => StringNullableFilter)
-  claseTramite?: StringNullableFilter;
-
-  @Expose()
-  @ApiPropertyOptional({ type: StringNullableFilter })
-  @IsOptional()
-  @Type(() => StringNullableFilter)
-  negocio?: StringNullableFilter;
+  email?: StringNullableFilter;
 
   @Expose()
   @ApiPropertyOptional({ type: BoolFilter })
@@ -137,16 +113,11 @@ class TipoTramiteWhereInput {
   estaActiva?: BoolFilter;
 }
 
-class TipoTramiteSelectInput {
+class SucursalSelectInput {
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
   @IsBoolean()
   id?: boolean;
-
-  @Expose()
-  @ApiPropertyOptional({ type: Boolean })
-  @IsBoolean()
-  tipoDocumentoId?: boolean;
 
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
@@ -156,51 +127,61 @@ class TipoTramiteSelectInput {
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
   @IsBoolean()
-  colorHex?: boolean;
+  abreviacion?: boolean;
 
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
   @IsBoolean()
-  icon?: boolean;
+  departamento?: boolean;
 
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
   @IsBoolean()
-  descripcion?: boolean;
+  direccion?: boolean;
 
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
   @IsBoolean()
-  claseTramite?: boolean;
+  telefono?: boolean;
 
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
   @IsBoolean()
-  negocio?: boolean;
+  email?: boolean;
 
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
   @IsBoolean()
-  imagen?: boolean;
+  usuarioResponsableId?: boolean;
 
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
   @IsBoolean()
   estaActiva?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  fechaCreacion?: boolean;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Boolean })
+  @IsBoolean()
+  fechaActualizacion?: boolean;
 }
 
-export class ListTipoTramiteArgsDto extends BaseFilterDto {
+export class ListSucursalArgsDto extends BaseFilterDto {
   @Expose()
-  @ApiPropertyOptional({ type: TipoTramiteWhereInput })
+  @ApiPropertyOptional({ type: SucursalWhereInput })
   @IsOptional()
-  @Type(() => TipoTramiteWhereInput)
-  @Expose()
-  where?: TipoTramiteWhereInput;
+  @ValidateNested()
+  @Type(() => SucursalWhereInput)
+  where?: SucursalWhereInput;
 
   @Expose()
-  @ApiPropertyOptional({ type: TipoTramiteSelectInput })
+  @ApiPropertyOptional({ type: SucursalSelectInput })
   @IsOptional()
-  @Type(() => TipoTramiteSelectInput)
-  @Expose()
-  select?: TipoTramiteSelectInput;
+  @ValidateNested()
+  @Type(() => SucursalSelectInput)
+  select?: SucursalSelectInput;
 }

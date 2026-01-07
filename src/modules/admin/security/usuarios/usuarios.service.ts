@@ -50,6 +50,17 @@ export class UsuariosService {
         return dataErrorValidations({ rolesIds: ['Uno o más roles no existen'] });
       }
 
+      // Validar sucursal si se proporciona
+      if (usuarioData.sucursalId) {
+        const sucursalExists = await this.prismaService.sucursal.findUnique({
+          where: { id: usuarioData.sucursalId },
+          select: { id: true },
+        });
+        if (!sucursalExists) {
+          return dataErrorValidations({ sucursalId: ['La sucursal no existe'] });
+        }
+      }
+
       // 2. Procesar avatar usando FileStorageService
       const avatarUrl = await this.fileStorageService.processAvatarUpload(file);
 
@@ -189,7 +200,17 @@ export class UsuariosService {
   async findOne(id: string) {
     const usuario = await this.prismaService.usuario.findUnique({
       where: { id },
-      include: { roles: { include: { rol: true } } },
+      include: {
+        roles: { include: { rol: true } },
+        sucursal: {
+          select: {
+            id: true,
+            nombre: true,
+            abreviacion: true,
+            departamento: true,
+          },
+        },
+      },
     });
     if (!usuario) return dataResponseError('Usuario no encontrado');
 
@@ -234,6 +255,17 @@ export class UsuariosService {
         const areRolesValid = await this.userValidationService.doRolesExist(rolesIds);
         if (!areRolesValid) {
           return dataResponseError('No existen los roles indicados');
+        }
+      }
+
+      // Validar sucursal si se proporciona
+      if (usuarioData.sucursalId) {
+        const sucursalExists = await this.prismaService.sucursal.findUnique({
+          where: { id: usuarioData.sucursalId },
+          select: { id: true },
+        });
+        if (!sucursalExists) {
+          return dataErrorValidations({ sucursalId: ['La sucursal no existe'] });
         }
       }
 

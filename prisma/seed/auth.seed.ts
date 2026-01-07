@@ -65,7 +65,7 @@ export async function assignPermisosToRoles(prisma: PrismaClient, roleIds: numbe
   console.info(`Assigned ${rolPermisosData.length} permissions to ${roleIds.length} roles`);
 }
 
-export async function createUsuarios(prisma: PrismaClient) {
+export async function createUsuarios(prisma: PrismaClient, sucursales: any[]) {
   const password = await bcrypt.hash('Cambiar123@', 10);
 
   const adminUser = await prisma.usuario.create({
@@ -76,6 +76,7 @@ export async function createUsuarios(prisma: PrismaClient) {
       apellidos: 'Administrador',
       telefono: '12345678',
       emailVerificado: true,
+      sucursalId: sucursales[0]?.id, // Asignar a Santa Cruz
     },
   });
 
@@ -87,6 +88,7 @@ export async function createUsuarios(prisma: PrismaClient) {
       apellidos: 'Ejemplo',
       telefono: '87654321',
       emailVerificado: true,
+      sucursalId: sucursales[0]?.id, // Santa Cruz
     },
   });
 
@@ -98,6 +100,7 @@ export async function createUsuarios(prisma: PrismaClient) {
       apellidos: 'González',
       telefono: '22334477',
       emailVerificado: true,
+      sucursalId: sucursales[0]?.id, // Santa Cruz
     },
   });
 
@@ -109,6 +112,7 @@ export async function createUsuarios(prisma: PrismaClient) {
       apellidos: 'Rodríguez',
       telefono: '22334488',
       emailVerificado: true,
+      sucursalId: sucursales[1]?.id, // Cochabamba
     },
   });
 
@@ -120,6 +124,7 @@ export async function createUsuarios(prisma: PrismaClient) {
       apellidos: 'Martínez',
       telefono: '22334499',
       emailVerificado: true,
+      sucursalId: sucursales[1]?.id, // Cochabamba
     },
   });
 

@@ -76,6 +76,16 @@ export class CreateUsuarioDto {
 
   @Expose()
   @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({
+    type: Number,
+    description: 'ID de la sucursal a la que pertenece el usuario',
+  })
+  @Expose()
+  sucursalId?: number;
+
+  @Expose()
+  @IsOptional()
   @IsArray()
   @IsNumber({}, { each: true, message: 'Cada roleId debe ser un número' })
   @ApiPropertyOptional({ description: 'Array de IDs de roles', example: '[1,2]', type: [Number] })

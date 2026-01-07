@@ -8,6 +8,7 @@ import { HistorialEstadosServicio } from './historial-estados-servicio/historial
 import { ResponsableServicio } from './responsable-servicio/responsable-servicio.entity';
 import { DerivacionEntity } from './derivaciones/derivacion.entity';
 import { PagosIngresos } from '../finanzas/pagos-ingresos/pagos-ingresos.entity';
+import { SucursalEntity } from '../catalogos/sucursales/sucursal.entity';
 
 export class Servicio {
   @ApiProperty()
@@ -24,6 +25,9 @@ export class Servicio {
 
   @ApiPropertyOptional()
   tipoTramiteId?: string;
+
+  @ApiPropertyOptional({ type: Number })
+  sucursalId?: number;
 
   @ApiPropertyOptional()
   estadoActualId?: string;
@@ -76,6 +80,9 @@ export class Servicio {
 
   @ApiPropertyOptional()
   tipoTramite?: TipoTramiteEntity;
+
+  @ApiPropertyOptional({ type: () => SucursalEntity })
+  sucursal?: SucursalEntity;
 
   @ApiPropertyOptional()
   estadoActual?: EstadoTramite;

@@ -1,10 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Prisma } from 'src/generated/prisma/client';
 import { TipoDocumentoEntity } from '../tipos-documento/tipo-documento.entity';
+import { SucursalEntity } from '../sucursales/sucursal.entity';
 
 export class TipoTramiteEntity {
   @ApiProperty({ type: String })
   id: string;
+
+  @ApiProperty({ type: Number })
+  sucursalId: number;
 
   @ApiPropertyOptional({ type: String })
   tipoDocumentoId?: string;
@@ -52,4 +56,7 @@ export class TipoTramiteEntity {
 export class TipoTramiteDetail extends TipoTramiteEntity {
   @ApiPropertyOptional()
   tipoDocumento?: TipoDocumentoEntity;
+
+  @ApiPropertyOptional({ type: () => SucursalEntity })
+  sucursal?: SucursalEntity;
 }

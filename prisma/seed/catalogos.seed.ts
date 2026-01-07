@@ -1,11 +1,43 @@
 import { Prisma, PrismaClient } from '../../src/generated/prisma/client';
 
+export async function createSucursales(prisma: PrismaClient, userId: string) {
+  const sucursales = await prisma.sucursal.createManyAndReturn({
+    data: [
+      {
+        nombre: 'Notaría Santa Cruz 69',
+        abreviacion: 'NSC-69',
+        departamento: 'Santa Cruz',
+        direccion: 'Av. Cristóbal de Mendoza #569, entre 2do y 3er anillo',
+        telefono: '3-3456789',
+        email: 'santacruz69@notaria.bo',
+        estaActiva: true,
+        userCreateId: userId,
+      },
+      {
+        nombre: 'Notaría Cochabamba 68',
+        abreviacion: 'NCB-68',
+        departamento: 'Cochabamba',
+        direccion: 'Av. Heroínas #568, Zona Central',
+        telefono: '4-4567890',
+        email: 'cochabamba68@notaria.bo',
+        estaActiva: true,
+        userCreateId: userId,
+      },
+    ],
+  });
+
+  console.info(`Created ${sucursales.length} sucursales (notarías)`);
+  return sucursales;
+}
+
 export async function createTiposTramite(
   prisma: PrismaClient,
   userId: string,
   tiposDocumento: any[],
+  sucursales: any[],
 ) {
-  const tiposTramite: Prisma.TipoTramiteCreateManyInput[] = [
+  // Definir plantillas base de tipos de trámite (sin sucursalId)
+  const tiposTramiteBase = [
     {
       tipoDocumentoId: tiposDocumento.find((t) => t.nombre === 'Poder General')?.id,
       nombre: 'Poder General Administrativo',
@@ -69,16 +101,36 @@ export async function createTiposTramite(
   ];
 
   const tiposTramiteCreados = [];
-  for (const tipoTramite of tiposTramite) {
-    if (tipoTramite.tipoDocumentoId) {
+  
+  // Crear tipos de trámite para cada sucursal con relación explícita
+  for (const sucursal of sucursales) {
+    console.info(`Creating tipos de trámite for sucursal: ${sucursal.nombre}...`);
+    
+    for (const tipoBase of tiposTramiteBase) {
+      // Solo crear si tiene tipo de documento asociado
+      if (!tipoBase.tipoDocumentoId) continue;
+      
+      // Ajustar precio según sucursal (Cochabamba 10% menos que Santa Cruz)
+      const precioAjustado = sucursal.abreviacion === 'NCB-68' 
+        ? Number(tipoBase.costoBase) * 0.9 
+        : Number(tipoBase.costoBase);
+      
+      // Crear tipo de trámite con relación a sucursal
       const tipoTramiteCreado = await prisma.tipoTramite.create({
-        data: tipoTramite,
+        data: {
+          ...tipoBase,
+          sucursalId: sucursal.id, // Relación con sucursal
+          costoBase: precioAjustado,
+        },
       });
+      
       tiposTramiteCreados.push(tipoTramiteCreado);
     }
   }
 
-  console.info(`Created ${tiposTramiteCreados.length} tipos de trámite`);
+  console.info(`✓ Created ${tiposTramiteCreados.length} tipos de trámite para ${sucursales.length} sucursales`);
+  console.info(`  - ${tiposTramiteCreados.length / sucursales.length} tipos por sucursal`);
+  
   return tiposTramiteCreados;
 }
 

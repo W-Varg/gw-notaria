@@ -115,7 +115,7 @@ model RolPermiso {
 }
 
 model Usuario {
-  id                        String                     @id @default(cuid())
+  id                        String                     @id @default(cuid()) @db.VarChar(26)
   email                     String                     @unique @db.VarChar(150)
   password                  String                     @db.VarChar(150)
   nombre                    String                     @db.VarChar(30)
@@ -123,6 +123,7 @@ model Usuario {
   telefono                  String?                    @db.VarChar(10)
   direccion                 String?
   avatar                    String?
+  sucursalId                Int? // Sucursal a la que pertenece el usuario
   estaActivo                Boolean                    @default(true)
   emailVerificado           Boolean                    @default(false)
   twoFactorSecret           String?                    @db.VarChar(255)
@@ -148,6 +149,8 @@ model Usuario {
   gastos                    Gastos[]
   arqueosDiarios            ArqueosDiarios[]
   auditLogs                 AuditLog[]
+  // Relación con sucursal
+  sucursal                  Sucursal?                  @relation("UsuariosSucursal", fields: [sucursalId], references: [id])
 
   @@map("auth_usuarios")
   @@schema("public")
@@ -155,7 +158,7 @@ model Usuario {
 
 model UsuarioRol {
   id        Int     @id @default(autoincrement())
-  usuarioId String
+  usuarioId String  @db.VarChar(26)
   rolId     Int
   // Relaciones
   usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
@@ -167,8 +170,8 @@ model UsuarioRol {
 }
 
 model Sesion {
-  id                 String   @id @default(cuid())
-  usuarioId          String
+  id                 String   @id @default(cuid()) @db.VarChar(26)
+  usuarioId          String   @db.VarChar(26)
   refreshToken       String   @unique
   userAgent          String?  @db.VarChar(500)
   ipAddress          String?  @db.VarChar(50)
@@ -188,8 +191,8 @@ model Sesion {
 }
 
 model HistorialLogin {
-  id           String   @id @default(cuid())
-  usuarioId    String
+  id           String   @id @default(cuid()) @db.VarChar(26)
+  usuarioId    String   @db.VarChar(26)
   exitoso      Boolean
   ipAddress    String?  @db.VarChar(50)
   userAgent    String?  @db.VarChar(500)
@@ -206,8 +209,8 @@ model HistorialLogin {
 }
 
 model DispositivoConfianza {
-  id                String   @id @default(cuid())
-  usuarioId         String
+  id                String   @id @default(cuid()) @db.VarChar(26)
+  usuarioId         String   @db.VarChar(26)
   deviceFingerprint String   @db.VarChar(255)
   deviceName        String?  @db.VarChar(255)
   userAgent         String?  @db.VarChar(500)
@@ -226,11 +229,11 @@ model DispositivoConfianza {
 }
 
 model TokenTemporal {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @db.VarChar(26)
   clave           String // "verify_token", "reset_token", "otp_email", "2fa_secret"
   valor           String   @db.Text
   tipo            String // "verificacion_email", "reset_password", "otp_login", "2fa_setup"
-  usuarioId       String
+  usuarioId       String   @db.VarChar(26)
   metadatos       Json? // Para datos como { expiresAt, code, attempts }
   fechaExpiracion DateTime
   fechaCreacion   DateTime @default(now())
@@ -246,7 +249,7 @@ model TokenTemporal {
 }
 
 model ConfiguracionAplicacion {
-  id                 String   @id @default(cuid())
+  id                 String   @id @default(cuid()) @db.VarChar(26)
   clave              String   @unique
   valor              String   @db.Text
   tipo               String   @default("texto") // "texto", "numero", "booleano", "json", "html"
@@ -264,13 +267,41 @@ model ConfiguracionAplicacion {
 }
 
 // ============================================
+// MÓDULO DE SUCURSALES (NOTARÍAS)
+// ============================================
+
+model Sucursal {
+  id                   Int           @id @default(autoincrement())
+  nombre               String        @unique @db.VarChar(150)
+  abreviacion          String        @unique @db.VarChar(10)
+  departamento         String        @db.VarChar(100)
+  direccion            String        @db.VarChar(255)
+  telefono             String?       @db.VarChar(20)
+  email                String?       @db.VarChar(100)
+  usuarioResponsableId String?       @db.VarChar(26) // Usuario responsable de la sucursal
+  estaActiva           Boolean       @default(true)
+  userCreateId         String
+  userUpdateId         String?
+  fechaCreacion        DateTime      @default(now())
+  fechaActualizacion   DateTime      @updatedAt
+  // Relaciones
+  usuarios             Usuario[]     @relation("UsuariosSucursal")
+  tiposTramite         TipoTramite[] // tramites por sucursal
+  servicios            Servicio[]
+
+  @@map("cat_sucursales")
+  @@schema("public")
+}
+
+// ============================================
 // MÓDULO DE TIPOS DE TRÁMITE
 // ============================================
 
 model TipoTramite {
-  id                 String   @id @default(cuid())
+  id                 String   @id @default(cuid()) @db.VarChar(26)
+  sucursalId         Int
   tipoDocumentoId    String?  @db.VarChar(26)
-  nombre             String   @unique
+  nombre             String   @db.VarChar(150)
   colorHex           String   @default("#1abc9c") @db.VarChar(15)
   icon               String   @default("pi pi-code") @db.VarChar(15)
   descripcion        String?  @db.VarChar(500)
@@ -285,8 +316,10 @@ model TipoTramite {
   fechaActualizacion DateTime @updatedAt
 
   tipoDocumento TipoDocumento? @relation(fields: [tipoDocumentoId], references: [id])
+  sucursal      Sucursal       @relation(fields: [sucursalId], references: [id], onDelete: Cascade)
   servicios     Servicio[]
 
+  @@unique([sucursalId, nombre])
   @@map("cat_tipos_tramite")
   @@schema("public")
 }
@@ -296,8 +329,8 @@ model TipoTramite {
 // ============================================
 
 model Notificacion {
-  id                 String   @id @default(cuid())
-  usuarioId          String
+  id                 String   @id @default(cuid()) @db.VarChar(26)
+  usuarioId          String   @db.VarChar(26)
   titulo             String   @db.VarChar(255)
   mensaje            String   @db.Text
   tipo               String   @default("info") @db.VarChar(20) // "info", "warning", "success", "error"
@@ -324,8 +357,8 @@ model Notificacion {
 // ============================================
 
 model MensajeContacto {
-  id                 String   @id @default(cuid())
-  usuarioId          String? // opcional, puede ser un usuario anónimo
+  id                 String   @id @default(cuid()) @db.VarChar(26)
+  usuarioId          String?  @db.VarChar(26) // opcional, puede ser un usuario anónimo
   nombre             String
   correo             String
   telefono           String?
@@ -428,7 +461,7 @@ model PlantillaDocumento {
 }
 
 model EstadoTramite {
-  id                       String                     @id @default(cuid())
+  id                       String                     @id @default(cuid()) @db.VarChar(26)
   nombre                   String                     @unique @db.VarChar(100)
   descripcion              String?
   colorHex                 String?                    @db.VarChar(7)
@@ -450,7 +483,7 @@ model EstadoTramite {
 // ============================================================================
 
 model Cliente {
-  id                 String   @id @default(cuid())
+  id                 String   @id @default(cuid()) @db.VarChar(26)
   tipo               Int // 1 = NATURAL, 2 = JURIDICA
   direccion          String?  @db.VarChar(255)
   telefono           String?  @db.VarChar(20)
@@ -469,7 +502,7 @@ model Cliente {
 }
 
 model PersonaNatural {
-  clienteId          String    @id
+  clienteId          String    @id @db.VarChar(26)
   tipoDocumento      String    @db.VarChar(20) // cedula identidad, pasaporte, c-extrangero
   numeroDocumento    String    @unique @db.VarChar(20)
   nombres            String    @db.VarChar(100)
@@ -487,7 +520,7 @@ model PersonaNatural {
 }
 
 model PersonaJuridica {
-  clienteId          String   @id
+  clienteId          String   @id @db.VarChar(26)
   nit                String?  @unique @db.VarChar(20)
   razonSocial        String   @unique @db.VarChar(150)
   representanteLegal String?  @db.VarChar(150)
@@ -507,12 +540,13 @@ model PersonaJuridica {
 // ============================================================================
 
 model Servicio {
-  id                   String    @id @default(cuid())
+  id                   String    @id @default(cuid()) @db.VarChar(26)
   codigoTicket         String    @unique @db.VarChar(20)
-  clienteId            String
+  clienteId            String    @db.VarChar(26)
   tipoDocumentoId      String    @db.VarChar(26)
-  tipoTramiteId        String
-  estadoActualId       String?
+  tipoTramiteId        String    @db.VarChar(26)
+  sucursalId           Int? // Sucursal donde se realizó el servicio
+  estadoActualId       String?   @db.VarChar(26)
   fechaInicio          DateTime  @default(now()) @db.Timestamptz()
   fechaFinalizacion    DateTime?
   fechaEstimadaEntrega DateTime?
@@ -530,6 +564,7 @@ model Servicio {
   cliente                  Cliente                    @relation(fields: [clienteId], references: [id])
   tipoDocumento            TipoDocumento              @relation(fields: [tipoDocumentoId], references: [id])
   tipoTramite              TipoTramite                @relation(fields: [tipoTramiteId], references: [id])
+  sucursal                 Sucursal?                  @relation(fields: [sucursalId], references: [id])
   estadoActual             EstadoTramite?             @relation("EstadoActualServicio", fields: [estadoActualId], references: [id])
   historialEstadosServicio HistorialEstadosServicio[]
   responsablesServicio     ResponsableServicio[]
@@ -542,9 +577,9 @@ model Servicio {
 
 model HistorialEstadosServicio {
   id          Int      @id @default(autoincrement())
-  usuarioId   String?
-  servicioId  String
-  estadoId    String
+  usuarioId   String?  @db.VarChar(26)
+  servicioId  String   @db.VarChar(26)
+  estadoId    String   @db.VarChar(26)
   fechaCambio DateTime @default(now()) @db.Timestamptz()
   comentario  String?  @db.VarChar(255)
 
@@ -558,8 +593,8 @@ model HistorialEstadosServicio {
 
 model ResponsableServicio {
   id              Int       @id @default(autoincrement())
-  usuarioId       String
-  servicioId      String
+  usuarioId       String    @db.VarChar(26)
+  servicioId      String    @db.VarChar(26)
   fechaAsignacion DateTime  @default(now()) @db.Timestamptz()
   fechaBaja       DateTime?
   activo          Boolean   @default(true)
@@ -573,9 +608,9 @@ model ResponsableServicio {
 
 model DerivacionServicio {
   id                   Int       @id @default(autoincrement())
-  servicioId           String
-  usuarioOrigenId      String?
-  usuarioDestinoId     String
+  servicioId           String    @db.VarChar(26)
+  usuarioOrigenId      String?   @db.VarChar(26)
+  usuarioDestinoId     String    @db.VarChar(26)
   fechaDerivacion      DateTime  @default(now()) @db.Timestamptz()
   motivo               String?   @db.Text
   prioridad            String    @default("normal") @db.VarChar(20) // "baja", "normal", "alta", "urgente"
@@ -588,7 +623,7 @@ model DerivacionServicio {
   fechaVisualizacion   DateTime? // Cuándo fue visualizada
   motivoCancelacion    String?   @db.Text // Razón de cancelación si aplica
   fechaCancelacion     DateTime? // Cuándo fue cancelada
-  usuarioCancelacionId String? // Quién canceló
+  usuarioCancelacionId String?   @db.VarChar(26) // Quién canceló
 
   servicio       Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
   usuarioOrigen  Usuario? @relation("DerivacionesOrigen", fields: [usuarioOrigenId], references: [id])
@@ -609,7 +644,7 @@ model DerivacionServicio {
 
 model PagosIngresos {
   id                Int             @id @default(autoincrement())
-  servicioId        String?
+  servicioId        String?         @db.VarChar(26)
   fecha             DateTime        @default(now()) @db.Timestamptz()
   monto             Decimal         @db.Decimal(10, 2)
   tipoPago          Int // 1 = EFECTIVO, 2 = QR, 3 = TRANSFERENCIA, 4 = CHEQUE, 5 = DEPOSITO
@@ -617,7 +652,7 @@ model PagosIngresos {
   constanciaTipo    ConstanciaEnum?
   numeroConstancia  String?         @db.VarChar(50)
   concepto          String?         @db.VarChar(255)
-  usuarioRegistroId String?
+  usuarioRegistroId String?         @db.VarChar(26)
 
   servicio        Servicio?       @relation(fields: [servicioId], references: [id])
   cuentaBancaria  CuentaBancaria? @relation(fields: [cuentaBancariaId], references: [id])
@@ -641,7 +676,7 @@ model Gastos {
   saldo              Decimal? @db.Decimal(10, 2)
   fechaGasto         DateTime @default(now()) @db.Date
   categoria          String?  @db.VarChar(50)
-  usuarioId          String?
+  usuarioId          String?  @db.VarChar(26)
   userCreateId       String
   userUpdateId       String?
   fechaCreacion      DateTime @default(now())
@@ -676,7 +711,7 @@ model TransaccionesEgresos {
 model ArqueosDiarios {
   id                    Int      @id @default(autoincrement())
   fecha                 DateTime @unique @default(now()) @db.Date
-  usuarioCierreId       String?
+  usuarioCierreId       String?  @db.VarChar(26)
   totalIngresosEfectivo Decimal  @default(0) @db.Decimal(10, 2)
   totalIngresosBancos   Decimal  @default(0) @db.Decimal(10, 2)
   totalEgresosEfectivo  Decimal  @default(0) @db.Decimal(10, 2)
@@ -699,7 +734,7 @@ model ArqueosDiarios {
 // NivelLog: 1 = INFO, 2 = WARNING, 3 = ERROR, 4 = CRITICAL, 5 = DEBUG
 
 model AuditLog {
-  id                String   @id @default(cuid())
+  id                String   @id @default(cuid()) @db.VarChar(26)
   // Información de la acción
   accion            Int // 1 = CREATE, 2 = UPDATE, 3 = DELETE, 4 = READ, etc.
   modulo            String // Ej: "usuarios", "categorias", "faqs", "pedidos"
@@ -707,7 +742,7 @@ model AuditLog {
   registroId        String? // ID del registro afectado
   descripcion       String // Descripción de la acción realizada
   // Usuario que realiza la acción
-  usuarioId         String?
+  usuarioId         String?  @db.VarChar(26)
   usuarioEmail      String?
   usuarioNombre     String?
   usuarioIp         String? // IP del usuario
@@ -737,7 +772,7 @@ model AuditLog {
 }
 
 model SystemLog {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @db.VarChar(26)
   // Información del log
   nivel         Int      @default(1) // 1 = INFO, 2 = WARNING, 3 = ERROR, 4 = CRITICAL, 5 = DEBUG
   mensaje       String
@@ -747,7 +782,7 @@ model SystemLog {
   stackTrace    String?  @db.Text // Stack trace completo del error
   metadatos     Json? // Información adicional
   // Usuario relacionado (opcional)
-  usuarioId     String?
+  usuarioId     String?  @db.VarChar(26)
   usuarioEmail  String?
   // Request info
   metodoHttp    String? // GET, POST, PUT, DELETE
@@ -767,7 +802,7 @@ model SystemLog {
 }
 
 model LoginAttempt {
-  id                 String   @id @default(cuid())
+  id                 String   @id @default(cuid()) @db.VarChar(26)
   // Información del intento
   email              String
   exitoso            Boolean
@@ -793,9 +828,9 @@ model LoginAttempt {
 }
 
 model AccessLog {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @db.VarChar(26)
   // Usuario que accede
-  usuarioId    String?
+  usuarioId    String?  @db.VarChar(26)
   usuarioEmail String?
   // Información de acceso
   recurso      String // Recurso al que se accedió
@@ -825,7 +860,7 @@ model AccessLog {
 }
 
 model DataChangeLog {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @db.VarChar(26)
   // Información del cambio
   tabla         String
   registroId    String
@@ -834,7 +869,7 @@ model DataChangeLog {
   valorNuevo    String?  @db.Text // Valor nuevo (como string)
   tipoCambio    String // CREATE, UPDATE, DELETE
   // Usuario responsable
-  usuarioId     String?
+  usuarioId     String?  @db.VarChar(26)
   usuarioEmail  String?
   usuarioNombre String?
   // Contexto
@@ -853,7 +888,7 @@ model DataChangeLog {
 }
 
 model ErrorLog {
-  id              String    @id @default(cuid())
+  id              String    @id @default(cuid()) @db.VarChar(26)
   // Información del error
   mensaje         String
   tipo            String // Tipo de error (TypeError, ValidationError, etc.)
@@ -868,7 +903,7 @@ model ErrorLog {
   url             String?
   requestBody     Json?
   // Usuario afectado
-  usuarioId       String?
+  usuarioId       String?   @db.VarChar(26)
   usuarioEmail    String?
   ip              String?
   // Estado
