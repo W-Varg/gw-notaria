@@ -56,7 +56,7 @@ export class PagosIngresosController {
   @Get()
   @BearerAuthPermision([PermisoEnum.PAGOS_INGRESOS_VER])
   @ApiDescription('Listar todos los pagos e ingresos', [PermisoEnum.PAGOS_INGRESOS_VER])
-  @ApiResponse({ type: ResponseListPagosIngresosType })
+  @ApiResponse({ status: 200, type: ResponseListPagosIngresosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.pagosIngresosService.findAll(query);
   }

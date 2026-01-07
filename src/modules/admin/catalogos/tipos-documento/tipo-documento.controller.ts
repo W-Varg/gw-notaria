@@ -54,7 +54,7 @@ export class TipoDocumentoController {
   @Get()
   @BearerAuthPermision([PermisoEnum.TIPOS_DOCUMENTO_VER])
   @ApiDescription('Listar todos los tipos de documento', [PermisoEnum.TIPOS_DOCUMENTO_VER])
-  @ApiResponse({ type: ResponseTipoDocumentosType })
+  @ApiResponse({ status: 200, type: ResponseTipoDocumentosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.tipoDocumentoService.findAll(query);
   }

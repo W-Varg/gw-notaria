@@ -61,7 +61,7 @@ export class ServicioController {
   @Get()
   @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
   @ApiDescription('Listar todos los servicios', [PermisoEnum.SERVICIOS_VER])
-  @ApiResponse({ type: ResponseServiciosType })
+  @ApiResponse({ status: 200, type: ResponseServiciosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.servicioService.findAll(query);
   }

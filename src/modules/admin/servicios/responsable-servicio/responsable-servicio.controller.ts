@@ -57,7 +57,7 @@ export class ResponsableServicioController {
   @ApiDescription('Listar todos los responsables de servicios', [
     PermisoEnum.RESPONSABLES_SERVICIO_VER,
   ])
-  @ApiResponse({ type: ResponseResponsablesServicioType })
+  @ApiResponse({ status: 200, type: ResponseResponsablesServicioType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.responsableServicioService.findAll(query);
   }

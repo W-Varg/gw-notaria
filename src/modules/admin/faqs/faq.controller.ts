@@ -40,7 +40,7 @@ export class FaqController {
   @Get()
   @BearerAuthPermision([PermisoEnum.FAQS_VER])
   @ApiDescription('Listar todas las FAQs', [PermisoEnum.FAQS_VER])
-  @ApiResponse({ type: ResponseFaqsType })
+  @ApiResponse({ status: 200, type: ResponseFaqsType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.faqService.findAll(query);
   }

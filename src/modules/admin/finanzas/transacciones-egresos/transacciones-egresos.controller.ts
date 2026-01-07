@@ -59,7 +59,7 @@ export class TransaccionesEgresosController {
   @ApiDescription('Listar todas las transacciones de egresos', [
     PermisoEnum.TRANSACCIONES_EGRESOS_VER,
   ])
-  @ApiResponse({ type: ResponseListTransaccionesEgresosType })
+  @ApiResponse({ status: 200, type: ResponseListTransaccionesEgresosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.transaccionesEgresosService.findAll(query);
   }

@@ -9,8 +9,8 @@ export class DerivacionEntity {
   @ApiProperty()
   servicioId: string;
 
-  @ApiProperty()
-  usuarioOrigenId: string;
+  @ApiPropertyOptional()
+  usuarioOrigenId?: string;
 
   @ApiProperty()
   usuarioDestinoId: string;
@@ -32,6 +32,24 @@ export class DerivacionEntity {
 
   @ApiPropertyOptional()
   fechaAceptacion?: Date;
+
+  @ApiProperty({ default: true })
+  estaActiva: boolean;
+
+  @ApiProperty({ default: false })
+  visualizada: boolean;
+
+  @ApiPropertyOptional()
+  fechaVisualizacion?: Date;
+
+  @ApiPropertyOptional()
+  motivoCancelacion?: string;
+
+  @ApiPropertyOptional()
+  fechaCancelacion?: Date;
+
+  @ApiPropertyOptional()
+  usuarioCancelacionId?: string;
 }
 
 export class DerivacionDetail extends DerivacionEntity {

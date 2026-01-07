@@ -56,7 +56,7 @@ export class CuentaBancariaController {
   @Get('select')
   @BearerAuthPermision([PermisoEnum.CUENTAS_BANCARIAS_VER])
   @ApiDescription('Obtener cuentas bancarias para select', [PermisoEnum.CUENTAS_BANCARIAS_VER])
-  @ApiResponse({ type: ResponseCuentasBancariasType })
+  @ApiResponse({ status: 200, type: ResponseCuentasBancariasType })
   getForSelect() {
     return this.cuentaBancariaService.getForSelect();
   }
@@ -64,7 +64,7 @@ export class CuentaBancariaController {
   @Get()
   @BearerAuthPermision([PermisoEnum.CUENTAS_BANCARIAS_VER])
   @ApiDescription('Listar todas las cuentas bancarias', [PermisoEnum.CUENTAS_BANCARIAS_VER])
-  @ApiResponse({ type: ResponseCuentasBancariasType })
+  @ApiResponse({ status: 200, type: ResponseCuentasBancariasType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.cuentaBancariaService.findAll(query);
   }

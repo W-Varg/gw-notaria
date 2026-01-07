@@ -514,7 +514,7 @@ create(@Body() inputDto: Create[Nombre]Dto, @AuthUser() session: IToken) {
 @Get()
 @BearerAuthPermision([PermisoEnum.[NOMBRE]_VER])
 @ApiDescription('Listar todos los [nombre]s', [PermisoEnum.[NOMBRE]_VER])
-@ApiResponse({ type: Response[Nombre]sType })
+@ApiResponse({ status: 200, type: Response[Nombre]sType })
 findAll(@Query() query: ListFindAllQueryDto) {
   return this.[nombre]Service.findAll(query);
 }
@@ -889,7 +889,7 @@ export class CategoriaController {
   @Get()
   @BearerAuthPermision([PermisoEnum.CATEGORIAS_VER])
   @ApiDescription('Listar todas las categorías', [PermisoEnum.CATEGORIAS_VER])
-  @ApiResponse({ type: ResponseCategoriasType })
+  @ApiResponse({ status: 200, type: ResponseCategoriasType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.categoriaService.findAll(query);
   }
@@ -963,7 +963,7 @@ export class ProductoController {
   @Get()
   @BearerAuthPermision([PermisoEnum.PRODUCTOS_VER])
   @ApiDescription('Listar todos los productos', [PermisoEnum.PRODUCTOS_VER])
-  @ApiResponse({ type: ResponseProductosType })
+  @ApiResponse({ status: 200, type: ResponseProductosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.productoService.findAll(query);
   }

@@ -54,7 +54,7 @@ export class NotificacionController {
   @Get()
   @BearerAuthPermision([PermisoEnum.NOTIFICACIONES_VER])
   @ApiDescription('Listar todas las notificaciones', [PermisoEnum.NOTIFICACIONES_VER])
-  @ApiResponse({ type: ResponseNotificacionesType })
+  @ApiResponse({ status: 200, type: ResponseNotificacionesType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.notificacionService.findAll(query);
   }

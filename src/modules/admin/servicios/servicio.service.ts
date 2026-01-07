@@ -62,8 +62,7 @@ export class ServicioService {
         where: { id: inputDto.estadoActualId },
         select: { id: true },
       });
-      if (!estadoExists)
-        return dataErrorValidations({ estadoActualId: ['El estado no existe'] });
+      if (!estadoExists) return dataErrorValidations({ estadoActualId: ['El estado no existe'] });
     }
 
     // Si no se proporciona estado, buscar el estado inicial por defecto

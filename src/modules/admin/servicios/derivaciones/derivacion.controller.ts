@@ -72,10 +72,7 @@ export class DerivacionController {
   @BearerAuthPermision()
   @ApiDescription('Obtener mis derivaciones recibidas')
   @ApiResponse({ status: 200, type: () => ResponseDerivacionesType })
-  misDerivacionesRecibidas(
-    @Body() filters: ListDerivacionArgsDto,
-    @AuthUser() session: IToken,
-  ) {
+  misDerivacionesRecibidas(@Body() filters: ListDerivacionArgsDto, @AuthUser() session: IToken) {
     return this.derivacionService.misDerivacionesRecibidas(filters, session);
   }
 

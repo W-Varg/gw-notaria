@@ -59,7 +59,7 @@ export class HistorialEstadosServicioController {
   @ApiDescription('Listar todos los historiales de estados', [
     PermisoEnum.HISTORIAL_ESTADOS_SERVICIO_VER,
   ])
-  @ApiResponse({ type: ResponseHistorialEstadosServiciosType })
+  @ApiResponse({ status: 200, type: ResponseHistorialEstadosServiciosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.historialEstadosServicioService.findAll(query);
   }

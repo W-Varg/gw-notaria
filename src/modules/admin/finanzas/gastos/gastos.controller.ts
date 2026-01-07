@@ -52,7 +52,7 @@ export class GastosController {
   @Get()
   @BearerAuthPermision([PermisoEnum.GASTOS_VER])
   @ApiDescription('Listar todos los gastos', [PermisoEnum.GASTOS_VER])
-  @ApiResponse({ type: ResponseListGastosType })
+  @ApiResponse({ status: 200, type: ResponseListGastosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.gastosService.findAll(query);
   }

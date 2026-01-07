@@ -54,7 +54,7 @@ export class EstadoTramiteController {
   @Get('select')
   @BearerAuthPermision()
   @ApiDescription('Obtener estados de trámite para select')
-  @ApiResponse({ type: ResponseEstadosTramiteType })
+  @ApiResponse({ status: 200, type: ResponseEstadosTramiteType })
   getForSelect() {
     return this.estadoTramiteService.getForSelect();
   }
@@ -62,7 +62,7 @@ export class EstadoTramiteController {
   @Get()
   @BearerAuthPermision([PermisoEnum.ESTADOS_TRAMITE_VER])
   @ApiDescription('Listar todos los estados de trámite', [PermisoEnum.ESTADOS_TRAMITE_VER])
-  @ApiResponse({ type: ResponseEstadosTramiteType })
+  @ApiResponse({ status: 200, type: ResponseEstadosTramiteType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.estadoTramiteService.findAll(query);
   }

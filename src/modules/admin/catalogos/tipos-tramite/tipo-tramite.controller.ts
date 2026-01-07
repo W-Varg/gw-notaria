@@ -54,7 +54,7 @@ export class TipoTramiteController {
   // @Get()
   // @BearerAuthPermision([PermisoEnum.TIPOS_TRAMITE_VER])
   // @ApiDescription('Listar todos los tipos de trámite', [PermisoEnum.TIPOS_TRAMITE_VER])
-  // @ApiResponse({ type: ResponseTiposTramiteType })
+  // @ApiResponse({ status: 200, type: ResponseTiposTramiteType })
   // findAll(@Query() query: ListFindAllQueryDto) {
   //   return this.tipoTramiteService.findAll(query);
   // }

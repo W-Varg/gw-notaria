@@ -52,7 +52,7 @@ export class BancoController {
   @Get('select')
   @BearerAuthPermision()
   @ApiDescription('Obtener bancos para select')
-  @ApiResponse({ type: ResponseBancosType })
+  @ApiResponse({ status: 200, type: ResponseBancosType })
   getForSelect() {
     return this.bancoService.getForSelect();
   }
@@ -60,7 +60,7 @@ export class BancoController {
   @Get()
   @BearerAuthPermision([PermisoEnum.BANCOS_VER])
   @ApiDescription('Listar todos los bancos', [PermisoEnum.BANCOS_VER])
-  @ApiResponse({ type: ResponseBancosType })
+  @ApiResponse({ status: 200, type: ResponseBancosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.bancoService.findAll(query);
   }

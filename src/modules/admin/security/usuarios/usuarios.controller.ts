@@ -59,7 +59,7 @@ export class UsuariosController {
   @Get('select')
   @BearerAuthPermision([PermisoEnum.USUARIOS_VER])
   @ApiDescription('Obtener usuarios para select', [PermisoEnum.USUARIOS_VER])
-  @ApiResponse({ type: ResponseUsuariosType })
+  @ApiResponse({ status: 200, type: ResponseUsuariosType })
   getForSelect() {
     return this.usuariosService.getForSelect();
   }
@@ -67,7 +67,7 @@ export class UsuariosController {
   @Get()
   @BearerAuthPermision([PermisoEnum.USUARIOS_VER])
   @ApiDescription('Listar todos los usuarios', [PermisoEnum.USUARIOS_VER])
-  @ApiResponse({ type: ResponseUsuariosType })
+  @ApiResponse({ status: 200, type: ResponseUsuariosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.usuariosService.findAll(query);
   }

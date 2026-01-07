@@ -54,7 +54,7 @@ export class MensajeContactoController {
   @Get()
   @BearerAuthPermision([PermisoEnum.MENSAJES_CONTACTO_VER])
   @ApiDescription('Listar todos los mensajes de contacto', [PermisoEnum.MENSAJES_CONTACTO_VER])
-  @ApiResponse({ type: ResponseMensajesContactoType })
+  @ApiResponse({ status: 200, type: ResponseMensajesContactoType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.mensajeContactoService.findAll(query);
   }

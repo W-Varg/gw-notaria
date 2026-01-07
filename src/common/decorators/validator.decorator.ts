@@ -297,7 +297,7 @@ interface SqlInjectionOptions extends ValidationOptions {
 
 // Decorador personalizado para prevenir inyección SQL
 export function IsSQLInjectionSafe(options?: SqlInjectionOptions): PropertyDecorator {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     const exceptWords = options?.exceptWords || [];
     const customRegex = options?.regex;
     const validationOptions = options || {};

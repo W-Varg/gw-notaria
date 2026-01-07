@@ -52,7 +52,7 @@ export class ClienteController {
   @Get('select')
   @BearerAuthPermision([PermisoEnum.CLIENTES_VER])
   @ApiDescription('Obtener clientes para select', [PermisoEnum.CLIENTES_VER])
-  @ApiResponse({ type: ResponseClientesType })
+  @ApiResponse({ status: 200, type: ResponseClientesType })
   getForSelect() {
     return this.clienteService.getForSelect();
   }
@@ -60,7 +60,7 @@ export class ClienteController {
   @Get()
   @BearerAuthPermision([PermisoEnum.CLIENTES_VER])
   @ApiDescription('Listar todos los clientes', [PermisoEnum.CLIENTES_VER])
-  @ApiResponse({ type: ResponseClientesType })
+  @ApiResponse({ status: 200, type: ResponseClientesType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.clienteService.findAll(query);
   }

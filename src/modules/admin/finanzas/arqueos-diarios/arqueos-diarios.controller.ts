@@ -56,7 +56,7 @@ export class ArqueosDiariosController {
   @Get()
   @BearerAuthPermision([PermisoEnum.ARQUEOS_DIARIOS_VER])
   @ApiDescription('Listar todos los arqueos diarios', [PermisoEnum.ARQUEOS_DIARIOS_VER])
-  @ApiResponse({ type: ResponseListArqueosDiariosType })
+  @ApiResponse({ status: 200, type: ResponseListArqueosDiariosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.arqueosDiariosService.findAll(query);
   }

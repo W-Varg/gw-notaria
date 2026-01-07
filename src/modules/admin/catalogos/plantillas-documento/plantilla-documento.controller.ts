@@ -58,7 +58,7 @@ export class PlantillaDocumentoController {
   @ApiDescription('Listar todas las plantillas de documento', [
     PermisoEnum.PLANTILLAS_DOCUMENTO_VER,
   ])
-  @ApiResponse({ type: ResponsePlantillaDocumentosType })
+  @ApiResponse({ status: 200, type: ResponsePlantillaDocumentosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.plantillaDocumentoService.findAll(query);
   }
