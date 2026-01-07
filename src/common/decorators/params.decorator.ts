@@ -1,6 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiProperty, ApiPropertyOptions } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsInt, IsOptional, IsPositive, IsString, Matches, MaxLength, Min } from 'class-validator';
 import { smsInteger, smsIsString } from 'src/helpers/validator.sms';
 import { IsSQLInjectionSafe } from './validator.decorator';
@@ -64,6 +64,7 @@ export function ParamsStringValidator(options: ParamsStringValidatorOptions = {}
   };
 
   return applyDecorators(
+    Expose(),
     ApiProperty(apiPropertyOptions),
     Type(() => String),
     IsString({ message: (v) => smsIsString(v) }),
@@ -118,6 +119,7 @@ export function ParamsIntValidator(
   };
 
   const decorators = [
+    Expose(),
     ApiProperty(apiPropertyOptions),
     Type(() => Number),
     IsInt({ message: (v) => smsInteger(v) }),

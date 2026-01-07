@@ -77,6 +77,39 @@ export class CreateServicioDto {
   @Min(0)
   @ApiProperty({ type: Number })
   montoTotal: number;
+
+  // Campos para la primera derivación
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String, description: 'Motivo de la derivación inicial' })
+  motivoDerivacion?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String, description: 'Comentario adicional de la derivación' })
+  comentarioDerivacion?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  @ApiPropertyOptional({
+    type: String,
+    enum: ['baja', 'normal', 'alta', 'urgente'],
+    default: 'normal',
+    description: 'Prioridad de la derivación',
+  })
+  prioridadDerivacion?: string;
+
+  // Campo para el historial de estado inicial
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  @ApiPropertyOptional({ type: String, description: 'Comentario del estado inicial' })
+  comentarioEstadoInicial?: string;
 }
 
 export class UpdateServicioDto extends PartialType(CreateServicioDto) {}

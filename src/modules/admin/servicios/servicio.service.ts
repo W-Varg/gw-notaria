@@ -48,35 +48,151 @@ export class ServicioService {
     if (!tipoDocExists)
       return dataErrorValidations({ tipoDocumentoId: ['El tipo de documento no existe'] });
 
-    // Validar que el tipo de trámite existe (si se proporciona)
-    if (inputDto.tipoTramiteId) {
-      const tipoTramiteExists = await this.prismaService.tipoTramite.findUnique({
-        where: { id: inputDto.tipoTramiteId },
+    // Validar que el tipo de trámite existe
+    const tipoTramiteExists = await this.prismaService.tipoTramite.findUnique({
+      where: { id: inputDto.tipoTramiteId },
+      select: { id: true },
+    });
+    if (!tipoTramiteExists)
+      return dataErrorValidations({ tipoTramiteId: ['El tipo de trámite no existe'] });
+
+    // Validar que el estado existe (si se proporciona)
+    if (inputDto.estadoActualId) {
+      const estadoExists = await this.prismaService.estadoTramite.findUnique({
+        where: { id: inputDto.estadoActualId },
         select: { id: true },
       });
-      if (!tipoTramiteExists)
-        return dataErrorValidations({ tipoTramiteId: ['El tipo de trámite no existe'] });
+      if (!estadoExists)
+        return dataErrorValidations({ estadoActualId: ['El estado no existe'] });
+    }
+
+    // Si no se proporciona estado, buscar el estado inicial por defecto
+    let estadoInicialId = inputDto.estadoActualId;
+    if (!estadoInicialId) {
+      const estadoInicial = await this.prismaService.estadoTramite.findFirst({
+        where: {
+          OR: [
+            { nombre: { contains: 'Iniciado', mode: 'insensitive' } },
+            { nombre: { contains: 'Registrado', mode: 'insensitive' } },
+            { nombre: { contains: 'Pendiente', mode: 'insensitive' } },
+          ],
+        },
+        orderBy: { id: 'asc' },
+      });
+      estadoInicialId = estadoInicial?.id;
     }
 
     const codigoTicket = this.generateCodigoTicket();
+    const usuarioId = session.usuarioId;
 
-    const result = await this.prismaService.servicio.create({
-      data: {
-        codigoTicket,
-        clienteId: inputDto.clienteId,
-        tipoDocumentoId: inputDto.tipoDocumentoId,
-        tipoTramiteId: inputDto.tipoTramiteId,
-        observaciones: inputDto.observaciones,
-        contenidoFinal: inputDto.contenidoFinal,
-        montoTotal: inputDto.montoTotal,
-        saldoPendiente: inputDto.montoTotal, // Inicialmente, el saldo pendiente es igual al monto total
-        userCreateId: session.usuarioId,
-      },
-      include: {
-        cliente: true,
-        tipoDocumento: true,
-        tipoTramite: true,
-      },
+    // Crear servicio con todas las relaciones en una transacción
+    const result = await this.prismaService.$transaction(async (prisma) => {
+      // 1. Crear el servicio
+      const servicio = await prisma.servicio.create({
+        data: {
+          codigoTicket,
+          clienteId: inputDto.clienteId,
+          tipoDocumentoId: inputDto.tipoDocumentoId,
+          tipoTramiteId: inputDto.tipoTramiteId,
+          estadoActualId: estadoInicialId,
+          fechaEstimadaEntrega: inputDto.fechaEstimadaEntrega,
+          plazoEntregaDias: inputDto.plazoEntregaDias,
+          prioridad: inputDto.prioridad || 'normal',
+          observaciones: inputDto.observaciones,
+          contenidoFinal: inputDto.contenidoFinal,
+          montoTotal: inputDto.montoTotal,
+          saldoPendiente: inputDto.montoTotal, // Inicialmente, el saldo pendiente es igual al monto total
+          userCreateId: usuarioId,
+        },
+      });
+
+      // 2. Crear la primera derivación (sin origen, el usuario actual es quien crea y recibe)
+      await prisma.derivacionServicio.create({
+        data: {
+          servicioId: servicio.id,
+          usuarioOrigenId: null, // Sin origen porque es la creación inicial
+          usuarioDestinoId: usuarioId, // El usuario creador es el destino
+          motivo: inputDto.motivoDerivacion || 'Creación inicial del servicio',
+          prioridad: inputDto.prioridadDerivacion || inputDto.prioridad || 'normal',
+          comentario: inputDto.comentarioDerivacion,
+          aceptada: true, // Auto-aceptada porque es el creador
+          fechaAceptacion: new Date(),
+          estaActiva: true,
+          visualizada: true, // Auto-visualizada
+          fechaVisualizacion: new Date(),
+        },
+      });
+
+      // 3. Crear el primer registro en el historial de estados
+      if (estadoInicialId) {
+        await prisma.historialEstadosServicio.create({
+          data: {
+            servicioId: servicio.id,
+            estadoId: estadoInicialId,
+            usuarioId: usuarioId,
+            fechaCambio: new Date(),
+            comentario: inputDto.comentarioEstadoInicial || 'Estado inicial del servicio',
+          },
+        });
+      }
+
+      // 4. Registrar al usuario como primer responsable del servicio
+      await prisma.responsableServicio.create({
+        data: {
+          servicioId: servicio.id,
+          usuarioId: usuarioId,
+          activo: true,
+          fechaAsignacion: new Date(),
+        },
+      });
+
+      // 5. Retornar el servicio completo con todas las relaciones
+      return await prisma.servicio.findUnique({
+        where: { id: servicio.id },
+        include: {
+          cliente: {
+            include: {
+              personaNatural: true,
+              personaJuridica: true,
+            },
+          },
+          tipoDocumento: true,
+          tipoTramite: true,
+          estadoActual: true,
+          historialEstadosServicio: {
+            include: {
+              estado: true,
+              usuario: true,
+            },
+          },
+          responsablesServicio: {
+            where: { activo: true },
+            include: {
+              usuario: true,
+            },
+          },
+          derivaciones: {
+            include: {
+              usuarioOrigen: {
+                select: {
+                  id: true,
+                  nombre: true,
+                  apellidos: true,
+                  email: true,
+                },
+              },
+              usuarioDestino: {
+                select: {
+                  id: true,
+                  nombre: true,
+                  apellidos: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      });
     });
 
     return dataResponseSuccess<Servicio>({ data: result });
