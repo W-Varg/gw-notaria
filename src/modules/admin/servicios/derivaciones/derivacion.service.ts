@@ -29,7 +29,7 @@ export class DerivacionService {
     // Validar que el servicio existe
     const servicio = await this.prismaService.servicio.findUnique({
       where: { id: inputDto.servicioId },
-      select: { id: true, codigoTicket: true, estaActivo: true },
+      select: { id: true, codigoTicket: true, estaActivo: true, estadoActualId: true },
     });
 
     if (!servicio) {
@@ -78,7 +78,25 @@ export class DerivacionService {
       return dataResponseError('No eres responsable activo de este servicio');
     }
 
-    // Usar transacción para crear derivación y cambiar responsable
+    // Si se proporciona un nuevo estado, validar que existe y es diferente del actual
+    let cambiarEstado = false;
+    if (inputDto.nuevoEstadoId) {
+      const estadoExists = await this.prismaService.estadoTramite.findUnique({
+        where: { id: inputDto.nuevoEstadoId },
+        select: { id: true, nombre: true },
+      });
+
+      if (!estadoExists) {
+        return dataErrorValidations({ nuevoEstadoId: ['El estado no existe'] });
+      }
+
+      // Solo cambiar si es diferente del actual
+      if (servicio.estadoActualId !== inputDto.nuevoEstadoId) {
+        cambiarEstado = true;
+      }
+    }
+
+    // Usar transacción para crear derivación, cambiar responsable y opcionalmente cambiar estado
     const resultado = await this.prismaService.$transaction(async (prisma) => {
       // Desactivar responsable actual
       await prisma.responsableServicio.update({
@@ -97,6 +115,28 @@ export class DerivacionService {
           activo: true,
         },
       });
+
+      // Si hay cambio de estado, actualizar servicio y crear registro en historial
+      if (cambiarEstado && inputDto.nuevoEstadoId) {
+        // Actualizar estado del servicio
+        await prisma.servicio.update({
+          where: { id: inputDto.servicioId },
+          data: {
+            estadoActualId: inputDto.nuevoEstadoId,
+          },
+        });
+
+        // Crear registro en historial de estados
+        await prisma.historialEstadosServicio.create({
+          data: {
+            servicioId: inputDto.servicioId,
+            estadoId: inputDto.nuevoEstadoId,
+            usuarioId: session.usuarioId,
+            fechaCambio: new Date(),
+            comentario: inputDto.comentarioEstado || 'Cambio de estado al derivar',
+          },
+        });
+      }
 
       // Crear la derivación
       const derivacion = await prisma.derivacionServicio.create({

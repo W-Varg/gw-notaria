@@ -51,6 +51,25 @@ export class CreateDerivacionDto {
   @IsString()
   @ApiPropertyOptional({ type: String, description: 'Comentario adicional' })
   comentario?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({
+    type: String,
+    description: 'ID del nuevo estado del servicio (opcional, si se cambia el estado)',
+  })
+  nuevoEstadoId?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Comentario del cambio de estado (si se cambia el estado)',
+  })
+  comentarioEstado?: string;
 }
 
 export class CancelarDerivacionDto {
