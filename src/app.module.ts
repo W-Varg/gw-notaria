@@ -13,7 +13,7 @@ import { GuardsModule } from './common/guards/guards.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { PublicModule } from './modules/public_portal/public.module';
 import { CacheInterceptor } from './common/interceptors/cache.interceptor';
-import { MovimientosModule } from './modules/movimientos/movimientos.module';
+import { MovimientosModule } from './modules/admin/finanzas/movimientos/movimientos.module';
 
 @Module({
   imports: [
@@ -24,7 +24,6 @@ import { MovimientosModule } from './modules/movimientos/movimientos.module';
     GuardsModule, // Importar GuardsModule globalmente
     AdminModule,
     PublicModule,
-    MovimientosModule,
   ],
   controllers: [AppController],
   providers: [

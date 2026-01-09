@@ -5,7 +5,7 @@ import { MovimientoResponseDto } from './dto/movimiento-response.dto';
 import { dataResponseFormat } from 'src/common/dtos';
 import { FiltroInputDto } from './dto/filtro.input.dto';
 
-@ApiTags('Movimientos')
+@ApiTags('[finanzas] Movimientos')
 @Controller('movimientos')
 export class MovimientosController {
   constructor(private readonly movimientosService: MovimientosService) {}
