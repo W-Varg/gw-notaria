@@ -125,9 +125,10 @@ async function main() {
 
   // Crear clientes (personas naturales y jurídicas)
   const clientes = await crearClientes(prisma, adminUserId);
+  const clientesArray = Object.values(clientes);
 
   // Crear comercializadoras
-  const comercializadoras = await crearComercializadoras(prisma, adminUserId, clientes);
+  const comercializadoras = await crearComercializadoras(prisma, adminUserId, clientesArray, sucursales);
 
   // Crear servicios
   const servicios = await crearServicios(

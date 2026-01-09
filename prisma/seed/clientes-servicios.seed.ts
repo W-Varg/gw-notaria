@@ -4,7 +4,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
   // Clientes Personas Naturales
   const cliente1 = await prisma.cliente.create({
     data: {
-      tipo: 1, // NATURAL
+      tipoCliente: 1, // NATURAL
       direccion: 'Av. 6 de Agosto #2345, La Paz',
       telefono: '77123456',
       email: 'juan.perez@email.com',
@@ -24,7 +24,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente2 = await prisma.cliente.create({
     data: {
-      tipo: 1, // NATURAL
+      tipoCliente: 1, // NATURAL
       direccion: 'Calle Murillo #456, Cochabamba',
       telefono: '72345678',
       email: 'maria.lopez@email.com',
@@ -44,7 +44,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente3 = await prisma.cliente.create({
     data: {
-      tipo: 1, // NATURAL
+      tipoCliente: 1, // NATURAL
       direccion: 'Av. Cristo Redentor #789, Santa Cruz',
       telefono: '69876543',
       email: 'carlos.mendez@email.com',
@@ -65,7 +65,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
   // Clientes Personas Jurídicas
   const cliente4 = await prisma.cliente.create({
     data: {
-      tipo: 2, // JURIDICA
+      tipoCliente: 2, // JURIDICA
       direccion: 'Av. Arce #1234, Edificio Torre Empresarial, Piso 8',
       telefono: '22334455',
       email: 'contacto@techsolutions.bo',
@@ -83,7 +83,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente5 = await prisma.cliente.create({
     data: {
-      tipo: 2, // JURIDICA
+      tipoCliente: 2, // JURIDICA
       direccion: 'Calle Comercio #567, Zona Central',
       telefono: '23445566',
       email: 'info@consultores.bo',
@@ -101,7 +101,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente6 = await prisma.cliente.create({
     data: {
-      tipo: 1, // NATURAL
+      tipoCliente: 1, // NATURAL
       direccion: 'Calle Potosí #321, La Paz',
       telefono: '76543210',
       email: 'ana.martinez@email.com',
@@ -121,7 +121,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente7 = await prisma.cliente.create({
     data: {
-      tipo: 1,
+      tipoCliente: 1,
       direccion: 'Calle Ballivián #890, Oruro',
       telefono: '71234567',
       email: 'pedro.ramirez@email.com',
@@ -141,7 +141,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente8 = await prisma.cliente.create({
     data: {
-      tipo: 1,
+      tipoCliente: 1,
       direccion: 'Av. Heroínas #234, Cochabamba',
       telefono: '68765432',
       email: 'sofia.torres@email.com',
@@ -161,7 +161,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente9 = await prisma.cliente.create({
     data: {
-      tipo: 2,
+      tipoCliente: 2,
       direccion: 'Av. Busch #456, La Paz',
       telefono: '22445566',
       email: 'contacto@innovatech.bo',
@@ -179,7 +179,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente10 = await prisma.cliente.create({
     data: {
-      tipo: 1,
+      tipoCliente: 1,
       direccion: 'Calle Junín #678, Tarija',
       telefono: '75432109',
       email: 'lucia.vega@email.com',
@@ -199,7 +199,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente11 = await prisma.cliente.create({
     data: {
-      tipo: 1,
+      tipoCliente: 1,
       direccion: 'Av. América #345, Cochabamba',
       telefono: '70987654',
       email: 'roberto.silva@email.com',
@@ -219,7 +219,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente12 = await prisma.cliente.create({
     data: {
-      tipo: 2,
+      tipoCliente: 2,
       direccion: 'Calle Colón #789, Santa Cruz',
       telefono: '33556677',
       email: 'ventas@exportbol.bo',
@@ -237,7 +237,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente13 = await prisma.cliente.create({
     data: {
-      tipo: 1,
+      tipoCliente: 1,
       direccion: 'Calle Sucre #567, Potosí',
       telefono: '73456789',
       email: 'daniela.flores@email.com',
@@ -257,7 +257,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente14 = await prisma.cliente.create({
     data: {
-      tipo: 1,
+      tipoCliente: 1,
       direccion: 'Av. Montes #890, La Paz',
       telefono: '67890123',
       email: 'fernando.rios@email.com',
@@ -277,7 +277,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente15 = await prisma.cliente.create({
     data: {
-      tipo: 2,
+      tipoCliente: 2,
       direccion: 'Calle Ayacucho #123, Cochabamba',
       telefono: '44667788',
       email: 'contacto@grupoinmobiliario.bo',
@@ -295,7 +295,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente16 = await prisma.cliente.create({
     data: {
-      tipo: 1,
+      tipoCliente: 1,
       direccion: 'Av. Villarroel #456, La Paz',
       telefono: '72109876',
       email: 'valeria.castro@email.com',
@@ -315,7 +315,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente17 = await prisma.cliente.create({
     data: {
-      tipo: 1,
+      tipoCliente: 1,
       direccion: 'Calle Bolívar #234, Santa Cruz',
       telefono: '69123456',
       email: 'andres.moreno@email.com',
@@ -335,7 +335,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente18 = await prisma.cliente.create({
     data: {
-      tipo: 2,
+      tipoCliente: 2,
       direccion: 'Av. Salamanca #678, La Paz',
       telefono: '22778899',
       email: 'info@constructoraandina.bo',
@@ -353,7 +353,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente19 = await prisma.cliente.create({
     data: {
-      tipo: 1,
+      tipoCliente: 1,
       direccion: 'Calle Linares #901, Cochabamba',
       telefono: '71876543',
       email: 'gabriela.vargas@email.com',
@@ -373,7 +373,7 @@ export async function crearClientes(prisma: PrismaClient, adminUserId: string) {
 
   const cliente20 = await prisma.cliente.create({
     data: {
-      tipo: 1,
+      tipoCliente: 1,
       direccion: 'Av. Circunvalación #345, Santa Cruz',
       telefono: '68234567',
       email: 'ricardo.arce@email.com',
@@ -508,6 +508,7 @@ export async function crearServicios(
       clienteId: clientes.cliente4.id,
       tipoDocumentoId: tiposDocumento[3].id,
       tipoTramiteId: tiposTramite[0].id,
+      sucursalId: sucursales[1]?.id || 1,
       estadoActualId: estadoRecibido?.id,
       fechaInicio: new Date('2026-01-02T09:00:00Z'),
       fechaEstimadaEntrega: new Date('2026-01-20'),
@@ -528,6 +529,7 @@ export async function crearServicios(
       clienteId: clientes.cliente5.id,
       tipoDocumentoId: tiposDocumento[4].id,
       tipoTramiteId: tiposTramite[1].id,
+      sucursalId: sucursales[0]?.id || 1,
       estadoActualId: estadoProceso?.id,
       fechaInicio: new Date('2026-01-03T14:00:00Z'),
       fechaEstimadaEntrega: new Date('2026-01-10'),
@@ -549,6 +551,7 @@ export async function crearServicios(
       clienteId: clientes.cliente6.id,
       tipoDocumentoId: tiposDocumento[5].id,
       tipoTramiteId: tiposTramite[2].id,
+      sucursalId: sucursales[2]?.id || 1,
       estadoActualId: estadoRecibido?.id,
       fechaInicio: new Date('2026-01-04T10:00:00Z'),
       fechaEstimadaEntrega: new Date('2026-01-11'),
@@ -655,6 +658,7 @@ export async function crearServicios(
       clienteId: clientes.cliente9.id,
       tipoDocumentoId: tiposDocumento[3].id,
       tipoTramiteId: tiposTramite[1].id,
+      sucursalId: sucursales[1]?.id || 1,
       estadoActualId: estadoProceso?.id,
       fechaInicio: new Date('2026-01-02T15:00:00Z'),
       fechaEstimadaEntrega: new Date('2026-01-25'),
@@ -675,6 +679,7 @@ export async function crearServicios(
       clienteId: clientes.cliente10.id,
       tipoDocumentoId: tiposDocumento[1].id,
       tipoTramiteId: tiposTramite[0].id,
+      sucursalId: sucursales[2]?.id || 1,
       estadoActualId: estadoFinalizado?.id,
       fechaInicio: new Date('2025-12-20T10:00:00Z'),
       fechaFinalizacion: new Date('2025-12-23T14:00:00Z'),
@@ -1131,8 +1136,7 @@ export async function crearDerivaciones(prisma: PrismaClient, servicios: any, us
         fechaDerivacion: new Date('2026-01-05T11:00:00Z'),
         motivo: 'Aprobado - Proceder con protocolización',
         prioridad: 'urgente',
-        comentario:
-          'Modificaciones estatutarias aprobadas. Listo para protocolización y registro.',
+        comentario: 'Modificaciones estatutarias aprobadas. Listo para protocolización y registro.',
         aceptada: false,
         fechaAceptacion: null,
         estaActiva: true,
@@ -1194,8 +1198,7 @@ export async function crearDerivaciones(prisma: PrismaClient, servicios: any, us
         estaActiva: false,
         visualizada: false,
         fechaVisualizacion: null,
-        motivoCancelacion:
-          'Error en derivación - Consulta resuelta directamente con el cliente',
+        motivoCancelacion: 'Error en derivación - Consulta resuelta directamente con el cliente',
         fechaCancelacion: new Date('2025-12-15T15:00:00Z'),
         usuarioCancelacionId: usuarios.asistenteUser.id,
       },
@@ -1245,8 +1248,7 @@ export async function crearDerivaciones(prisma: PrismaClient, servicios: any, us
         fechaDerivacion: new Date('2026-01-03T09:00:00Z'),
         motivo: 'Aprobación de estatutos de fundación',
         prioridad: 'alta',
-        comentario:
-          'Estatutos revisados y aprobados por gerencia. Proceder con protocolización.',
+        comentario: 'Estatutos revisados y aprobados por gerencia. Proceder con protocolización.',
         aceptada: true,
         fechaAceptacion: new Date('2026-01-03T10:00:00Z'),
         estaActiva: true,

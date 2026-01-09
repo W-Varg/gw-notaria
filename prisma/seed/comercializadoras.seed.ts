@@ -4,13 +4,14 @@ export async function crearComercializadoras(
   prisma: PrismaClient,
   adminUserId: string,
   clientes: any[],
+  sucursales: any[],
 ) {
   console.info('Creando comercializadoras...');
 
   const comercializadora1 = await prisma.comercializadora.create({
     data: {
       nombre: 'Urbanización Los Pinos',
-      tipo: 1, // techo
+      tipoComercializadora: 1, // techo
       metaData: {
         proyectoUrb: 'Los Pinos Fase 1',
         mza: 'A',
@@ -18,6 +19,7 @@ export async function crearComercializadoras(
         lote: '10',
         fechaRecepcion: '2026-01-05',
       },
+      sucursalId: sucursales[0]?.id || 1,
       clienteId: clientes[0].id, // Persona Natural
       consolidado: false,
       minuta: 'MIN-2026-001',
@@ -31,7 +33,7 @@ export async function crearComercializadoras(
   const comercializadora2 = await prisma.comercializadora.create({
     data: {
       nombre: 'Residencial Monumental Valle Alto',
-      tipo: 2, // monumental
+      tipoComercializadora: 2, // monumental
       metaData: {
         proyectoUrb: 'Valle Alto Premium',
         mza: 'B',
@@ -41,6 +43,7 @@ export async function crearComercializadoras(
         superficieTerreno: '500 m2',
         superficieConstruccion: '350 m2',
       },
+      sucursalId: sucursales[1]?.id || 1,
       clienteId: clientes[3].id, // Persona Jurídica
       consolidado: true,
       minuta: 'MIN-2026-002',
@@ -54,7 +57,7 @@ export async function crearComercializadoras(
   const comercializadora3 = await prisma.comercializadora.create({
     data: {
       nombre: 'Condominio Santa Rita',
-      tipo: 1, // techo
+      tipoComercializadora: 1, // techo
       metaData: {
         proyectoUrb: 'Santa Rita Residencial',
         mza: 'C',
@@ -65,6 +68,7 @@ export async function crearComercializadoras(
         piso: '3',
         departamento: '3B',
       },
+      sucursalId: sucursales[0]?.id || 1,
       clienteId: clientes[1].id, // Persona Natural
       consolidado: false,
       minuta: 'MIN-2026-003',
@@ -78,7 +82,7 @@ export async function crearComercializadoras(
   const comercializadora4 = await prisma.comercializadora.create({
     data: {
       nombre: 'Urbanización El Dorado',
-      tipo: 2, // monumental
+      tipoComercializadora: 2, // monumental
       metaData: {
         proyectoUrb: 'El Dorado Elite',
         mza: 'D',
@@ -87,6 +91,7 @@ export async function crearComercializadoras(
         fechaRecepcion: '2026-01-02',
         zona: 'Norte',
       },
+      sucursalId: sucursales[2]?.id || 1,
       clienteId: clientes[4].id, // Persona Jurídica
       consolidado: true,
       minuta: 'MIN-2026-004',
@@ -100,7 +105,7 @@ export async function crearComercializadoras(
   const comercializadora5 = await prisma.comercializadora.create({
     data: {
       nombre: 'Proyecto Las Magnolias',
-      tipo: 1, // techo
+      tipoComercializadora: 1, // techo
       metaData: {
         proyectoUrb: 'Las Magnolias',
         mza: 'E',
@@ -108,6 +113,7 @@ export async function crearComercializadoras(
         lote: '32',
         fechaRecepcion: '2026-01-04',
       },
+      sucursalId: sucursales[1]?.id || 1,
       clienteId: clientes[2].id, // Persona Natural
       consolidado: false,
       minuta: 'MIN-2026-005',
