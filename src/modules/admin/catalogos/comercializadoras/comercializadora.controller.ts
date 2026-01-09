@@ -33,7 +33,7 @@ export class ComercializadoraController {
   constructor(private readonly comercializadoraService: ComercializadoraService) {}
 
   @Post()
-  @BearerAuthPermision(PermisoEnum.CATALOGOS_CREAR)
+  @BearerAuthPermision(PermisoEnum.TIPOS_TRAMITE_CREAR)
   @Audit({ accion: TipoAccionEnum.CREATE, modulo: 'Comercializadoras' })
   @ApiOperation({ summary: 'Crear una nueva comercializadora' })
   @ApiResponse({ status: 201, description: 'Comercializadora creada exitosamente' })
@@ -43,7 +43,7 @@ export class ComercializadoraController {
   }
 
   @Get()
-  @BearerAuthPermision(PermisoEnum.CATALOGOS_LEER)
+  @BearerAuthPermision(PermisoEnum.TIPOS_TRAMITE_VER)
   @ApiOperation({ summary: 'Listar todas las comercializadoras' })
   @ApiResponse({ status: 200, description: 'Lista de comercializadoras' })
   findAll(@Query() query: ListFindAllQueryDto) {
@@ -51,7 +51,7 @@ export class ComercializadoraController {
   }
 
   @Post('filter')
-  @BearerAuthPermision(PermisoEnum.CATALOGOS_LEER)
+  @BearerAuthPermision(PermisoEnum.TIPOS_TRAMITE_VER)
   @ApiOperation({ summary: 'Filtrar comercializadoras' })
   @ApiResponse({ status: 200, description: 'Lista filtrada de comercializadoras' })
   filter(@Body() filterDto: ListComercializadoraArgsDto) {
@@ -59,7 +59,7 @@ export class ComercializadoraController {
   }
 
   @Get(':id')
-  @BearerAuthPermision(PermisoEnum.CATALOGOS_LEER)
+  @BearerAuthPermision(PermisoEnum.TIPOS_TRAMITE_VER)
   @ApiOperation({ summary: 'Obtener una comercializadora por ID' })
   @ApiResponse({ status: 200, description: 'Comercializadora encontrada' })
   @ApiResponse({ status: 404, description: 'Comercializadora no encontrada' })
@@ -68,7 +68,7 @@ export class ComercializadoraController {
   }
 
   @Patch(':id')
-  @BearerAuthPermision(PermisoEnum.CATALOGOS_ACTUALIZAR)
+  @BearerAuthPermision(PermisoEnum.TIPOS_TRAMITE_EDITAR)
   @Audit({ accion: TipoAccionEnum.UPDATE, modulo: 'Comercializadoras' })
   @ApiOperation({ summary: 'Actualizar una comercializadora' })
   @ApiResponse({ status: 200, description: 'Comercializadora actualizada exitosamente' })
@@ -82,7 +82,7 @@ export class ComercializadoraController {
   }
 
   @Delete(':id')
-  @BearerAuthPermision(PermisoEnum.CATALOGOS_ELIMINAR)
+  @BearerAuthPermision(PermisoEnum.TIPOS_TRAMITE_ELIMINAR)
   @Audit({ accion: TipoAccionEnum.DELETE, modulo: 'Comercializadoras' })
   @ApiOperation({ summary: 'Eliminar una comercializadora' })
   @ApiResponse({ status: 200, description: 'Comercializadora eliminada exitosamente' })
