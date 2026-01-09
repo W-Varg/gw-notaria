@@ -32,13 +32,13 @@ export class CreateServicioDto {
   tipoTramiteId?: string;
 
   @Expose()
-  @IsOptional()
-  @IsNumber()
-  @ApiPropertyOptional({
+  @IsInt()
+  @Min(1)
+  @ApiProperty({
     type: Number,
     description: 'ID de la sucursal donde se realiza el servicio',
   })
-  sucursalId?: number;
+  sucursalId: number;
 
   @Expose()
   @IsOptional()

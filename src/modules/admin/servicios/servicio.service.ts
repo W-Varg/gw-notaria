@@ -26,13 +26,66 @@ import { IToken } from 'src/common/decorators/token.decorator';
 export class ServicioService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  private generateCodigoTicket(): string {
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return `TKT-${timestamp}-${random}`;
+  /**
+   * Genera un código de ticket con formato: ABREV-AAMM-00000
+   * - ABREV: Abreviación de la sucursal
+   * - AA: Últimos 2 dígitos del año
+   * - MM: Mes en formato 01-12
+   * - 00000: Número secuencial de 5 dígitos (autoincremental por sucursal/mes)
+   * Ejemplo: SC69-2601-00001
+   */
+  private async generateCodigoTicket(input: { id: number; abreviacion: string }): Promise<string> {
+    // Obtener la sucursal para la abreviación
+
+    const now = new Date();
+    const anio = now.getFullYear();
+    const mes = now.getMonth() + 1; // getMonth() devuelve 0-11
+    const anioCorto = anio.toString().slice(-2); // Últimos 2 dígitos
+    const mesFormateado = mes.toString().padStart(2, '0'); // 01-12
+
+    // Obtener o crear el contador para esta sucursal/año/mes en una transacción
+    const contador = await this.prismaService.$transaction(async (prisma) => {
+      // Intentar obtener el contador existente
+      let contadorExistente = await prisma.contadorTicketSucursal.findUnique({
+        where: {
+          sucursalId_anio_mes: { sucursalId: input.id, anio, mes },
+        },
+      });
+
+      // Si no existe, crearlo
+      if (!contadorExistente) {
+        contadorExistente = await prisma.contadorTicketSucursal.create({
+          data: {
+            sucursalId: input.id,
+            anio,
+            mes,
+            ultimoNumero: 0,
+          },
+        });
+      }
+
+      // Incrementar el contador
+      const contadorActualizado = await prisma.contadorTicketSucursal.update({
+        where: { id: contadorExistente.id },
+        data: { ultimoNumero: { increment: 1 } },
+      });
+
+      return contadorActualizado;
+    });
+
+    // Formatear el número secuencial a 5 dígitos
+    const numeroFormateado = contador.ultimoNumero.toString().padStart(5, '0');
+
+    // Generar el código final: ABREV-AAMM-00000
+    return `${input.abreviacion}-${anioCorto}${mesFormateado}-${numeroFormateado}`;
   }
 
   async create(inputDto: CreateServicioDto, session: IToken) {
+    // Validar que la sucursal es obligatoria
+    if (!inputDto.sucursalId) {
+      return dataErrorValidations({ sucursalId: ['La sucursal es obligatoria'] });
+    }
+
     // Validar que el cliente existe
     const clienteExists = await this.prismaService.cliente.findUnique({
       where: { id: inputDto.clienteId },
@@ -57,19 +110,17 @@ export class ServicioService {
       return dataErrorValidations({ tipoTramiteId: ['El tipo de trámite no existe'] });
 
     // Validar sucursal si se proporciona
-    if (inputDto.sucursalId) {
-      const sucursalExists = await this.prismaService.sucursal.findUnique({
-        where: { id: inputDto.sucursalId },
-        select: { id: true },
-      });
-      if (!sucursalExists) return dataErrorValidations({ sucursalId: ['La sucursal no existe'] });
+    const sucursalExists = await this.prismaService.sucursal.findUnique({
+      where: { id: inputDto.sucursalId },
+      select: { id: true, abreviacion: true },
+    });
+    if (!sucursalExists) return dataErrorValidations({ sucursalId: ['La sucursal no existe'] });
 
-      // Validar que el tipo de trámite pertenece a la sucursal
-      if (tipoTramiteExists.sucursalId !== inputDto.sucursalId) {
-        return dataErrorValidations({
-          tipoTramiteId: ['El tipo de trámite no pertenece a la sucursal seleccionada'],
-        });
-      }
+    // Validar que el tipo de trámite pertenece a la sucursal
+    if (tipoTramiteExists.sucursalId !== inputDto.sucursalId) {
+      return dataErrorValidations({
+        tipoTramiteId: ['El tipo de trámite no pertenece a la sucursal seleccionada'],
+      });
     }
 
     // Validar que el estado existe (si se proporciona)
@@ -97,7 +148,8 @@ export class ServicioService {
       estadoInicialId = estadoInicial?.id;
     }
 
-    const codigoTicket = this.generateCodigoTicket();
+    // Generar código de ticket
+    const codigoTicket = await this.generateCodigoTicket(sucursalExists);
     const usuarioId = session.usuarioId;
 
     // Crear servicio con todas las relaciones en una transacción

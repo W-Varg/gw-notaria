@@ -92,4 +92,7 @@ export class ClienteEntity {
 
   @ApiPropertyOptional({ type: PersonaJuridica })
   personaJuridica?: PersonaJuridica;
+
+  @ApiPropertyOptional({ type: Array })
+  comercializadoras?: any[];
 }

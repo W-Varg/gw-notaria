@@ -20,6 +20,9 @@ export class Servicio {
   @ApiProperty()
   clienteId: string;
 
+  @ApiPropertyOptional({ type: Number })
+  comercializadoraId?: number;
+
   @ApiProperty()
   tipoDocumentoId: string;
 
@@ -74,6 +77,9 @@ export class Servicio {
   // Relaciones
   @ApiPropertyOptional()
   cliente?: ClienteEntity;
+
+  @ApiPropertyOptional()
+  comercializadora?: any;
 
   @ApiPropertyOptional()
   tipoDocumento?: TipoDocumentoEntity;

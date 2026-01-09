@@ -26,6 +26,7 @@ import {
   crearResponsables,
   crearDerivaciones,
 } from './clientes-servicios.seed';
+import { crearComercializadoras } from './comercializadoras.seed';
 import {
   crearNotificaciones,
   crearMensajesContacto,
@@ -125,6 +126,9 @@ async function main() {
   // Crear clientes (personas naturales y jurídicas)
   const clientes = await crearClientes(prisma, adminUserId);
 
+  // Crear comercializadoras
+  const comercializadoras = await crearComercializadoras(prisma, adminUserId, clientes);
+
   // Crear servicios
   const servicios = await crearServicios(
     prisma,
@@ -178,6 +182,7 @@ async function clearDatabase() {
   await prisma.responsableServicio.deleteMany();
   await prisma.historialEstadosServicio.deleteMany();
   await prisma.servicio.deleteMany();
+  await prisma.comercializadora.deleteMany();
   await prisma.personaJuridica.deleteMany();
   await prisma.personaNatural.deleteMany();
   await prisma.cliente.deleteMany();
@@ -194,6 +199,7 @@ async function clearDatabase() {
   await prisma.tokenTemporal.deleteMany();
   await prisma.configuracionAplicacion.deleteMany();
   await prisma.usuario.deleteMany();
+  await prisma.contadorTicketSucursal.deleteMany();
   await prisma.sucursal.deleteMany();
 }
 

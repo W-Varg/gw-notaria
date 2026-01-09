@@ -7,6 +7,7 @@ import { TipoDocumentoModule } from './tipos-documento/tipo-documento.module';
 import { PlantillaDocumentoModule } from './plantillas-documento/plantilla-documento.module';
 import { EstadoTramiteModule } from './estados-tramite/estado-tramite.module';
 import { SucursalModule } from './sucursales/sucursal.module';
+import { ComercializadoraModule } from './comercializadoras/comercializadora.module';
 
 const modules = [
   SucursalModule,
@@ -16,6 +17,7 @@ const modules = [
   EstadoTramiteModule,
   CuentaBancariaModule,
   PlantillaDocumentoModule,
+  ComercializadoraModule,
 ];
 @Module({
   imports: [
