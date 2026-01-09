@@ -289,6 +289,7 @@ model Sucursal {
   tiposTramite         TipoTramite[] // tramites por sucursal
   servicios            Servicio[]
   contadoresTicket     ContadorTicketSucursal[]
+  comercializadoras    Comercializadora[]
 
   @@map("cat_sucursales")
   @@schema("public")
@@ -498,7 +499,7 @@ model EstadoTramite {
 
 model Cliente {
   id                 String   @id @default(cuid()) @db.VarChar(26)
-  tipo               Int // 1 = NATURAL, 2 = JURIDICA
+  tipoCliente        Int // 1 = NATURAL, 2 = JURIDICA @map("tipo")
   direccion          String?  @db.VarChar(255)
   telefono           String?  @db.VarChar(20)
   email              String?  @db.VarChar(100)
@@ -558,7 +559,7 @@ model Comercializadora {
   id                   Int        @id @default(autoincrement())
   nombre               String     @unique @db.VarChar(150)
   /// tipo 1=techo, 2 = monumental
-  tipo                 Int
+  tipoComercializadora Int
   // datos como pryecto urb, mza, proy, lote, fecha de recepcion
   metaData             Json
   sucursalId           Int
@@ -570,12 +571,13 @@ model Comercializadora {
   /// fecha de recepcion en fisico del documento
   fechaEnvio           DateTime?
   fechaEnvioTestimonio DateTime?
-  cliente              Cliente    @relation(fields: [clienteId], references: [id])
-  servicios            Servicio[]
   userCreateId         String
   userUpdateId         String?
   fechaCreacion        DateTime   @default(now())
   fechaActualizacion   DateTime   @updatedAt
+  cliente              Cliente    @relation(fields: [clienteId], references: [id])
+  servicios            Servicio[]
+  sucursal             Sucursal?  @relation(fields: [sucursalId], references: [id], onDelete: Restrict)
 
   @@map("core_comercializadoras")
   @@schema("public")

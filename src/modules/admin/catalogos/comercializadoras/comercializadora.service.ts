@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import {
   CreateComercializadoraDto,
   UpdateComercializadoraDto,
-  ListComercializadoraArgsDto,
 } from './dto/comercializadora.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
 import {
@@ -11,16 +10,35 @@ import {
   dataResponseSuccess,
 } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
-import { Comercializadora } from './comercializadora.entity';
+import { Comercializadora, ComercializadoraDetail } from './comercializadora.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken } from 'src/common/decorators/token.decorator';
+import { ListComercializadoraArgsDto } from './dto/comercializadora.where.input';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class ComercializadoraService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(inputDto: CreateComercializadoraDto, session: IToken) {
+    // Validar tipoComercializadora (1=techo o 2=monumental)
+    if (inputDto.tipoComercializadora !== 1 && inputDto.tipoComercializadora !== 2) {
+      return dataErrorValidations({ tipoComercializadora: ['El tipo debe ser 1 (techo) o 2 (monumental)'] });
+    }
+
+    // Validar que la sucursal existe
+    if (inputDto.sucursalId) {
+      const sucursalExists = await this.prismaService.sucursal.findUnique({
+        where: { id: inputDto.sucursalId },
+        select: { id: true },
+      });
+
+      if (!sucursalExists) {
+        return dataErrorValidations({ sucursalId: ['La sucursal no existe'] });
+      }
+    }
+
     // Validar que el cliente existe
     const clienteExists = await this.prismaService.cliente.findUnique({
       where: { id: inputDto.clienteId },
@@ -31,34 +49,24 @@ export class ComercializadoraService {
       return dataErrorValidations({ clienteId: ['El cliente no existe'] });
     }
 
-    // Validar tipo (1 o 2)
-    if (inputDto.tipo !== 1 && inputDto.tipo !== 2) {
-      return dataErrorValidations({ tipo: ['El tipo debe ser 1 (techo) o 2 (monumental)'] });
-    }
+    const metaData = (
+      inputDto.metaData ? structuredClone(inputDto.metaData) : {}
+    ) as Prisma.InputJsonValue;
 
     const result = await this.prismaService.comercializadora.create({
       data: {
         nombre: inputDto.nombre,
-        tipo: inputDto.tipo,
-        metaData: inputDto.metaData,
-        departamento: inputDto.departamento,
+        tipoComercializadora: inputDto.tipoComercializadora,
+        metaData,
+        sucursalId: inputDto.sucursalId,
         clienteId: inputDto.clienteId,
-        consolidado: inputDto.consolidado ?? false,
         minuta: inputDto.minuta,
         protocolo: inputDto.protocolo,
-        fechaEnvio: inputDto.fechaEnvio ? new Date(inputDto.fechaEnvio) : null,
+        fechaEnvio: inputDto.fechaEnvio ? dayjs(inputDto.fechaEnvio).toDate() : null,
         fechaEnvioTestimonio: inputDto.fechaEnvioTestimonio
-          ? new Date(inputDto.fechaEnvioTestimonio)
+          ? dayjs(inputDto.fechaEnvioTestimonio).toDate()
           : null,
         userCreateId: session.usuarioId,
-      },
-      include: {
-        cliente: {
-          include: {
-            personaNatural: true,
-            personaJuridica: true,
-          },
-        },
       },
     });
 
@@ -73,14 +81,6 @@ export class ComercializadoraService {
         skip,
         take,
         orderBy,
-        include: {
-          cliente: {
-            include: {
-              personaNatural: true,
-              personaJuridica: true,
-            },
-          },
-        },
       }),
       pagination ? this.prismaService.comercializadora.count() : undefined,
     ]);
@@ -95,14 +95,50 @@ export class ComercializadoraService {
 
   async filter(inputDto: ListComercializadoraArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
-    const { nombre, tipo, departamento, clienteId, consolidado } = inputDto.where || {};
+    const { where } = inputDto;
+
     const whereInput: Prisma.ComercializadoraWhereInput = {};
 
-    if (nombre) whereInput.nombre = { contains: nombre, mode: 'insensitive' };
-    if (tipo !== undefined) whereInput.tipo = tipo;
-    if (departamento) whereInput.departamento = { contains: departamento, mode: 'insensitive' };
-    if (clienteId) whereInput.clienteId = clienteId;
-    if (consolidado !== undefined) whereInput.consolidado = consolidado;
+    // Aplicar filtros
+    if (where?.nombre) {
+      whereInput.nombre = where.nombre;
+    }
+
+    if (where?.tipoComercializadora) {
+      whereInput.tipoComercializadora = where.tipoComercializadora;
+    }
+
+    if (where?.sucursalId) {
+      whereInput.sucursalId = where.sucursalId;
+    }
+
+    if (where?.clienteId) {
+      whereInput.clienteId = where.clienteId;
+    }
+
+    if (where?.consolidado) {
+      whereInput.consolidado = where.consolidado;
+    }
+
+    if (where?.minuta) {
+      whereInput.minuta = where.minuta;
+    }
+
+    if (where?.protocolo) {
+      whereInput.protocolo = where.protocolo;
+    }
+
+    if (where?.fechaEnvio) {
+      whereInput.fechaEnvio = where.fechaEnvio;
+    }
+
+    if (where?.fechaEnvioTestimonio) {
+      whereInput.fechaEnvioTestimonio = where.fechaEnvioTestimonio;
+    }
+
+    if (where?.fechaCreacion) {
+      whereInput.fechaCreacion = where.fechaCreacion;
+    }
 
     const [list, total] = await Promise.all([
       this.prismaService.comercializadora.findMany({
@@ -110,14 +146,6 @@ export class ComercializadoraService {
         skip,
         take,
         orderBy,
-        include: {
-          cliente: {
-            include: {
-              personaNatural: true,
-              personaJuridica: true,
-            },
-          },
-        },
       }),
       this.prismaService.comercializadora.count({ where: whereInput }),
     ]);
@@ -133,24 +161,48 @@ export class ComercializadoraService {
       where: { id },
       include: {
         cliente: {
-          include: {
-            personaNatural: true,
-            personaJuridica: true,
+          select: {
+            id: true,
+            tipoCliente: true,
+            personaNatural: {
+              select: {
+                nombres: true,
+                apellidos: true,
+                numeroDocumento: true,
+              },
+            },
+            personaJuridica: {
+              select: {
+                razonSocial: true,
+                nit: true,
+              },
+            },
+          },
+        },
+        sucursal: {
+          select: {
+            id: true,
+            nombre: true,
+            abreviacion: true,
+            departamento: true,
           },
         },
         servicios: {
-          include: {
-            tipoDocumento: true,
-            tipoTramite: true,
-            estadoActual: true,
+          select: {
+            id: true,
+            codigoTicket: true,
+            estadoActualId: true,
+            tipoTramiteId: true,
           },
         },
       },
     });
 
-    if (!item) return dataResponseError('Comercializadora no encontrada');
+    if (!item) {
+      return dataResponseError('Comercializadora no encontrada');
+    }
 
-    return dataResponseSuccess<Comercializadora>({ data: item });
+    return dataResponseSuccess({ data: item });
   }
 
   async update(id: number, updateDto: UpdateComercializadoraDto, session: IToken) {
@@ -159,7 +211,26 @@ export class ComercializadoraService {
       select: { id: true },
     });
 
-    if (!exists) return dataResponseError('Comercializadora no encontrada');
+    if (!exists) {
+      return dataResponseError('Comercializadora no encontrada');
+    }
+
+    // Validar tipoComercializadora si se actualiza
+    if (updateDto.tipoComercializadora !== undefined && updateDto.tipoComercializadora !== 1 && updateDto.tipoComercializadora !== 2) {
+      return dataErrorValidations({ tipoComercializadora: ['El tipo debe ser 1 (techo) o 2 (monumental)'] });
+    }
+
+    // Validar sucursal si se actualiza
+    if (updateDto.sucursalId) {
+      const sucursalExists = await this.prismaService.sucursal.findUnique({
+        where: { id: updateDto.sucursalId },
+        select: { id: true },
+      });
+
+      if (!sucursalExists) {
+        return dataErrorValidations({ sucursalId: ['La sucursal no existe'] });
+      }
+    }
 
     // Validar cliente si se actualiza
     if (updateDto.clienteId) {
@@ -167,38 +238,47 @@ export class ComercializadoraService {
         where: { id: updateDto.clienteId },
         select: { id: true },
       });
-      if (!clienteExists) return dataResponseError('El cliente no existe');
+
+      if (!clienteExists) {
+        return dataErrorValidations({ clienteId: ['El cliente no existe'] });
+      }
     }
 
-    // Validar tipo si se actualiza
-    if (updateDto.tipo !== undefined && updateDto.tipo !== 1 && updateDto.tipo !== 2) {
-      return dataErrorValidations({ tipo: ['El tipo debe ser 1 (techo) o 2 (monumental)'] });
-    }
-
-    const dataToUpdate: any = {
-      ...updateDto,
+    const dataToUpdate: Prisma.ComercializadoraUpdateInput = {
       userUpdateId: session.usuarioId,
     };
 
-    // Convertir fechas si están presentes
-    if (updateDto.fechaEnvio) {
-      dataToUpdate.fechaEnvio = new Date(updateDto.fechaEnvio);
+    const metaData = (
+      updateDto.metaData ? structuredClone(updateDto.metaData) : {}
+    ) as Prisma.InputJsonValue;
+
+    // Aplicar actualizaciones
+    if (updateDto.nombre !== undefined) dataToUpdate.nombre = updateDto.nombre;
+    if (updateDto.tipoComercializadora !== undefined) dataToUpdate.tipoComercializadora = updateDto.tipoComercializadora;
+    if (updateDto.metaData !== undefined) dataToUpdate.metaData = metaData;
+    if (updateDto.sucursalId !== undefined)
+      dataToUpdate.sucursal = {
+        connect: { id: updateDto.sucursalId },
+      };
+
+    if (updateDto.clienteId !== undefined) {
+      dataToUpdate.cliente = { connect: { id: updateDto.clienteId } };
     }
-    if (updateDto.fechaEnvioTestimonio) {
-      dataToUpdate.fechaEnvioTestimonio = new Date(updateDto.fechaEnvioTestimonio);
+    if (updateDto.consolidado !== undefined) dataToUpdate.consolidado = updateDto.consolidado;
+    if (updateDto.minuta !== undefined) dataToUpdate.minuta = updateDto.minuta;
+    if (updateDto.protocolo !== undefined) dataToUpdate.protocolo = updateDto.protocolo;
+    if (updateDto.fechaEnvio !== undefined) {
+      dataToUpdate.fechaEnvio = updateDto.fechaEnvio ? dayjs(updateDto.fechaEnvio).toDate() : null;
+    }
+    if (updateDto.fechaEnvioTestimonio !== undefined) {
+      dataToUpdate.fechaEnvioTestimonio = updateDto.fechaEnvioTestimonio
+        ? dayjs(updateDto.fechaEnvioTestimonio).toDate()
+        : null;
     }
 
     const result = await this.prismaService.comercializadora.update({
       where: { id },
       data: dataToUpdate,
-      include: {
-        cliente: {
-          include: {
-            personaNatural: true,
-            personaJuridica: true,
-          },
-        },
-      },
     });
 
     return dataResponseSuccess<Comercializadora>({ data: result });
@@ -212,8 +292,8 @@ export class ComercializadoraService {
 
     if (!exists) return dataResponseError('Comercializadora no encontrada');
 
-    await this.prismaService.comercializadora.delete({ where: { id } });
+    const result = await this.prismaService.comercializadora.delete({ where: { id } });
 
-    return dataResponseSuccess({ data: 'Comercializadora eliminada' });
+    return dataResponseSuccess<Comercializadora>({ data: result });
   }
 }

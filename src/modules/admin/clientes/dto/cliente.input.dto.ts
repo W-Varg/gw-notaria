@@ -84,7 +84,7 @@ export class CreateClienteDto {
   @IsDefined()
   @IsInt()
   @ApiProperty({ type: Number, enum: TipoClienteEnum, description: '1 = NATURAL, 2 = JURIDICA' })
-  tipo: TipoClienteEnum;
+  tipoCliente: TipoClienteEnum;
 
   @Expose()
   @IsEmail()
@@ -136,7 +136,7 @@ class ClienteWhereInput {
   })
   @IsOptional()
   @IsInt()
-  tipo?: TipoClienteEnum;
+  tipoCliente?: TipoClienteEnum;
 
   @Expose()
   @ApiPropertyOptional({ type: StringFilter })

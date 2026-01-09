@@ -29,12 +29,12 @@ export class ClienteService {
     }
 
     // Validar que se proporcionen los datos específicos según el tipo
-    if (inputDto.tipo === TipoClienteEnum.NATURAL && !inputDto.personaNatural) {
+    if (inputDto.tipoCliente === TipoClienteEnum.NATURAL && !inputDto.personaNatural) {
       return dataErrorValidations({
         personaNatural: ['Debe proporcionar los datos de persona natural'],
       });
     }
-    if (inputDto.tipo === TipoClienteEnum.JURIDICA && !inputDto.personaJuridica) {
+    if (inputDto.tipoCliente === TipoClienteEnum.JURIDICA && !inputDto.personaJuridica) {
       return dataErrorValidations({
         personaJuridica: ['Debe proporcionar los datos de persona jurídica'],
       });
@@ -62,12 +62,12 @@ export class ClienteService {
 
     const result = await this.prismaService.cliente.create({
       data: {
-        tipo: inputDto.tipo,
+        tipoCliente: inputDto.tipoCliente,
         email: inputDto.email,
         telefono: inputDto.telefono,
         direccion: inputDto.direccion,
         userCreateId: session.usuarioId,
-        ...(inputDto.tipo === TipoClienteEnum.NATURAL && {
+        ...(inputDto.tipoCliente === TipoClienteEnum.NATURAL && {
           personaNatural: {
             create: {
               ...inputDto.personaNatural,
@@ -75,7 +75,7 @@ export class ClienteService {
             },
           },
         }),
-        ...(inputDto.tipo === TipoClienteEnum.JURIDICA && {
+        ...(inputDto.tipoCliente === TipoClienteEnum.JURIDICA && {
           personaJuridica: {
             create: {
               ...inputDto.personaJuridica,
@@ -121,7 +121,7 @@ export class ClienteService {
     const list = await this.prismaService.cliente.findMany({
       select: {
         id: true,
-        tipo: true,
+        tipoCliente: true,
         email: true,
         telefono: true,
         personaNatural: {
@@ -148,10 +148,10 @@ export class ClienteService {
 
   async filter(inputDto: ListClienteArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
-    const { tipo, email, telefono, direccion } = inputDto.where || {};
+    const { tipoCliente: tipo, email, telefono, direccion } = inputDto.where || {};
     const whereInput: Prisma.ClienteWhereInput = {};
 
-    if (tipo) whereInput.tipo = tipo;
+    if (tipo) whereInput.tipoCliente = tipo;
     if (email) whereInput.email = email;
     if (telefono) whereInput.telefono = telefono;
     if (direccion) whereInput.direccion = direccion;
@@ -191,7 +191,7 @@ export class ClienteService {
   async update(id: string, updateDto: UpdateClienteDto, session: IToken) {
     const exists = await this.prismaService.cliente.findUnique({
       where: { id },
-      select: { id: true, tipo: true },
+      select: { id: true, tipoCliente: true },
     });
     if (!exists) return dataResponseError('Cliente no encontrado');
 
@@ -237,7 +237,7 @@ export class ClienteService {
     const result = await this.prismaService.cliente.update({
       where: { id },
       data: {
-        tipo: updateDto.tipo,
+        tipoCliente: updateDto.tipoCliente,
         email: updateDto.email,
         telefono: updateDto.telefono,
         direccion: updateDto.direccion,

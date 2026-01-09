@@ -64,7 +64,7 @@ export class ClienteEntity {
   id: string;
 
   @ApiProperty({ type: Number, enum: TipoClienteEnum, description: '1 = NATURAL, 2 = JURIDICA' })
-  tipo: TipoClienteEnum;
+  tipoCliente: TipoClienteEnum;
 
   @ApiPropertyOptional()
   email?: string;

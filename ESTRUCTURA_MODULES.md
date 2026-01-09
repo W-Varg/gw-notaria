@@ -22,7 +22,8 @@ Cada módulo debe seguir esta estructura:
 ```
 src/modules/admin/catalogos/[nombre-modulo]/
 ├── dto/
-│   ├── [nombre].input.dto.ts      # DTOs de entrada (Create, Update, Filter)
+│   ├── [nombre].input.dto.ts      # DTOs de entrada (Create, Update)
+│   ├── [nombre].where.input.ts    # DTOs de filtros (WhereInput, SelectInput, ListArgsDto)
 │   └── [nombre].response.ts       # DTOs de respuesta (tipos de retorno)
 ├── [nombre].controller.ts         # Controlador con endpoints
 ├── [nombre].service.ts            # Lógica de negocio
@@ -31,13 +32,18 @@ src/modules/admin/catalogos/[nombre-modulo]/
 └── README.md                      # Documentación del módulo
 ```
 
+**Nota sobre separación de archivos:**
+- `[nombre].input.dto.ts`: Contiene solo `CreateDto` y `UpdateDto`
+- `[nombre].where.input.ts`: Contiene `WhereInput`, `SelectInput` y `ListArgsDto` (filtros)
+- Esta separación mejora la organización y mantiene los archivos más pequeños y enfocados
+
 ---
 
 ## 📥 DTOs de Entrada (Input)
 
 ### Archivo: `[nombre].input.dto.ts`
 
-Este archivo contiene todos los DTOs para las operaciones de entrada del módulo.
+Este archivo contiene los DTOs para crear y actualizar registros del módulo.
 
 ### 1️⃣ CreateDto - DTO de Creación
 
@@ -122,6 +128,12 @@ export class Update[Nombre]Dto extends PartialType(Create[Nombre]Dto) {
 ```
 
 **Nota:** `PartialType` convierte automáticamente todos los campos del DTO base en opcionales.
+
+---
+
+### Archivo: `[nombre].where.input.ts`
+
+Este archivo contiene los DTOs para filtrado, selección de campos y listado paginado.
 
 ### 3️⃣ WhereInput - DTO de Filtros
 
@@ -584,10 +596,15 @@ async getForSelect() {
 @BearerAuthPermision([PermisoEnum.[NOMBRE]_VER])
 @ApiResponse({ status: 200, type: () => Response[Nombre]DetailType })
 @ApiDescription('Obtener un [nombre] por ID', [PermisoEnum.[NOMBRE]_VER])
-findOne(@Param('id') id: string) {
-  return this.[nombre]Service.findOne(id);
+findOne(@Param() params: CommonParamsDto.Id) {
+  return this.[nombre]Service.findOne(params.id);
 }
 ```
+
+**Nota sobre parámetros:**
+- Se usa `CommonParamsDto.Id` para validación automática del parámetro `id`
+- `CommonParamsDto` proporciona validación de tipos (number, string, etc.)
+- Elimina la necesidad de usar `ParseIntPipe` o `ParseUUIDPipe` manualmente
 
 **Retorna:** `Response[Nombre]DetailType` (con relaciones)
 
@@ -605,11 +622,11 @@ findOne(@Param('id') id: string) {
   descripcion: 'Actualizar [nombre]',
 })
 update(
-  @Param('id') id: string,
+  @Param() params: CommonParamsDto.Id,
   @Body() updateDto: Update[Nombre]Dto,
   @AuthUser() session: IToken,
 ) {
-  return this.[nombre]Service.update(id, updateDto, session);
+  return this.[nombre]Service.update(params.id, updateDto, session);
 }
 ```
 
@@ -628,8 +645,8 @@ update(
   tabla: '[Nombre]',
   descripcion: 'Eliminar [nombre]',
 })
-remove(@Param('id') id: string) {
-  return this.[nombre]Service.remove(id);
+remove(@Param() params: CommonParamsDto.Id) {
+  return this.[nombre]Service.remove(params.id);
 }
 ```
 
@@ -693,6 +710,7 @@ Los endpoints con rutas específicas (como `/select`, `/list`) deben declararse 
 | Módulo | `[nombre].module.ts` | `categoria.module.ts` |
 | Entidad | `[nombre].entity.ts` | `categoria.entity.ts` |
 | Input DTOs | `[nombre].input.dto.ts` | `categoria.input.dto.ts` |
+| Where DTOs | `[nombre].where.input.ts` | `categoria.where.input.ts` |
 | Response DTOs | `[nombre].response.ts` | `categoria.response.ts` |
 
 **Nota:** 
@@ -908,6 +926,7 @@ import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PermisoEnum } from 'src/enums/permisos.enum';
 import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Categorías')
 @Controller('categorias')
@@ -951,8 +970,8 @@ export class CategoriaController {
   @BearerAuthPermision([PermisoEnum.CATEGORIAS_VER])
   @ApiResponse({ status: 200, type: () => ResponseCategoriaDetailType })
   @ApiDescription('Obtener una categoría por ID', [PermisoEnum.CATEGORIAS_VER])
-  findOne(@Param('id') id: string) {
-    return this.categoriaService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.categoriaService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -966,11 +985,11 @@ export class CategoriaController {
     descripcion: 'Actualizar categoría',
   })
   update(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateCategoriaDto: UpdateCategoriaDto,
     @AuthUser() session: IToken,
   ) {
-    return this.categoriaService.update(id, updateCategoriaDto, session);
+    return this.categoriaService.update(params.id, updateCategoriaDto, session);
   }
 
   @Delete(':id')
@@ -983,8 +1002,8 @@ export class CategoriaController {
     tabla: 'Categoria',
     descripcion: 'Eliminar categoría',
   })
-  remove(@Param('id') id: string) {
-    return this.categoriaService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.categoriaService.remove(params.id);
   }
 }
 ```
@@ -1025,24 +1044,24 @@ export class ProductoController {
   @BearerAuthPermision([PermisoEnum.PRODUCTOS_VER])
   @ApiResponse({ status: 200, type: () => ResponseProductoType })
   @ApiDescription('Obtener un producto por ID', [PermisoEnum.PRODUCTOS_VER])
-  findOne(@Param('id') id: string) {
-    return this.productoService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.productoService.findOne(params.id);
   }
 
   @Patch(':id')
   @BearerAuthPermision([PermisoEnum.PRODUCTOS_EDITAR])
   @ApiResponse({ status: 200, type: () => ResponseProductoType })
   @ApiDescription('Actualizar un producto por ID', [PermisoEnum.PRODUCTOS_EDITAR])
-  update(@Param('id') id: string, @Body() updateDto: UpdateProductoDto) {
-    return this.productoService.update(id, updateDto);
+  update(@Param() params: CommonParamsDto.Id, @Body() updateDto: UpdateProductoDto) {
+    return this.productoService.update(params.id, updateDto);
   }
 
   @Delete(':id')
   @BearerAuthPermision([PermisoEnum.PRODUCTOS_ELIMINAR])
   @ApiResponse({ status: 200, type: () => ResponseProductoType })
   @ApiDescription('Eliminar un producto por ID', [PermisoEnum.PRODUCTOS_ELIMINAR])
-  remove(@Param('id') id: string) {
-    return this.productoService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.productoService.remove(params.id);
   }
 }
 ```
@@ -1072,6 +1091,11 @@ Al crear un nuevo módulo CRUD, asegúrate de:
 - [ ] Campos tipo `Decimal` → `@IsNumber()` en DTO
 - [ ] Campos tipo `DateTime` → `@IsDateString()` o `@IsISO8601()` si se envían como string
 - [ ] `Update[Nombre]Dto` usando `PartialType`
+- [ ] Todos los decoradores de validación (`@IsString`, `@IsOptional`, etc.)
+- [ ] Todos los decoradores de Swagger (`@ApiProperty`, `@ApiPropertyOptional`)
+- [ ] Decorador `@Expose()` en todos los campos
+
+### Where DTOs (`[nombre].where.input.ts`)
 - [ ] `[Nombre]WhereInput` con filtros apropiados
   - [ ] `StringFilter` / `StringNullableFilter` para strings
   - [ ] `IntFilter` / `FloatFilter` / `DecimalFilter` para números
@@ -1080,9 +1104,8 @@ Al crear un nuevo módulo CRUD, asegúrate de:
   - [ ] Campos de relación como `string` simple para filtrar por ID
 - [ ] `[Nombre]SelectInput` con todos los campos del modelo
 - [ ] `List[Nombre]ArgsDto` extendiendo `BaseFilterDto`
-- [ ] Todos los decoradores de validación (`@IsString`, `@IsOptional`, etc.)
-- [ ] Todos los decoradores de Swagger (`@ApiProperty`, `@ApiPropertyOptional`)
-- [ ] Decorador `@Expose()` en todos los campos
+- [ ] Todos los decoradores (`@Expose()`, `@IsOptional()`, `@Type()`, `@ValidateNested()`)
+- [ ] Todos los decoradores de Swagger (`@ApiPropertyOptional`)
 
 ### Response Types (`[nombre].response.ts`)
 - [ ] `Response[Nombrselect` con `Response[Nombre]sType` (opcional, para dropdowns)
@@ -1117,6 +1140,7 @@ Al crear un nuevo módulo CRUD, asegúrate de:
 - [ ] Usar `dataErrorValidations()` para errores de validación de campos específicos
 - [ ] Usar `dataResponseError()` para errores generales (no encontrado, permisos, etc.)
 - [ ] Importar funciones: `import { dataErrorValidations, dataResponseError, dataResponseSuccess } from 'src/common/dtos';`
+- [ ] **Usar `dayjs` en vez de `new Date()` para conversiones de fechas**: `import dayjs from 'dayjs';`
 - [ ] Usar `dataErrorValidations()` para errores de validación de campos
 - [ ] Usar `dataResponseError()` para errores generales (no encontrado, etc.)ombre]sType`
 - [ ] Endpoint `GET /:id` con `Response[Nombre]DetailType`
@@ -1586,6 +1610,13 @@ return dataResponseSuccess<Sucursal>({
 5. **Importación**: Ambas funciones se importan desde el mismo lugar
    ```typescript
    import { dataErrorValidations, dataResponseError, dataResponseSuccess } from 'src/common/dtos';
+   ```
+
+6. **Conversión de fechas**: Usa `dayjs` en vez de `new Date()` para convertir fechas
+   ```typescript
+   import dayjs from 'dayjs';
+
+   ademas usar fechas en formato iso
    ```
 
 ---

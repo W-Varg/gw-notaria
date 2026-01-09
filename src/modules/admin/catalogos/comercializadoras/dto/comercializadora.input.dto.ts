@@ -1,89 +1,159 @@
-import { IsString, IsInt, IsOptional, IsBoolean, IsDateString, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { Expose, Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsDefined,
+  IsInt,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
+import { BaseFilterDto } from 'src/common/dtos/filters.dto';
+import { BoolFilter } from 'src/common/dtos/prisma/bool-filter.input';
+import { IntFilter } from 'src/common/dtos/prisma/int-filter.input';
+import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
+import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
+import { DateTimeFilter, DateTimeNullableFilter } from 'src/common/dtos';
+
+class ComercializadoraMetaData {
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String, description: 'Proyecto urbano' })
+  proyectoUrb?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String, description: 'Manzana' })
+  mza?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String, description: 'Proyecto' })
+  proy?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String, description: 'Lote' })
+  lote?: string;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Date, description: 'Fecha de recepción' })
+  fechaRecepcion?: Date | string;
+}
 
 export class CreateComercializadoraDto {
-  @ApiProperty({ description: 'Nombre de la comercializadora', example: 'Comercializadora Los Pinos' })
+  @Expose()
+  @IsDefined()
   @IsString()
+  @IsNotEmpty()
+  @MinLength(3)
+  @MaxLength(150)
+  @ApiProperty({
+    description: 'Nombre de la comercializadora',
+    example: 'Comercializadora Los Pinos',
+    minLength: 3,
+    maxLength: 150,
+  })
   nombre: string;
 
-  @ApiProperty({ description: 'Tipo de comercializadora: 1=techo, 2=monumental', example: 1, enum: [1, 2] })
+  @Expose()
+  @IsDefined()
   @IsInt()
-  tipo: number;
+  @ApiProperty({
+    description: 'Tipo de comercializadora: 1=techo, 2=monumental',
+    example: 1,
+    enum: [1, 2],
+  })
+  tipoComercializadora: number;
 
-  @ApiProperty({ description: 'Metadatos adicionales (proyecto, mza, lote, etc.)', example: { proyectoUrb: 'Los Pinos', mza: 'A', lote: '10' } })
-  @IsObject()
-  metaData: Record<string, any>;
+  @Expose()
+  @IsDefined()
+  @ValidateNested()
+  @ApiProperty({
+    description: 'Metadatos adicionales (proyecto urb, mza, proy, lote, fecha recepción)',
+    example: { proyectoUrb: 'Los Pinos', mza: 'A', proy: 'Etapa 1', lote: '10' },
+    type: ComercializadoraMetaData,
+  })
+  metaData: ComercializadoraMetaData;
 
-  @ApiProperty({ description: 'Departamento', example: 'La Paz' })
+  @Expose()
+  @IsDefined()
+  @IsInt()
+  @ApiProperty({
+    description: 'ID de la sucursal',
+    example: 1,
+  })
+  sucursalId: number;
+
+  @Expose()
+  @IsDefined()
   @IsString()
-  departamento: string;
-
-  @ApiProperty({ description: 'ID del cliente asociado', example: 'ckxxx123456789' })
-  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    description: 'ID del cliente asociado',
+    example: 'clkxxx123456789',
+  })
   clienteId: string;
 
-  @ApiPropertyOptional({ description: 'Indica si está consolidado', example: false })
-  @IsOptional()
-  @IsBoolean()
-  consolidado?: boolean;
-
-  @ApiPropertyOptional({ description: 'Minuta', example: 'Minuta 123/2026' })
+  @Expose()
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @ApiPropertyOptional({
+    description: 'Minuta',
+    example: 'Minuta 123/2026',
+    maxLength: 255,
+  })
   minuta?: string;
 
-  @ApiPropertyOptional({ description: 'Protocolo', example: 'Protocolo 456/2026' })
+  @Expose()
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  @ApiPropertyOptional({
+    description: 'Protocolo',
+    example: 'Protocolo 456/2026',
+    maxLength: 255,
+  })
   protocolo?: string;
 
-  @ApiPropertyOptional({ description: 'Fecha de envío físico del documento', example: '2026-01-09T00:00:00.000Z' })
+  @Expose()
   @IsOptional()
-  @IsDateString()
-  fechaEnvio?: string;
+  @ApiPropertyOptional({
+    description: 'Fecha de envío físico del documento',
+    example: '2026-01-09T00:00:00.000Z',
+    type: 'string',
+    format: 'date-time',
+  })
+  fechaEnvio?: Date | string;
 
-  @ApiPropertyOptional({ description: 'Fecha de envío del testimonio', example: '2026-01-09T00:00:00.000Z' })
+  @Expose()
   @IsOptional()
-  @IsDateString()
-  fechaEnvioTestimonio?: string;
+  @ApiPropertyOptional({
+    description: 'Fecha de envío del testimonio',
+    example: '2026-01-09T00:00:00.000Z',
+    type: 'string',
+    format: 'date-time',
+  })
+  fechaEnvioTestimonio?: Date | string;
 }
 
-export class UpdateComercializadoraDto extends PartialType(CreateComercializadoraDto) {}
-
-export class ComercializadoraWhereInput {
-  @ApiPropertyOptional({ description: 'Filtro por nombre', example: 'Los Pinos' })
-  @IsOptional()
-  @IsString()
-  nombre?: string;
-
-  @ApiPropertyOptional({ description: 'Filtro por tipo: 1=techo, 2=monumental', example: 1 })
-  @IsOptional()
-  @IsInt()
-  @Type(() => Number)
-  tipo?: number;
-
-  @ApiPropertyOptional({ description: 'Filtro por departamento', example: 'La Paz' })
-  @IsOptional()
-  @IsString()
-  departamento?: string;
-
-  @ApiPropertyOptional({ description: 'Filtro por cliente ID', example: 'ckxxx123456789' })
-  @IsOptional()
-  @IsString()
-  clienteId?: string;
-
-  @ApiPropertyOptional({ description: 'Filtro por consolidado', example: false })
+export class UpdateComercializadoraDto extends PartialType(CreateComercializadoraDto) {
+  @Expose()
   @IsOptional()
   @IsBoolean()
-  @Type(() => Boolean)
+  @ApiPropertyOptional({
+    description: 'Indica si está consolidado',
+    example: false,
+  })
   consolidado?: boolean;
-}
-
-export class ListComercializadoraArgsDto extends ListFindAllQueryDto {
-  @ApiPropertyOptional({ description: 'Filtros para comercializadoras', type: ComercializadoraWhereInput })
-  @IsOptional()
-  @Type(() => ComercializadoraWhereInput)
-  where?: ComercializadoraWhereInput;
 }

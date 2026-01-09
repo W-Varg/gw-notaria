@@ -165,7 +165,7 @@ export class DerivacionService {
               cliente: {
                 select: {
                   id: true,
-                  tipo: true,
+                  tipoCliente: true,
                   personaNatural: {
                     select: {
                       nombres: true,
@@ -421,7 +421,7 @@ export class DerivacionService {
               cliente: {
                 select: {
                   id: true,
-                  tipo: true,
+                  tipoCliente: true,
                   personaNatural: {
                     select: {
                       nombres: true,
@@ -568,7 +568,7 @@ export class DerivacionService {
               tipoTramite: { select: { nombre: true, colorHex: true } },
               cliente: {
                 select: {
-                  tipo: true,
+                  tipoCliente: true,
                   personaNatural: { select: { nombres: true, apellidos: true } },
                   personaJuridica: { select: { razonSocial: true } },
                 },
@@ -615,7 +615,7 @@ export class DerivacionService {
             cliente: {
               select: {
                 id: true,
-                tipo: true,
+                tipoCliente: true,
                 personaNatural: {
                   select: {
                     nombres: true,
