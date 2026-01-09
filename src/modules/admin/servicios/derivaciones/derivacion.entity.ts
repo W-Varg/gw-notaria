@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Usuario } from '../../security/usuarios/usuario.entity';
-import { Servicio } from '../servicio.entity';
+import { ServicioEntity } from '../servicio.entity';
 
 export class DerivacionEntity {
   @ApiProperty()
@@ -55,7 +55,7 @@ export class DerivacionEntity {
 export class DerivacionDetail extends DerivacionEntity {
   // Relaciones
   @ApiPropertyOptional()
-  servicio?: Servicio;
+  servicio?: ServicioEntity;
 
   @ApiPropertyOptional()
   usuarioOrigen?: Usuario;

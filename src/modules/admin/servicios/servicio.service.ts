@@ -17,7 +17,7 @@ import {
   dataResponseSuccess,
 } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
-import { Servicio } from './servicio.entity';
+import { ServicioEntity } from './servicio.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken } from 'src/common/decorators/token.decorator';
@@ -263,7 +263,7 @@ export class ServicioService {
       });
     });
 
-    return dataResponseSuccess<Servicio>({ data: result });
+    return dataResponseSuccess<ServicioEntity>({ data: result });
   }
 
   async findAll(query: ListFindAllQueryDto) {
@@ -290,7 +290,7 @@ export class ServicioService {
 
     if (pagination && total !== undefined) pagination.total = total;
 
-    return dataResponseSuccess<Servicio[]>({
+    return dataResponseSuccess<ServicioEntity[]>({
       data: list,
       pagination,
     });
@@ -329,7 +329,7 @@ export class ServicioService {
       this.prismaService.servicio.count({ where: whereInput }),
     ]);
 
-    return dataResponseSuccess<Servicio[]>({
+    return dataResponseSuccess<ServicioEntity[]>({
       data: list,
       pagination: { ...pagination, total },
     });
@@ -363,7 +363,7 @@ export class ServicioService {
       },
     });
     if (!item) return dataResponseError('Servicio no encontrado');
-    return dataResponseSuccess<Servicio>({ data: item });
+    return dataResponseSuccess<ServicioEntity>({ data: item });
   }
 
   async update(id: string, updateDto: UpdateServicioDto, session: IToken) {
@@ -403,7 +403,7 @@ export class ServicioService {
       },
     });
 
-    return dataResponseSuccess<Servicio>({ data: result });
+    return dataResponseSuccess<ServicioEntity>({ data: result });
   }
 
   async remove(id: string) {
@@ -539,7 +539,7 @@ export class ServicioService {
       this.prismaService.servicio.count({ where }),
     ]);
 
-    return dataResponseSuccess<Servicio[]>({
+    return dataResponseSuccess<ServicioEntity[]>({
       data,
       pagination: {
         total,
@@ -592,7 +592,7 @@ export class ServicioService {
       },
     });
 
-    return dataResponseSuccess<Servicio>({ data: updated });
+    return dataResponseSuccess<ServicioEntity>({ data: updated });
   }
 
   /**
@@ -670,6 +670,6 @@ export class ServicioService {
       return updated;
     });
 
-    return dataResponseSuccess<Servicio>({ data: result });
+    return dataResponseSuccess<ServicioEntity>({ data: result });
   }
 }

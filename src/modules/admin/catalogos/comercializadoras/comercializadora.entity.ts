@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ClienteEntity } from '../../clientes/cliente.entity';
 import { SucursalEntity } from '../sucursales/sucursal.entity';
-import { Servicio } from '../../servicios/servicio.entity';
+import { ServicioEntity } from '../../servicios/servicio.entity';
 
 export class Comercializadora {
   @ApiProperty({ description: 'ID único de la comercializadora', example: 1 })
@@ -76,5 +76,5 @@ export class ComercializadoraDetail extends Comercializadora {
   sucursal?: SucursalEntity;
 
   @ApiPropertyOptional({ description: 'Lista de servicios asociados', type: 'array' })
-  servicios?: Array<Servicio>;
+  servicios?: Array<ServicioEntity>;
 }

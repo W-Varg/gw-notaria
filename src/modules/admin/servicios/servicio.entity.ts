@@ -10,7 +10,7 @@ import { DerivacionEntity } from './derivaciones/derivacion.entity';
 import { PagosIngresos } from '../finanzas/pagos-ingresos/pagos-ingresos.entity';
 import { SucursalEntity } from '../catalogos/sucursales/sucursal.entity';
 
-export class Servicio {
+export class ServicioEntity {
   @ApiProperty()
   id: string;
 

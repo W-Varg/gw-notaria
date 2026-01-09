@@ -109,7 +109,7 @@ export class CreateClienteDto {
 
   // Datos específicos según tipo
   @Expose()
-  @ValidateIf((o) => o.tipo === TipoClienteEnum.NATURAL)
+  @ValidateIf((o) => o.tipoCliente === TipoClienteEnum.NATURAL)
   @IsDefined()
   @ValidateNested()
   @Type(() => CreatePersonaNaturalDto)
@@ -117,7 +117,7 @@ export class CreateClienteDto {
   personaNatural?: CreatePersonaNaturalDto;
 
   @Expose()
-  @ValidateIf((o) => o.tipo === TipoClienteEnum.JURIDICA)
+  @ValidateIf((o) => o.tipoCliente === TipoClienteEnum.JURIDICA)
   @IsDefined()
   @ValidateNested()
   @Type(() => CreatePersonaJuridicaDto)
