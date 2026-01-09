@@ -42,8 +42,9 @@ export class CreateServicioDto {
 
   @Expose()
   @IsOptional()
-  @ApiPropertyOptional({ type: String })
-  estadoActualId?: string;
+  @IsInt()
+  @ApiPropertyOptional({ type: Number })
+  estadoActualId?: number;
 
   @Expose()
   @IsOptional()

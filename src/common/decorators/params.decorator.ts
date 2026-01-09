@@ -4,11 +4,6 @@ import { Expose, Type } from 'class-transformer';
 import { IsInt, IsOptional, IsPositive, IsString, Matches, MaxLength, Min } from 'class-validator';
 import { smsInteger, smsIsString } from 'src/helpers/validator.sms';
 import { IsSQLInjectionSafe } from './validator.decorator';
-// import {
-//   smsInteger,
-//   smsIsString,
-// } from 'fiscalia_bo-nest-helpers/dist/custom-validators/validator.sms';
-// import { IsSQLInjectionSafe } from 'fiscalia_bo-nest-helpers/dist/decorators/validator.decorator';
 
 interface ParamsStringValidatorOptions {
   description?: string;
@@ -17,6 +12,7 @@ interface ParamsStringValidatorOptions {
   pattern?: RegExp;
   patternMessage?: string;
   required?: boolean;
+  format?: string;
 }
 
 interface ParamsIntValidatorOptions {
@@ -54,6 +50,7 @@ export function ParamsStringValidator(options: ParamsStringValidatorOptions = {}
     pattern = /^[a-zA-Z0-9_-]+$/,
     patternMessage = 'El parámetro solo puede contener letras, números, guiones y guiones bajos',
     required = true,
+    format,
   } = options;
 
   const apiPropertyOptions: ApiPropertyOptions = {
@@ -61,6 +58,7 @@ export function ParamsStringValidator(options: ParamsStringValidatorOptions = {}
     type: String,
     example,
     required,
+    format,
   };
 
   return applyDecorators(

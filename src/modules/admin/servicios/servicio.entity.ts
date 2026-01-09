@@ -32,8 +32,8 @@ export class ServicioEntity {
   @ApiPropertyOptional({ type: Number })
   sucursalId?: number;
 
-  @ApiPropertyOptional()
-  estadoActualId?: string;
+  @ApiPropertyOptional({ type: Number })
+  estadoActualId?: number;
 
   @ApiProperty()
   fechaInicio: Date;

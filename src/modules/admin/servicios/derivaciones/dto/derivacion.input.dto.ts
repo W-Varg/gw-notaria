@@ -54,12 +54,12 @@ export class CreateDerivacionDto {
 
   @Expose()
   @IsOptional()
-  @IsString()
+  @IsInt()
   @ApiPropertyOptional({
-    type: String,
+    type: Number,
     description: 'ID del nuevo estado del servicio (opcional, si se cambia el estado)',
   })
-  nuevoEstadoId?: string;
+  nuevoEstadoId?: number;
 
   @Expose()
   @IsOptional()

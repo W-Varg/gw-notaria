@@ -20,9 +20,9 @@ export class CreateHistorialEstadosServicioDto {
 
   @Expose()
   @IsDefined()
-  @IsString()
-  @ApiProperty({ type: String })
-  estadoId: string;
+  @IsInt()
+  @ApiProperty({ type: Number })
+  estadoId: number;
 
   @Expose()
   @IsOptional()
@@ -50,10 +50,10 @@ class HistorialEstadosServicioWhereInput {
   servicioId?: StringFilter;
 
   @Expose()
-  @ApiPropertyOptional({ type: StringFilter })
+  @ApiPropertyOptional({ type: IntFilter })
   @IsOptional()
-  @Type(() => StringFilter)
-  estadoId?: StringFilter;
+  @Type(() => IntFilter)
+  estadoId?: IntFilter;
 }
 
 class HistorialEstadosServicioSelectInput {

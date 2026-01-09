@@ -18,6 +18,7 @@ import { BaseFilterDto } from 'src/common/dtos/filters.dto';
 import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
 import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
 import { DateTimeFilter, DateTimeNullableFilter } from 'src/common/dtos';
+import { IntFilter } from 'src/common/dtos/prisma/int-filter.input';
 import { FloatFilter } from 'src/common/dtos/prisma/float-filter.input';
 import { BoolFilter } from 'src/common/dtos/prisma/bool-filter.input';
 
@@ -67,12 +68,12 @@ export class CreateServicioDto {
 
   @Expose()
   @IsOptional()
-  @IsString()
+  @IsInt()
   @ApiPropertyOptional({
-    type: String,
+    type: Number,
     description: 'ID del estado actual',
   })
-  estadoActualId?: string;
+  estadoActualId?: number;
 
   @Expose()
   @IsOptional()
@@ -182,10 +183,10 @@ class ServicioWhereInput {
   tipoTramiteId?: StringFilter;
 
   @Expose()
-  @ApiPropertyOptional({ type: StringNullableFilter })
+  @ApiPropertyOptional({ type: IntFilter })
   @IsOptional()
-  @Type(() => StringNullableFilter)
-  estadoActualId?: StringNullableFilter;
+  @Type(() => IntFilter)
+  estadoActualId?: IntFilter;
 
   @Expose()
   @ApiPropertyOptional({ type: DateTimeFilter })
@@ -433,9 +434,9 @@ export class ServiciosStatsDto {
 export class UpdateServicioProgresoDto {
   @Expose()
   @IsDefined()
-  @IsString()
-  @ApiProperty({ type: String })
-  estadoActualId: string;
+  @IsInt()
+  @ApiProperty({ type: Number })
+  estadoActualId: number;
 
   @Expose()
   @IsOptional()

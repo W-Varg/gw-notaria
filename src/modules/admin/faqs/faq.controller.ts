@@ -16,6 +16,7 @@ import { PermisoEnum } from 'src/enums/permisos.enum';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PaginateFaqsType, ResponseFaqType, ResponseFaqsType } from './dto/faq.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
@@ -57,8 +58,8 @@ export class FaqController {
   @BearerAuthPermision([PermisoEnum.FAQS_VER])
   @ApiResponse({ status: 200, type: () => ResponseFaqType })
   @ApiDescription('Obtener una FAQ por ID', [PermisoEnum.FAQS_VER])
-  findOne(@Param('id') id: string) {
-    return this.faqService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.IdUuid) {
+    return this.faqService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -66,8 +67,8 @@ export class FaqController {
   @ApiResponse({ status: 200, type: () => ResponseFaqType })
   @ApiDescription('Actualizar una FAQ por ID', [PermisoEnum.FAQS_EDITAR])
   @Audit({ accion: TipoAccionEnum.UPDATE, modulo: 'faqs', tabla: 'logs_audit_logs' })
-  update(@Param('id') id: string, @Body() updateDto: UpdateFaqDto) {
-    return this.faqService.update(id, updateDto);
+  update(@Param() params: CommonParamsDto.IdUuid, @Body() updateDto: UpdateFaqDto) {
+    return this.faqService.update(params.id, updateDto);
   }
 
   @Delete(':id')
@@ -75,7 +76,7 @@ export class FaqController {
   @ApiResponse({ status: 200, type: () => ResponseFaqType })
   @ApiDescription('Eliminar una FAQ por ID', [PermisoEnum.FAQS_ELIMINAR])
   @Audit({ accion: TipoAccionEnum.DELETE, modulo: 'faqs', tabla: 'logs_audit_logs' })
-  remove(@Param('id') id: string) {
-    return this.faqService.remove(id);
+  remove(@Param() params: CommonParamsDto.IdUuid) {
+    return this.faqService.remove(params.id);
   }
 }

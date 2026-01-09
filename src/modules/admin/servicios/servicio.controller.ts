@@ -33,6 +33,7 @@ import {
   ResponseServiciosStatsType,
 } from './dto/servicio.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
@@ -78,8 +79,8 @@ export class ServicioController {
   @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
   @ApiResponse({ status: 200, type: () => ResponseServicioDetailType })
   @ApiDescription('Obtener un servicio por ID', [PermisoEnum.SERVICIOS_VER])
-  findOne(@Param('id') id: string) {
-    return this.servicioService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.IdUuid) {
+    return this.servicioService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -93,11 +94,11 @@ export class ServicioController {
     descripcion: 'Actualizar servicio',
   })
   update(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.IdUuid,
     @Body() updateDto: UpdateServicioDto,
     @AuthUser() session: IToken,
   ) {
-    return this.servicioService.update(id, updateDto, session);
+    return this.servicioService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')
@@ -110,8 +111,8 @@ export class ServicioController {
     tabla: 'Servicio',
     descripcion: 'Eliminar servicio',
   })
-  remove(@Param('id') id: string) {
-    return this.servicioService.remove(id);
+  remove(@Param() params: CommonParamsDto.IdUuid) {
+    return this.servicioService.remove(params.id);
   }
 
   @Get('stats/dashboard')
@@ -141,11 +142,11 @@ export class ServicioController {
     descripcion: 'Actualizar progreso de servicio',
   })
   updateProgreso(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.IdUuid,
     @Body() dto: UpdateServicioProgresoDto,
     @AuthUser() session: IToken,
   ) {
-    return this.servicioService.updateProgreso(id, dto, session.usuarioId);
+    return this.servicioService.updateProgreso(params.id, dto, session.usuarioId);
   }
 
   @Post(':id/pagos')
@@ -159,10 +160,10 @@ export class ServicioController {
     descripcion: 'Registrar pago de servicio',
   })
   registrarPago(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.IdUuid,
     @Body() dto: RegistrarPagoServicioDto,
     @AuthUser() session: IToken,
   ) {
-    return this.servicioService.registrarPago(id, dto, session.usuarioId);
+    return this.servicioService.registrarPago(params.id, dto, session.usuarioId);
   }
 }

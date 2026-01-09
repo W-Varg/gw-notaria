@@ -77,8 +77,8 @@ export class ClienteController {
   @BearerAuthPermision([PermisoEnum.CLIENTES_VER])
   @ApiResponse({ status: 200, type: () => ResponseClienteDetailType })
   @ApiDescription('Obtener un cliente por ID', [PermisoEnum.CLIENTES_VER])
-  findOne(@Param('id') id: string) {
-    return this.clienteService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.IdUuid) {
+    return this.clienteService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -92,11 +92,11 @@ export class ClienteController {
     descripcion: 'Actualizar cliente',
   })
   update(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.IdUuid,
     @Body() updateDto: UpdateClienteDto,
     @AuthUser() session: IToken,
   ) {
-    return this.clienteService.update(id, updateDto, session);
+    return this.clienteService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')

@@ -30,6 +30,7 @@ import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
 import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Estados de Trámite')
 @Controller('estados-tramite')
@@ -81,8 +82,8 @@ export class EstadoTramiteController {
   @BearerAuthPermision([PermisoEnum.ESTADOS_TRAMITE_VER])
   @ApiResponse({ status: 200, type: () => ResponseEstadoTramiteDetailType })
   @ApiDescription('Obtener un estado de trámite por ID', [PermisoEnum.ESTADOS_TRAMITE_VER])
-  findOne(@Param('id') id: string) {
-    return this.estadoTramiteService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.estadoTramiteService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -96,11 +97,11 @@ export class EstadoTramiteController {
     descripcion: 'Actualizar estado de trámite',
   })
   update(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateDto: UpdateEstadoTramiteDto,
     @AuthUser() session: IToken,
   ) {
-    return this.estadoTramiteService.update(id, updateDto, session);
+    return this.estadoTramiteService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')
@@ -113,7 +114,7 @@ export class EstadoTramiteController {
     tabla: 'EstadoTramite',
     descripcion: 'Eliminar estado de trámite',
   })
-  remove(@Param('id') id: string) {
-    return this.estadoTramiteService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.estadoTramiteService.remove(params.id);
   }
 }

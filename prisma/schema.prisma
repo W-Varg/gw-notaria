@@ -476,7 +476,7 @@ model PlantillaDocumento {
 }
 
 model EstadoTramite {
-  id                       String                     @id @default(cuid()) @db.VarChar(26)
+  id                       Int                        @id @default(autoincrement())
   nombre                   String                     @unique @db.VarChar(100)
   descripcion              String?
   colorHex                 String?                    @db.VarChar(7)
@@ -591,7 +591,7 @@ model Servicio {
   tipoDocumentoId          String                     @db.VarChar(26)
   tipoTramiteId            String                     @db.VarChar(26)
   sucursalId               Int // Sucursal donde se realizó el servicio
-  estadoActualId           String?                    @db.VarChar(26)
+  estadoActualId           Int
   fechaInicio              DateTime                   @default(now()) @db.Timestamptz()
   fechaFinalizacion        DateTime?
   fechaEstimadaEntrega     DateTime?
@@ -625,13 +625,13 @@ model HistorialEstadosServicio {
   id          Int      @id @default(autoincrement())
   usuarioId   String?  @db.VarChar(26)
   servicioId  String   @db.VarChar(26)
-  estadoId    String   @db.VarChar(26)
+  estadoId    Int
   fechaCambio DateTime @default(now()) @db.Timestamptz()
   comentario  String?  @db.VarChar(255)
 
-  usuario  Usuario?      @relation(fields: [usuarioId], references: [id])
-  servicio Servicio      @relation(fields: [servicioId], references: [id], onDelete: Cascade)
-  estado   EstadoTramite @relation(fields: [estadoId], references: [id])
+  usuario  Usuario?       @relation(fields: [usuarioId], references: [id])
+  servicio Servicio?      @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+  estado   EstadoTramite? @relation(fields: [estadoId], references: [id])
 
   @@map("core_historial_estados_servicio")
   @@schema("public")

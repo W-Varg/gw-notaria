@@ -30,6 +30,7 @@ import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
 import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Tipos de Trámite')
 @Controller('tipos-tramite')
@@ -81,8 +82,8 @@ export class TipoTramiteController {
   @BearerAuthPermision([PermisoEnum.TIPOS_TRAMITE_VER])
   @ApiResponse({ status: 200, type: () => ResponseTipoTramiteDetailType })
   @ApiDescription('Obtener un tipo de trámite por ID', [PermisoEnum.TIPOS_TRAMITE_VER])
-  findOne(@Param('id') id: string) {
-    return this.tipoTramiteService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.IdUuid) {
+    return this.tipoTramiteService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -96,11 +97,11 @@ export class TipoTramiteController {
     descripcion: 'Actualizar tipo de trámite',
   })
   update(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.IdUuid,
     @Body() updateTipoTramiteDto: UpdateTipoTramiteDto,
     @AuthUser() session: IToken,
   ) {
-    return this.tipoTramiteService.update(id, updateTipoTramiteDto, session);
+    return this.tipoTramiteService.update(params.id, updateTipoTramiteDto, session);
   }
 
   @Delete(':id')
@@ -113,7 +114,7 @@ export class TipoTramiteController {
     tabla: 'TipoTramite',
     descripcion: 'Eliminar tipo de trámite',
   })
-  remove(@Param('id') id: string) {
-    return this.tipoTramiteService.remove(id);
+  remove(@Param() params: CommonParamsDto.IdUuid) {
+    return this.tipoTramiteService.remove(params.id);
   }
 }

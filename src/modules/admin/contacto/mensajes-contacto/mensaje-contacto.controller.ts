@@ -26,6 +26,7 @@ import {
   ResponseMensajesContactoType,
 } from './dto/mensaje-contacto.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
@@ -73,8 +74,8 @@ export class MensajeContactoController {
   @BearerAuthPermision([PermisoEnum.MENSAJES_CONTACTO_VER])
   @ApiResponse({ status: 200, type: () => ResponseMensajeContactoDetailType })
   @ApiDescription('Obtener un mensaje de contacto por ID', [PermisoEnum.MENSAJES_CONTACTO_VER])
-  findOne(@Param('id') id: string) {
-    return this.mensajeContactoService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.IdUuid) {
+    return this.mensajeContactoService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -90,11 +91,11 @@ export class MensajeContactoController {
     descripcion: 'Actualizar mensaje de contacto',
   })
   update(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.IdUuid,
     @Body() updateDto: UpdateMensajeContactoDto,
     @AuthUser() session: IToken,
   ) {
-    return this.mensajeContactoService.update(id, updateDto, session);
+    return this.mensajeContactoService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')
@@ -109,7 +110,7 @@ export class MensajeContactoController {
     tabla: 'MensajeContacto',
     descripcion: 'Eliminar mensaje de contacto',
   })
-  remove(@Param('id') id: string) {
-    return this.mensajeContactoService.remove(id);
+  remove(@Param() params: CommonParamsDto.IdUuid) {
+    return this.mensajeContactoService.remove(params.id);
   }
 }

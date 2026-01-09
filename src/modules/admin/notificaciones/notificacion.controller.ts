@@ -25,6 +25,7 @@ import {
   PaginateNotificacionesType,
 } from './dto/notificacion.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 import { PermisoEnum } from 'src/enums/permisos.enum';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
@@ -73,8 +74,8 @@ export class NotificacionController {
   @BearerAuthPermision([PermisoEnum.NOTIFICACIONES_VER])
   @ApiResponse({ status: 200, type: () => ResponseNotificacionDetailType })
   @ApiDescription('Obtener una notificación por ID', [PermisoEnum.NOTIFICACIONES_VER])
-  findOne(@Param('id') id: string) {
-    return this.notificacionService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.IdUuid) {
+    return this.notificacionService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -88,11 +89,11 @@ export class NotificacionController {
     descripcion: 'Actualizar notificación',
   })
   update(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.IdUuid,
     @Body() updateDto: UpdateNotificacionDto,
     @AuthUser() session: IToken,
   ) {
-    return this.notificacionService.update(id, updateDto, session);
+    return this.notificacionService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')
@@ -105,8 +106,8 @@ export class NotificacionController {
     tabla: 'Notificacion',
     descripcion: 'Eliminar notificación',
   })
-  remove(@Param('id') id: string) {
-    return this.notificacionService.remove(id);
+  remove(@Param() params: CommonParamsDto.IdUuid) {
+    return this.notificacionService.remove(params.id);
   }
 
   // ==================== CUSTOM ENDPOINTS ====================
@@ -147,8 +148,8 @@ export class NotificacionController {
     tabla: 'Notificacion',
     descripcion: 'Marcar notificación como leída',
   })
-  markAsRead(@Param('id') id: string) {
-    return this.notificacionService.markAsRead(id);
+  markAsRead(@Param() params: CommonParamsDto.IdUuid) {
+    return this.notificacionService.markAsRead(params.id);
   }
 
   @Patch('user/marcar-todas-leidas')

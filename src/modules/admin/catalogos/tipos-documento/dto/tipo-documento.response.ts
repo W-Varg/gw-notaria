@@ -30,7 +30,7 @@ export class ResponseTipoDocumentosType extends OmitType(ApiOkResponseDto, ['cac
   declare response: TipoDocumentosData;
 }
 
-// Respuesta lista paginada
+/* ------------------------------------------- // Respuesta lista paginada ------------------------------------------ */
 class PaginateTipoDocumentosData extends OmitType(ResponseStructDTO, ['validationErrors']) {
   @ApiProperty({ type: [TipoDocumentoEntity] })
   data?: TipoDocumentoEntity[];

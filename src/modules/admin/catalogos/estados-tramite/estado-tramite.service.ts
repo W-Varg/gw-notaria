@@ -100,7 +100,7 @@ export class EstadoTramiteService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     const item = await this.prismaService.estadoTramite.findUnique({
       where: { id },
     });
@@ -108,7 +108,7 @@ export class EstadoTramiteService {
     return dataResponseSuccess<EstadoTramite>({ data: item });
   }
 
-  async update(id: string, updateDto: UpdateEstadoTramiteDto, session: IToken) {
+  async update(id: number, updateDto: UpdateEstadoTramiteDto, session: IToken) {
     const exists = await this.prismaService.estadoTramite.findUnique({
       where: { id },
       select: { id: true },
@@ -138,7 +138,7 @@ export class EstadoTramiteService {
     return dataResponseSuccess<EstadoTramite>({ data: result });
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     const exists = await this.prismaService.estadoTramite.findUnique({
       where: { id },
       select: { id: true },

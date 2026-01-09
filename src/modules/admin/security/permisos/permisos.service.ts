@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { PermisosRepository } from './permisos.repository';
 import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { ListPermisosArgsDto } from './dto/permisos.dto';
@@ -10,10 +9,7 @@ import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 
 @Injectable()
 export class PermisosService {
-  constructor(
-    private readonly prismaService: PrismaService,
-    private readonly permisosRepository: PermisosRepository,
-  ) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
   async findAll(query?: ListFindAllQueryDto) {
     if (query) {
@@ -44,19 +40,38 @@ export class PermisosService {
         pagination: { ...pagination, total },
       });
     } else {
-      const list = await this.permisosRepository.findAllActivos();
+      const list = await this.prismaService.permiso.findMany({
+        where: { estaActivo: true },
+      });
       return dataResponseSuccess({ data: list });
     }
   }
 
+  async findOne(id: number) {
+    const permiso = await this.prismaService.permiso.findUnique({
+      where: { id },
+    });
+    if (!permiso) {
+      return dataResponseError('Permiso no encontrado');
+    }
+    return dataResponseSuccess({ data: permiso });
+  }
+
   async findAllInactivos() {
-    const list = await this.permisosRepository.findAllInactivos();
+    const list = await this.prismaService.permiso.findMany({
+      where: { estaActivo: false },
+    });
     return dataResponseSuccess({ data: list });
   }
   async setActivo(id: number, activo: boolean) {
-    const permiso = await this.permisosRepository.findById(id);
+    const permiso = await this.prismaService.permiso.findUnique({
+      where: { id },
+    });
     if (!permiso) return dataResponseError('Permiso no encontrado');
-    const updated = await this.permisosRepository.setActivo(id, activo);
+    const updated = await this.prismaService.permiso.update({
+      where: { id },
+      data: { estaActivo: activo },
+    });
     return dataResponseSuccess({ data: updated });
   }
 
@@ -94,16 +109,16 @@ export class PermisosService {
     });
   }
 
-  // Deshabilitado: CRUD de permisos es estático. No soporta findOne/update/remove/create
-  async findOne() {
-    return dataResponseError('Operación no soportada');
-  }
-
   async updateActivo(id: number, updateActivoDto: { estaActivo: boolean }) {
-    const permiso = await this.permisosRepository.findById(id);
+    const permiso = await this.prismaService.permiso.findUnique({
+      where: { id },
+    });
     if (!permiso) return dataResponseError('Permiso no encontrado');
 
-    const updated = await this.permisosRepository.setActivo(id, updateActivoDto.estaActivo);
+    const updated = await this.prismaService.permiso.update({
+      where: { id },
+      data: { estaActivo: updateActivoDto.estaActivo },
+    });
     return dataResponseSuccess({ data: updated });
   }
 
