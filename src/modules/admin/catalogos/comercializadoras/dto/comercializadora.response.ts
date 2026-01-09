@@ -1,12 +1,12 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
-import { Comercializadora, ComercializadoraDetail } from '../comercializadora.entity';
+import { ComercializadoraEntity, ComercializadoraDetail } from '../comercializadora.entity';
 
 // ==================== RESPUESTA INDIVIDUAL ====================
 
 class ComercializadoraData extends OmitType(ResponseStructDTO, ['pagination']) {
-  @ApiProperty({ type: Comercializadora })
-  data: Comercializadora;
+  @ApiProperty({ type: ComercializadoraEntity })
+  data: ComercializadoraEntity;
 }
 
 export class ResponseComercializadoraType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -29,8 +29,8 @@ export class ResponseComercializadoraDetailType extends OmitType(ApiOkResponseDt
 // ==================== RESPUESTA LISTA SIMPLE ====================
 
 class ComercializadorasData {
-  @ApiProperty({ type: [Comercializadora] })
-  data?: Comercializadora[];
+  @ApiProperty({ type: [ComercializadoraEntity] })
+  data?: ComercializadoraEntity[];
 }
 
 export class ResponseComercializadorasType extends OmitType(ApiOkResponseDto, ['cache']) {
@@ -41,8 +41,8 @@ export class ResponseComercializadorasType extends OmitType(ApiOkResponseDto, ['
 // ==================== RESPUESTA LISTA PAGINADA ====================
 
 class PaginateComercializadorasData extends OmitType(ResponseStructDTO, ['validationErrors']) {
-  @ApiProperty({ type: [Comercializadora] })
-  data?: Comercializadora[];
+  @ApiProperty({ type: [ComercializadoraEntity] })
+  data?: ComercializadoraEntity[];
 }
 
 export class PaginateComercializadorasType extends OmitType(ApiOkResponseDto, ['cache']) {

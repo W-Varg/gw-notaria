@@ -3,12 +3,9 @@ import { ClienteEntity } from '../../clientes/cliente.entity';
 import { SucursalEntity } from '../sucursales/sucursal.entity';
 import { ServicioEntity } from '../../servicios/servicio.entity';
 
-export class Comercializadora {
+export class ComercializadoraEntity {
   @ApiProperty({ description: 'ID único de la comercializadora', example: 1 })
   id: number;
-
-  @ApiProperty({ description: 'Nombre de la comercializadora', example: 'Notaria 69' })
-  nombre: string;
 
   @ApiProperty({ description: 'Tipo: 1=techo, 2=monumental', example: 1, enum: [1, 2] })
   tipoComercializadora: number;
@@ -65,7 +62,7 @@ export class Comercializadora {
   fechaActualizacion: Date;
 }
 
-export class ComercializadoraDetail extends Comercializadora {
+export class ComercializadoraDetail extends ComercializadoraEntity {
   @ApiPropertyOptional({
     description: 'Información del cliente asociado',
     type: () => ClienteEntity,

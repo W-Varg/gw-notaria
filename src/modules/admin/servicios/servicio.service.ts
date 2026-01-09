@@ -213,53 +213,60 @@ export class ServicioService {
           fechaAsignacion: new Date(),
         },
       });
+      // 5. Crear el registro en las comercializadoras a partir de
+      // comercializadoraInput?: ComercializadoraInputDto;
+      if (inputDto.comercializadoraInput) {
+        const comercializadoraInput = inputDto.comercializadoraInput;
 
-      // 5. Retornar el servicio completo con todas las relaciones
+        // Construir metaData a partir de los campos opcionales
+        const metaData: Record<string, any> = {};
+        if (comercializadoraInput.proyecto !== undefined)
+          metaData.proyecto = comercializadoraInput.proyecto;
+        if (comercializadoraInput.modulo !== undefined)
+          metaData.modulo = comercializadoraInput.modulo;
+        if (comercializadoraInput.bloque !== undefined)
+          metaData.bloque = comercializadoraInput.bloque;
+        if (comercializadoraInput.urbanizacion !== undefined)
+          metaData.urbanizacion = comercializadoraInput.urbanizacion;
+        if (comercializadoraInput.uv !== undefined) metaData.uv = comercializadoraInput.uv;
+        if (comercializadoraInput.manzana !== undefined)
+          metaData.manzana = comercializadoraInput.manzana;
+        if (comercializadoraInput.lote !== undefined) metaData.lote = comercializadoraInput.lote;
+        if (comercializadoraInput.fechaProtocolo !== undefined)
+          metaData.fechaProtocolo = comercializadoraInput.fechaProtocolo;
+        if (comercializadoraInput.fechaRecepcion !== undefined)
+          metaData.fechaRecepcion = comercializadoraInput.fechaRecepcion;
+        if (comercializadoraInput.fechaEnvio !== undefined)
+          metaData.fechaEnvio = comercializadoraInput.fechaEnvio;
+
+        await prisma.comercializadora.create({
+          data: {
+            tipoComercializadora: comercializadoraInput.tipoComercializadora, // 1=techo o 2=monumental
+            sucursalId: inputDto.sucursalId,
+            clienteId: comercializadoraInput.clienteId,
+            metaData,
+            userCreateId: usuarioId,
+          },
+        });
+      }
+
+      // 6. Retornar el servicio completo con todas las relaciones
       return await prisma.servicio.findUnique({
         where: { id: servicio.id },
-        include: {
-          cliente: {
-            include: {
-              personaNatural: true,
-              personaJuridica: true,
-            },
-          },
-          tipoDocumento: true,
-          tipoTramite: true,
-          estadoActual: true,
-          historialEstadosServicio: {
-            include: {
-              estado: true,
-              usuario: true,
-            },
-          },
-          responsablesServicio: {
-            where: { activo: true },
-            include: {
-              usuario: true,
-            },
-          },
-          derivaciones: {
-            include: {
-              usuarioOrigen: {
-                select: {
-                  id: true,
-                  nombre: true,
-                  apellidos: true,
-                  email: true,
-                },
-              },
-              usuarioDestino: {
-                select: {
-                  id: true,
-                  nombre: true,
-                  apellidos: true,
-                  email: true,
-                },
-              },
-            },
-          },
-        },
+        // include: {
+        //   cliente: { include: { personaNatural: true, personaJuridica: true } },
+        //   tipoDocumento: true,
+        //   tipoTramite: true,
+        //   estadoActual: true,
+        //   historialEstadosServicio: { include: { estado: true, usuario: true } },
+        //   responsablesServicio: { where: { activo: true }, include: { usuario: true } },
+        //   derivaciones: {
+        //     include: {
+        //       usuarioOrigen: { select: { id: true, nombre: true, apellidos: true, email: true } },
+        //       usuarioDestino: { select: { id: true, nombre: true, apellidos: true, email: true } },
+        //     },
+        //   },
+        // },
       });
     });
 

@@ -557,7 +557,6 @@ model PersonaJuridica {
 
 model Comercializadora {
   id                   Int        @id @default(autoincrement())
-  nombre               String     @unique @db.VarChar(150)
   /// tipo 1=techo, 2 = monumental
   tipoComercializadora Int
   // datos como pryecto urb, mza, proy, lote, fecha de recepcion

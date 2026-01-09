@@ -10,11 +10,14 @@ import {
   dataResponseSuccess,
 } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
-import { Comercializadora, ComercializadoraDetail } from './comercializadora.entity';
+import { ComercializadoraEntity, ComercializadoraDetail } from './comercializadora.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken } from 'src/common/decorators/token.decorator';
-import { ListComercializadoraArgsDto } from './dto/comercializadora.where.input';
+import {
+  ComercializadoraWhereInput,
+  ListComercializadoraArgsDto,
+} from './dto/comercializadora.where.input';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -24,7 +27,9 @@ export class ComercializadoraService {
   async create(inputDto: CreateComercializadoraDto, session: IToken) {
     // Validar tipoComercializadora (1=techo o 2=monumental)
     if (inputDto.tipoComercializadora !== 1 && inputDto.tipoComercializadora !== 2) {
-      return dataErrorValidations({ tipoComercializadora: ['El tipo debe ser 1 (techo) o 2 (monumental)'] });
+      return dataErrorValidations({
+        tipoComercializadora: ['El tipo debe ser 1 (techo) o 2 (monumental)'],
+      });
     }
 
     // Validar que la sucursal existe
@@ -55,7 +60,6 @@ export class ComercializadoraService {
 
     const result = await this.prismaService.comercializadora.create({
       data: {
-        nombre: inputDto.nombre,
         tipoComercializadora: inputDto.tipoComercializadora,
         metaData,
         sucursalId: inputDto.sucursalId,
@@ -70,7 +74,7 @@ export class ComercializadoraService {
       },
     });
 
-    return dataResponseSuccess<Comercializadora>({ data: result });
+    return dataResponseSuccess<ComercializadoraEntity>({ data: result });
   }
 
   async findAll(query: ListFindAllQueryDto) {
@@ -87,7 +91,7 @@ export class ComercializadoraService {
 
     if (pagination && total !== undefined) pagination.total = total;
 
-    return dataResponseSuccess<Comercializadora[]>({
+    return dataResponseSuccess<ComercializadoraEntity[]>({
       data: list,
       pagination,
     });
@@ -100,44 +104,21 @@ export class ComercializadoraService {
     const whereInput: Prisma.ComercializadoraWhereInput = {};
 
     // Aplicar filtros
-    if (where?.nombre) {
-      whereInput.nombre = where.nombre;
-    }
 
-    if (where?.tipoComercializadora) {
-      whereInput.tipoComercializadora = where.tipoComercializadora;
-    }
+    if (where?.tipoComercializadora) whereInput.tipoComercializadora = where.tipoComercializadora;
+    if (where?.sucursalId) whereInput.sucursalId = where.sucursalId;
+    if (where?.clienteId) whereInput.clienteId = where.clienteId;
+    if (where?.consolidado) whereInput.consolidado = where.consolidado;
+    if (where?.minuta) whereInput.minuta = where.minuta;
+    if (where?.protocolo) whereInput.protocolo = where.protocolo;
+    if (where?.fechaEnvio) whereInput.fechaEnvio = where.fechaEnvio;
+    if (where?.fechaEnvioTestimonio) whereInput.fechaEnvioTestimonio = where.fechaEnvioTestimonio;
+    if (where?.fechaCreacion) whereInput.fechaCreacion = where.fechaCreacion;
 
-    if (where?.sucursalId) {
-      whereInput.sucursalId = where.sucursalId;
-    }
-
-    if (where?.clienteId) {
-      whereInput.clienteId = where.clienteId;
-    }
-
-    if (where?.consolidado) {
-      whereInput.consolidado = where.consolidado;
-    }
-
-    if (where?.minuta) {
-      whereInput.minuta = where.minuta;
-    }
-
-    if (where?.protocolo) {
-      whereInput.protocolo = where.protocolo;
-    }
-
-    if (where?.fechaEnvio) {
-      whereInput.fechaEnvio = where.fechaEnvio;
-    }
-
-    if (where?.fechaEnvioTestimonio) {
-      whereInput.fechaEnvioTestimonio = where.fechaEnvioTestimonio;
-    }
-
-    if (where?.fechaCreacion) {
-      whereInput.fechaCreacion = where.fechaCreacion;
+    // Aplicar filtros de metaData
+    const metaDataConditions = this.buildMetaDataFilters(where);
+    if (metaDataConditions.length > 0) {
+      whereInput.AND = metaDataConditions;
     }
 
     const [list, total] = await Promise.all([
@@ -150,10 +131,38 @@ export class ComercializadoraService {
       this.prismaService.comercializadora.count({ where: whereInput }),
     ]);
 
-    return dataResponseSuccess<Comercializadora[]>({
+    return dataResponseSuccess<ComercializadoraEntity[]>({
       data: list,
       pagination: { ...pagination, total },
     });
+  }
+
+  private buildMetaDataFilters(
+    where: ComercializadoraWhereInput,
+  ): Prisma.ComercializadoraWhereInput[] {
+    const metaDataConditions: Prisma.ComercializadoraWhereInput[] = [];
+    if (where?.proyecto !== undefined) {
+      metaDataConditions.push({ metaData: { path: ['proyecto'], equals: where.proyecto } });
+    }
+    if (where?.modulo !== undefined) {
+      metaDataConditions.push({ metaData: { path: ['modulo'], equals: where.modulo } });
+    }
+    if (where?.bloque !== undefined) {
+      metaDataConditions.push({ metaData: { path: ['bloque'], equals: where.bloque } });
+    }
+    if (where?.urbanizacion !== undefined) {
+      metaDataConditions.push({ metaData: { path: ['urbanizacion'], equals: where.urbanizacion } });
+    }
+    if (where?.uv !== undefined) {
+      metaDataConditions.push({ metaData: { path: ['uv'], equals: where.uv } });
+    }
+    if (where?.manzana !== undefined) {
+      metaDataConditions.push({ metaData: { path: ['manzana'], equals: where.manzana } });
+    }
+    if (where?.lote !== undefined) {
+      metaDataConditions.push({ metaData: { path: ['lote'], equals: where.lote } });
+    }
+    return metaDataConditions;
   }
 
   async findOne(id: number) {
@@ -216,8 +225,14 @@ export class ComercializadoraService {
     }
 
     // Validar tipoComercializadora si se actualiza
-    if (updateDto.tipoComercializadora !== undefined && updateDto.tipoComercializadora !== 1 && updateDto.tipoComercializadora !== 2) {
-      return dataErrorValidations({ tipoComercializadora: ['El tipo debe ser 1 (techo) o 2 (monumental)'] });
+    if (
+      updateDto.tipoComercializadora !== undefined &&
+      updateDto.tipoComercializadora !== 1 &&
+      updateDto.tipoComercializadora !== 2
+    ) {
+      return dataErrorValidations({
+        tipoComercializadora: ['El tipo debe ser 1 (techo) o 2 (monumental)'],
+      });
     }
 
     // Validar sucursal si se actualiza
@@ -252,9 +267,11 @@ export class ComercializadoraService {
       updateDto.metaData ? structuredClone(updateDto.metaData) : {}
     ) as Prisma.InputJsonValue;
 
+    // if (updateDto.nombre !== undefined) dataToUpdate.nombre = updateDto.nombre;
+
     // Aplicar actualizaciones
-    if (updateDto.nombre !== undefined) dataToUpdate.nombre = updateDto.nombre;
-    if (updateDto.tipoComercializadora !== undefined) dataToUpdate.tipoComercializadora = updateDto.tipoComercializadora;
+    if (updateDto.tipoComercializadora !== undefined)
+      dataToUpdate.tipoComercializadora = updateDto.tipoComercializadora;
     if (updateDto.metaData !== undefined) dataToUpdate.metaData = metaData;
     if (updateDto.sucursalId !== undefined)
       dataToUpdate.sucursal = {
@@ -281,7 +298,7 @@ export class ComercializadoraService {
       data: dataToUpdate,
     });
 
-    return dataResponseSuccess<Comercializadora>({ data: result });
+    return dataResponseSuccess<ComercializadoraEntity>({ data: result });
   }
 
   async remove(id: number) {
@@ -294,6 +311,6 @@ export class ComercializadoraService {
 
     const result = await this.prismaService.comercializadora.delete({ where: { id } });
 
-    return dataResponseSuccess<Comercializadora>({ data: result });
+    return dataResponseSuccess<ComercializadoraEntity>({ data: result });
   }
 }

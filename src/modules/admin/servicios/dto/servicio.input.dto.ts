@@ -3,6 +3,7 @@ import { Expose, Type } from 'class-transformer';
 import {
   IsDefined,
   IsInt,
+  IsISO8601,
   IsNumber,
   IsOptional,
   IsString,
@@ -14,6 +15,73 @@ import { BaseFilterDto } from 'src/common/dtos/filters.dto';
 import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
 import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
 import { FloatFilter } from 'src/common/dtos/prisma/float-filter.input';
+
+export class ComercializadoraInputDto {
+  @Expose()
+  @IsDefined()
+  @ApiProperty({ type: Number, description: 'tipo 1=techo, 2 = monumental' })
+  tipoComercializadora: number;
+
+  @Expose()
+  @IsDefined()
+  @ApiProperty({ type: String })
+  clienteId: string;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Number })
+  proyecto?: number;
+
+  /* --------------------------------------------- fields para monumental --------------------------------------------- */
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Number })
+  modulo?: number;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Number })
+  bloque?: number;
+
+  /* ------------------------------------------------ fields para techo ----------------------------------------------- */
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: String })
+  urbanizacion?: string;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Number })
+  uv?: number;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Number })
+  manzana?: number;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Number })
+  lote?: number;
+
+  @Expose()
+  @IsOptional()
+  @IsISO8601()
+  @ApiPropertyOptional({ type: Date })
+  fechaProtocolo?: Date;
+
+  @Expose()
+  @IsOptional()
+  @IsISO8601()
+  @ApiPropertyOptional({ type: Date })
+  fechaRecepcion?: Date;
+
+  @Expose()
+  @IsOptional()
+  @IsISO8601()
+  @ApiPropertyOptional({ type: Date })
+  fechaEnvio?: Date;
+}
 
 export class CreateServicioDto {
   @Expose()
@@ -120,6 +188,15 @@ export class CreateServicioDto {
   @MaxLength(255)
   @ApiPropertyOptional({ type: String, description: 'Comentario del estado inicial' })
   comentarioEstadoInicial?: string;
+
+  @Expose()
+  @IsOptional()
+  @ValidateNested()
+  @ApiPropertyOptional({
+    type: ComercializadoraInputDto,
+    description: 'ID de la comercializadora asociada',
+  })
+  comercializadoraInput?: ComercializadoraInputDto;
 }
 
 export class UpdateServicioDto extends PartialType(CreateServicioDto) {}

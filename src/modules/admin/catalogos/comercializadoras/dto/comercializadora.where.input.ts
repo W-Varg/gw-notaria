@@ -8,13 +8,7 @@ import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
 import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
 import { DateTimeFilter, DateTimeNullableFilter } from 'src/common/dtos';
 
-class ComercializadoraWhereInput {
-  @Expose()
-  @ApiPropertyOptional({ type: StringFilter })
-  @IsOptional()
-  @Type(() => StringFilter)
-  nombre?: StringFilter;
-
+export class ComercializadoraWhereInput {
   @Expose()
   @ApiPropertyOptional({ type: IntFilter })
   @IsOptional()
@@ -68,6 +62,42 @@ class ComercializadoraWhereInput {
   @IsOptional()
   @Type(() => DateTimeFilter)
   fechaCreacion?: DateTimeFilter;
+
+  /* -------------------------------------------- where input para metadata ------------------------------------------- */
+  @Expose()
+  @ApiPropertyOptional({ type: Number })
+  @IsOptional()
+  proyecto?: number;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Number })
+  @IsOptional()
+  modulo?: number;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Number })
+  @IsOptional()
+  bloque?: number;
+
+  @Expose()
+  @ApiPropertyOptional({ type: String })
+  @IsOptional()
+  urbanizacion?: string;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Number })
+  @IsOptional()
+  uv?: number;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Number })
+  @IsOptional()
+  manzana?: number;
+
+  @Expose()
+  @ApiPropertyOptional({ type: Number })
+  @IsOptional()
+  lote?: number;
 }
 
 class ComercializadoraSelectInput {
