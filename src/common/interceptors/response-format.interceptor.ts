@@ -1,4 +1,10 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+  StreamableFile,
+} from '@nestjs/common';
 import { SKIP_RESPONSE_FORMAT } from '../decorators/interceptor.decorator';
 import { Reflector } from '@nestjs/core';
 import { Response } from 'express';
@@ -20,6 +26,9 @@ export class ResponseFormatInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map((data) => {
+        if (data instanceof StreamableFile) {
+          return data;
+        }
         // Tu lógica de formateo existente
         if (typeof data?.error !== 'boolean') {
           const auxData = {
