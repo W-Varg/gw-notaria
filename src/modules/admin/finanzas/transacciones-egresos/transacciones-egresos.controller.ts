@@ -29,7 +29,8 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Transacciones de Egresos')
 @Controller('transacciones-egresos')
@@ -58,7 +59,7 @@ export class TransaccionesEgresosController {
   @ApiDescription('Listar todas las transacciones de egresos', [
     PermisoEnum.TRANSACCIONES_EGRESOS_VER,
   ])
-  @ApiResponse({ type: ResponseListTransaccionesEgresosType })
+  @ApiResponse({ status: 200, type: ResponseListTransaccionesEgresosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.transaccionesEgresosService.findAll(query);
   }
@@ -79,8 +80,8 @@ export class TransaccionesEgresosController {
   @ApiDescription('Obtener una transacción de egreso por ID', [
     PermisoEnum.TRANSACCIONES_EGRESOS_VER,
   ])
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.transaccionesEgresosService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.transaccionesEgresosService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -95,11 +96,8 @@ export class TransaccionesEgresosController {
     tabla: 'TransaccionesEgresos',
     descripcion: 'Actualizar transacción de egreso',
   })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateDto: UpdateTransaccionesEgresosDto,
-  ) {
-    return this.transaccionesEgresosService.update(id, updateDto);
+  update(@Param() params: CommonParamsDto.Id, @Body() updateDto: UpdateTransaccionesEgresosDto) {
+    return this.transaccionesEgresosService.update(params.id, updateDto);
   }
 
   @Delete(':id')
@@ -114,7 +112,7 @@ export class TransaccionesEgresosController {
     tabla: 'TransaccionesEgresos',
     descripcion: 'Eliminar transacción de egreso',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.transaccionesEgresosService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.transaccionesEgresosService.remove(params.id);
   }
 }

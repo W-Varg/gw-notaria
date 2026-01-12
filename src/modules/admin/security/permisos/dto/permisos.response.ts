@@ -2,7 +2,7 @@
 
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Permiso } from '../permisos.entity';
-import { ApiOkResponseDto } from 'src/common/dtos/response.dto';
+import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
 
 class PermisosData {
   @ApiProperty({ type: [Permiso] })
@@ -26,7 +26,23 @@ export class ResponseMessageType extends OmitType(ApiOkResponseDto, ['cache']) {
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
+class PaginatePermisosData extends OmitType(ResponseStructDTO, ['validationErrors']) {
+  @ApiProperty({ type: [Permiso] })
+  data?: Permiso[];
+}
+
 export class PaginatePermisosType extends OmitType(ApiOkResponseDto, ['cache']) {
-  @ApiProperty({ type: PermisosData })
-  response: PermisosData;
+  @ApiProperty({ type: PaginatePermisosData })
+  response: PaginatePermisosData;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+class PermisoDetailData {
+  @ApiProperty({ type: Permiso })
+  data?: Permiso;
+}
+
+export class ResponsePermisoDetailType extends OmitType(ApiOkResponseDto, ['cache']) {
+  @ApiProperty({ type: PermisoDetailData })
+  response: PermisoDetailData;
 }

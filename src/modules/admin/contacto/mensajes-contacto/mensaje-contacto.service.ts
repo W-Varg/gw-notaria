@@ -5,7 +5,11 @@ import {
   ListMensajeContactoArgsDto,
 } from './dto/mensaje-contacto.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { MensajeContacto } from './mensaje-contacto.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -23,7 +27,7 @@ export class MensajeContactoService {
         where: { id: inputDto.usuarioId },
         select: { id: true },
       });
-      if (!usuarioExists) return dataResponseError('El usuario no existe');
+      if (!usuarioExists) return dataErrorValidations({ usuarioId: ['El usuario no existe'] });
     }
 
     const result = await this.prismaService.mensajeContacto.create({

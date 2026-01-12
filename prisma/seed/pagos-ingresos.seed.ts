@@ -56,7 +56,7 @@ export async function crearPagosIngresos(prisma: PrismaClient, usuarioId: string
 ];
 
   await prisma.$executeRawUnsafe(`
-    TRUNCATE TABLE "pagos_ingresos"
+    TRUNCATE TABLE "cont_pagos_ingresos"
     RESTART IDENTITY
     CASCADE;
   `);

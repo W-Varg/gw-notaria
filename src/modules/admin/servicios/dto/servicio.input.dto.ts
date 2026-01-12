@@ -3,6 +3,7 @@ import { Expose, Type } from 'class-transformer';
 import {
   IsDefined,
   IsInt,
+  IsISO8601,
   IsNumber,
   IsOptional,
   IsString,
@@ -11,10 +12,76 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { BaseFilterDto } from 'src/common/dtos/filters.dto';
-import { IntFilter } from 'src/common/dtos/prisma/int-filter.input';
 import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
 import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
 import { FloatFilter } from 'src/common/dtos/prisma/float-filter.input';
+
+export class ComercializadoraInputDto {
+  @Expose()
+  @IsDefined()
+  @ApiProperty({ type: Number, description: 'tipo 1=techo, 2 = monumental' })
+  tipoComercializadora: number;
+
+  @Expose()
+  @IsDefined()
+  @ApiProperty({ type: String })
+  clienteId: string;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Number })
+  proyecto?: number;
+
+  /* --------------------------------------------- fields para monumental --------------------------------------------- */
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Number })
+  modulo?: number;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Number })
+  bloque?: number;
+
+  /* ------------------------------------------------ fields para techo ----------------------------------------------- */
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: String })
+  urbanizacion?: string;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Number })
+  uv?: number;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Number })
+  manzana?: number;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Number })
+  lote?: number;
+
+  @Expose()
+  @IsOptional()
+  @IsISO8601()
+  @ApiPropertyOptional({ type: Date })
+  fechaProtocolo?: Date;
+
+  @Expose()
+  @IsOptional()
+  @IsISO8601()
+  @ApiPropertyOptional({ type: Date })
+  fechaRecepcion?: Date;
+
+  @Expose()
+  @IsOptional()
+  @IsISO8601()
+  @ApiPropertyOptional({ type: Date })
+  fechaEnvio?: Date;
+}
 
 export class CreateServicioDto {
   @Expose()
@@ -29,24 +96,46 @@ export class CreateServicioDto {
 
   @Expose()
   @IsOptional()
-  @IsString()
-  @MaxLength(50)
   @ApiPropertyOptional({ type: String })
-  claseTramite?: string;
+  tipoTramiteId?: string;
+
+  @Expose()
+  @IsInt()
+  @Min(1)
+  @ApiProperty({
+    type: Number,
+    description: 'ID de la sucursal donde se realiza el servicio',
+  })
+  sucursalId: number;
+
+  @Expose()
+  @IsOptional()
+  @IsInt()
+  @ApiPropertyOptional({ type: Number })
+  estadoActualId?: number;
+
+  @Expose()
+  @IsOptional()
+  @ApiPropertyOptional({ type: Date })
+  fechaEstimadaEntrega?: Date;
+
+  @Expose()
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @ApiPropertyOptional({ type: Number })
+  plazoEntregaDias?: number;
 
   @Expose()
   @IsOptional()
   @IsString()
-  @MaxLength(50)
-  @ApiPropertyOptional({ type: String })
-  tipoTramite?: string;
-
-  @Expose()
-  @IsOptional()
-  @IsString()
-  @MaxLength(50)
-  @ApiPropertyOptional({ type: String })
-  negocio?: string;
+  @MaxLength(20)
+  @ApiPropertyOptional({
+    type: String,
+    enum: ['baja', 'normal', 'alta', 'urgente'],
+    default: 'normal',
+  })
+  prioridad?: string;
 
   @Expose()
   @IsOptional()
@@ -66,6 +155,48 @@ export class CreateServicioDto {
   @Min(0)
   @ApiProperty({ type: Number })
   montoTotal: number;
+
+  // Campos para la primera derivación
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String, description: 'Motivo de la derivación inicial' })
+  motivoDerivacion?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String, description: 'Comentario adicional de la derivación' })
+  comentarioDerivacion?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  @ApiPropertyOptional({
+    type: String,
+    enum: ['baja', 'normal', 'alta', 'urgente'],
+    default: 'normal',
+    description: 'Prioridad de la derivación',
+  })
+  prioridadDerivacion?: string;
+
+  // Campo para el historial de estado inicial
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  @ApiPropertyOptional({ type: String, description: 'Comentario del estado inicial' })
+  comentarioEstadoInicial?: string;
+
+  @Expose()
+  @IsOptional()
+  @ValidateNested()
+  @ApiPropertyOptional({
+    type: ComercializadoraInputDto,
+    description: 'ID de la comercializadora asociada',
+  })
+  comercializadoraInput?: ComercializadoraInputDto;
 }
 
 export class UpdateServicioDto extends PartialType(CreateServicioDto) {}
@@ -93,19 +224,7 @@ class ServicioWhereInput {
   @ApiPropertyOptional({ type: StringNullableFilter })
   @IsOptional()
   @Type(() => StringNullableFilter)
-  claseTramite?: StringNullableFilter;
-
-  @Expose()
-  @ApiPropertyOptional({ type: StringNullableFilter })
-  @IsOptional()
-  @Type(() => StringNullableFilter)
-  tipoTramite?: StringNullableFilter;
-
-  @Expose()
-  @ApiPropertyOptional({ type: StringNullableFilter })
-  @IsOptional()
-  @Type(() => StringNullableFilter)
-  negocio?: StringNullableFilter;
+  tipoTramiteId?: StringNullableFilter;
 
   @Expose()
   @ApiPropertyOptional({ type: FloatFilter })
@@ -143,11 +262,7 @@ class ServicioSelectInput {
 
   @Expose()
   @ApiPropertyOptional({ type: Boolean })
-  tipoTramite?: boolean;
-
-  @Expose()
-  @ApiPropertyOptional({ type: Boolean })
-  negocio?: boolean;
+  tipoTramiteId?: boolean;
 
   @Expose()
   @ApiPropertyOptional({ type: Boolean })

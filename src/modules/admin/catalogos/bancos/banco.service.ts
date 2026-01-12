@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateBancoDto, UpdateBancoDto, ListBancoArgsDto } from './dto/banco.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
-import { Banco } from './banco.entity';
+import { BancoEntity } from './banco.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken } from 'src/common/decorators/token.decorator';
@@ -17,7 +21,7 @@ export class BancoService {
       where: { nombre: inputDto.nombre },
       select: { id: true },
     });
-    if (exists) return dataResponseError('El banco ya existe');
+    if (exists) return dataErrorValidations({ nombre: ['El banco ya existe'] });
 
     const result = await this.prismaService.banco.create({
       data: {
@@ -25,7 +29,7 @@ export class BancoService {
         userCreateId: session.usuarioId,
       },
     });
-    return dataResponseSuccess<Banco>({ data: result });
+    return dataResponseSuccess<BancoEntity>({ data: result });
   }
 
   /**
@@ -50,9 +54,23 @@ export class BancoService {
 
     if (pagination && total !== undefined) pagination.total = total;
 
-    return dataResponseSuccess<Banco[]>({
+    return dataResponseSuccess<BancoEntity[]>({
       data: list,
       pagination,
+    });
+  }
+
+  async getForSelect() {
+    const list = await this.prismaService.banco.findMany({
+      select: {
+        id: true,
+        nombre: true,
+      },
+      orderBy: { nombre: 'asc' },
+    });
+
+    return dataResponseSuccess({
+      data: list,
     });
   }
 
@@ -79,7 +97,7 @@ export class BancoService {
       this.prismaService.banco.count({ where: whereInput }),
     ]);
 
-    return dataResponseSuccess<Banco[]>({
+    return dataResponseSuccess<BancoEntity[]>({
       data: list,
       pagination: { ...pagination, total },
     });
@@ -91,7 +109,7 @@ export class BancoService {
       include: { cuentasBancarias: true },
     });
     if (!item) return dataResponseError('Banco no encontrado');
-    return dataResponseSuccess<Banco>({ data: item });
+    return dataResponseSuccess<BancoEntity>({ data: item });
   }
 
   async update(id: number, updateBancoDto: UpdateBancoDto, session: IToken) {
@@ -106,7 +124,8 @@ export class BancoService {
         where: { nombre: updateBancoDto.nombre, id: { not: id } },
         select: { id: true },
       });
-      if (nameExists) return dataResponseError('Ya existe un banco con ese nombre');
+      if (nameExists)
+        return dataErrorValidations({ nombre: ['Ya existe un banco con ese nombre'] });
     }
 
     const result = await this.prismaService.banco.update({
@@ -117,7 +136,7 @@ export class BancoService {
       },
     });
 
-    return dataResponseSuccess<Banco>({ data: result });
+    return dataResponseSuccess<BancoEntity>({ data: result });
   }
 
   async remove(id: number) {

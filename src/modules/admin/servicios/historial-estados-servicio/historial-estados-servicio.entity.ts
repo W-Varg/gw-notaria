@@ -10,8 +10,8 @@ export class HistorialEstadosServicio {
   @ApiProperty()
   servicioId: string;
 
-  @ApiProperty()
-  estadoId: string;
+  @ApiProperty({ type: Number })
+  estadoId: number;
 
   @ApiProperty()
   fechaCambio: Date;

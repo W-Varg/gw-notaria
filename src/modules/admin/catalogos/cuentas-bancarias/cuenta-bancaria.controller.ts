@@ -22,7 +22,7 @@ import { PermisoEnum } from 'src/enums/permisos.enum';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 import {
   PaginateCuentasBancariasType,
   ResponseCuentaBancariaType,
@@ -31,6 +31,7 @@ import {
 } from './dto/cuenta-bancaria.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Cuentas Bancarias')
 @Controller('cuentas-bancarias')
@@ -52,10 +53,18 @@ export class CuentaBancariaController {
     return this.cuentaBancariaService.create(inputDto, session);
   }
 
+  @Get('select')
+  @BearerAuthPermision([PermisoEnum.CUENTAS_BANCARIAS_VER])
+  @ApiDescription('Obtener cuentas bancarias para select', [PermisoEnum.CUENTAS_BANCARIAS_VER])
+  @ApiResponse({ status: 200, type: ResponseCuentasBancariasType })
+  getForSelect() {
+    return this.cuentaBancariaService.getForSelect();
+  }
+
   @Get()
   @BearerAuthPermision([PermisoEnum.CUENTAS_BANCARIAS_VER])
   @ApiDescription('Listar todas las cuentas bancarias', [PermisoEnum.CUENTAS_BANCARIAS_VER])
-  @ApiResponse({ type: ResponseCuentasBancariasType })
+  @ApiResponse({ status: 200, type: ResponseCuentasBancariasType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.cuentaBancariaService.findAll(query);
   }
@@ -74,8 +83,8 @@ export class CuentaBancariaController {
   @BearerAuthPermision([PermisoEnum.CUENTAS_BANCARIAS_VER])
   @ApiResponse({ status: 200, type: () => ResponseCuentaBancariaDetailType })
   @ApiDescription('Obtener una cuenta bancaria por ID', [PermisoEnum.CUENTAS_BANCARIAS_VER])
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.cuentaBancariaService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.cuentaBancariaService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -89,11 +98,11 @@ export class CuentaBancariaController {
     descripcion: 'Actualización de cuenta bancaria',
   })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateCuentaBancariaDto: UpdateCuentaBancariaDto,
     @AuthUser() session: IToken,
   ) {
-    return this.cuentaBancariaService.update(id, updateCuentaBancariaDto, session);
+    return this.cuentaBancariaService.update(params.id, updateCuentaBancariaDto, session);
   }
 
   @Delete(':id')
@@ -106,7 +115,7 @@ export class CuentaBancariaController {
     tabla: 'CuentaBancaria',
     descripcion: 'Eliminación de cuenta bancaria',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.cuentaBancariaService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.cuentaBancariaService.remove(params.id);
   }
 }

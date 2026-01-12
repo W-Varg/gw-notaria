@@ -9,6 +9,11 @@
         "include": "**/*.hbs",
         "outDir": "dist",
         "watchAssets": false
+      },
+      {
+        "include": "resources/**/*",
+        "outDir": "dist",
+        "watchAssets": false
       }
     ],
     "webpack": false

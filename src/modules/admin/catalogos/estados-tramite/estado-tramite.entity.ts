@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class EstadoTramite {
   @ApiProperty()
-  id: string;
+  id: number;
 
   @ApiProperty()
   nombre: string;

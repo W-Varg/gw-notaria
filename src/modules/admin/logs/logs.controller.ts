@@ -39,9 +39,7 @@ export class LogsController {
 
   @Post('system/list')
   @BearerAuthPermision([PermisoEnum.LOGS_VER])
-  @ApiDescription('Servicio post con filtros y paginado de logs de sistema', [
-    PermisoEnum.LOGS_VER,
-  ])
+  @ApiDescription('Servicio post con filtros y paginado de logs de sistema', [PermisoEnum.LOGS_VER])
   @ApiResponse({ status: 200, type: () => PaginateSystemLogsType })
   async listSystemLogs(@Body() inputDto: ListSystemLogsArgsDto) {
     return await this.logsService.getSystemLogs(inputDto);
@@ -59,9 +57,7 @@ export class LogsController {
 
   @Post('errors/list')
   @BearerAuthPermision([PermisoEnum.LOGS_VER])
-  @ApiDescription('Servicio post con filtros y paginado de logs de errores', [
-    PermisoEnum.LOGS_VER,
-  ])
+  @ApiDescription('Servicio post con filtros y paginado de logs de errores', [PermisoEnum.LOGS_VER])
   @ApiResponse({ status: 200, type: () => PaginateErrorLogsType })
   async listErrorLogs(@Body() inputDto: ListErrorLogsArgsDto) {
     return await this.logsService.getErrorLogs(inputDto);
@@ -69,9 +65,7 @@ export class LogsController {
 
   @Post('access/list')
   @BearerAuthPermision([PermisoEnum.LOGS_VER])
-  @ApiDescription('Servicio post con filtros y paginado de logs de acceso', [
-    PermisoEnum.LOGS_VER,
-  ])
+  @ApiDescription('Servicio post con filtros y paginado de logs de acceso', [PermisoEnum.LOGS_VER])
   @ApiResponse({ status: 200, type: () => PaginateAccessLogsType })
   async listAccessLogs(@Body() inputDto: ListAccessLogsArgsDto) {
     return await this.logsService.getAccessLogs(inputDto);

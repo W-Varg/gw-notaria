@@ -5,9 +5,13 @@ import {
   ListTipoDocumentoArgsDto,
 } from './dto/tipo-documento.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
-import { TipoDocumento } from './tipo-documento.entity';
+import { TipoDocumentoEntity } from './tipo-documento.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken } from 'src/common/decorators/token.decorator';
@@ -21,7 +25,7 @@ export class TipoDocumentoService {
       where: { nombre: inputDto.nombre },
       select: { id: true },
     });
-    if (exists) return dataResponseError('El tipo de documento ya existe');
+    if (exists) return dataErrorValidations({ nombre: ['El tipo de documento ya existe'] });
 
     const result = await this.prismaService.tipoDocumento.create({
       data: {
@@ -32,7 +36,7 @@ export class TipoDocumentoService {
         userCreateId: session.usuarioId,
       },
     });
-    return dataResponseSuccess<TipoDocumento>({ data: result });
+    return dataResponseSuccess<TipoDocumentoEntity>({ data: result });
   }
 
   async findAll(query: ListFindAllQueryDto) {
@@ -49,7 +53,7 @@ export class TipoDocumentoService {
 
     if (pagination && total !== undefined) pagination.total = total;
 
-    return dataResponseSuccess<TipoDocumento[]>({
+    return dataResponseSuccess<TipoDocumentoEntity[]>({
       data: list,
       pagination,
     });
@@ -75,7 +79,7 @@ export class TipoDocumentoService {
       this.prismaService.tipoDocumento.count({ where: whereInput }),
     ]);
 
-    return dataResponseSuccess<TipoDocumento[]>({
+    return dataResponseSuccess<TipoDocumentoEntity[]>({
       data: list,
       pagination: { ...pagination, total },
     });
@@ -86,7 +90,7 @@ export class TipoDocumentoService {
       where: { id },
     });
     if (!item) return dataResponseError('Tipo de documento no encontrado');
-    return dataResponseSuccess<TipoDocumento>({ data: item });
+    return dataResponseSuccess<TipoDocumentoEntity>({ data: item });
   }
 
   async update(id: string, updateDto: UpdateTipoDocumentoDto, session: IToken) {
@@ -101,7 +105,8 @@ export class TipoDocumentoService {
         where: { nombre: updateDto.nombre, id: { not: id } },
         select: { id: true },
       });
-      if (nameExists) return dataResponseError('Ya existe un tipo de documento con ese nombre');
+      if (nameExists)
+        return dataErrorValidations({ nombre: ['Ya existe un tipo de documento con ese nombre'] });
     }
 
     const result = await this.prismaService.tipoDocumento.update({
@@ -112,10 +117,20 @@ export class TipoDocumentoService {
       },
     });
 
-    return dataResponseSuccess<TipoDocumento>({ data: result });
+    return dataResponseSuccess<TipoDocumentoEntity>({ data: result });
   }
 
   async remove(id: string) {
+    //  query de tipo de documento, y verificar si existe algun Servicio asociado
+    const hasServices = await this.prismaService.servicio.count({
+      where: { tipoDocumentoId: id },
+    });
+
+    if (hasServices > 0) {
+      return dataResponseError(
+        'No se puede eliminar el tipo de documento porque tiene servicios asociados',
+      );
+    }
     const exists = await this.prismaService.tipoDocumento.findUnique({
       where: { id },
       select: { id: true },

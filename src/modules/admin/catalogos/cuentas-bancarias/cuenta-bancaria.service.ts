@@ -5,7 +5,11 @@ import {
   ListCuentaBancariaArgsDto,
 } from './dto/cuenta-bancaria.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { CuentaBancaria } from './cuenta-bancaria.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -22,14 +26,17 @@ export class CuentaBancariaService {
       where: { id: inputDto.bancoId },
       select: { id: true },
     });
-    if (!bancoExists) return dataResponseError('El banco no existe');
+    if (!bancoExists) return dataErrorValidations({ bancoId: ['El banco no existe'] });
 
     // Verificar que no exista una cuenta con el mismo número
     const exists = await this.prismaService.cuentaBancaria.findFirst({
       where: { numeroCuenta: inputDto.numeroCuenta },
       select: { id: true },
     });
-    if (exists) return dataResponseError('Ya existe una cuenta bancaria con ese número');
+    if (exists)
+      return dataErrorValidations({
+        numeroCuenta: ['Ya existe una cuenta bancaria con ese número'],
+      });
 
     const result = await this.prismaService.cuentaBancaria.create({
       data: {
@@ -66,6 +73,27 @@ export class CuentaBancariaService {
     return dataResponseSuccess<CuentaBancaria[]>({
       data: list,
       pagination,
+    });
+  }
+
+  async getForSelect() {
+    const list = await this.prismaService.cuentaBancaria.findMany({
+      select: {
+        id: true,
+        numeroCuenta: true,
+        tipoCuenta: true,
+        banco: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
+      },
+      orderBy: { id: 'desc' },
+    });
+
+    return dataResponseSuccess({
+      data: list,
     });
   }
 
@@ -127,7 +155,7 @@ export class CuentaBancariaService {
         where: { id: updateCuentaBancariaDto.bancoId },
         select: { id: true },
       });
-      if (!bancoExists) return dataResponseError('El banco no existe');
+      if (!bancoExists) return dataErrorValidations({ bancoId: ['El banco no existe'] });
     }
 
     // Si se actualiza el número de cuenta, verificar que no exista otro con ese número
@@ -136,7 +164,8 @@ export class CuentaBancariaService {
         where: { numeroCuenta: updateCuentaBancariaDto.numeroCuenta, id: { not: id } },
         select: { id: true },
       });
-      if (numberExists) return dataResponseError('Ya existe una cuenta con ese número');
+      if (numberExists)
+        return dataErrorValidations({ numeroCuenta: ['Ya existe una cuenta con ese número'] });
     }
 
     const result = await this.prismaService.cuentaBancaria.update({

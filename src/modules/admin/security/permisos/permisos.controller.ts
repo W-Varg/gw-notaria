@@ -7,15 +7,17 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { PermisoEnum } from 'src/enums/permisos.enum';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 import { ListPermisosArgsDto, UpdatePermisoActivoDto } from './dto/permisos.dto';
 import {
   ResponseMessageType,
   ResponsePermisosType,
   PaginatePermisosType,
+  ResponsePermisoDetailType,
 } from './dto/permisos.response';
 import { ResponseRolDetailType } from '../roles/dto/roles.response';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[auth] Permisos')
 @Controller('permisos')
@@ -37,6 +39,14 @@ export class PermisosController {
   @ApiResponse({ status: 200, type: () => ResponsePermisosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.permisosService.findAll(query);
+  }
+
+  @Get(':id')
+  @BearerAuthPermision([PermisoEnum.PERMISOS_VER])
+  @ApiDescription('Obtener un permiso por ID', [PermisoEnum.PERMISOS_VER])
+  @ApiResponse({ status: 200, type: () => ResponsePermisoDetailType })
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.permisosService.findOne(params.id);
   }
 
   @Post('asignar')
@@ -63,7 +73,10 @@ export class PermisosController {
     tabla: 'Permiso',
     descripcion: 'Cambio de estado activo de permiso',
   })
-  updateActivo(@Param('id') id: string, @Body() updateActivoDto: UpdatePermisoActivoDto) {
-    return this.permisosService.updateActivo(+id, updateActivoDto);
+  updateActivo(
+    @Param() params: CommonParamsDto.Id,
+    @Body() updateActivoDto: UpdatePermisoActivoDto,
+  ) {
+    return this.permisosService.updateActivo(params.id, updateActivoDto);
   }
 }

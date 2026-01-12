@@ -16,7 +16,7 @@ import { PermisoEnum } from 'src/enums/permisos.enum';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 import {
   PaginateRolesType,
   ResponseRolDetailType,
@@ -26,6 +26,7 @@ import {
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[auth] Roles')
 @Controller('roles')
@@ -45,6 +46,14 @@ export class RolesController {
   })
   create(@Body() inputDto: CreateRolDto, @AuthUser() session: IToken) {
     return this.rolesService.create(inputDto, session);
+  }
+
+  @Get('select')
+  @BearerAuthPermision([PermisoEnum.ROLES_VER])
+  @ApiDescription('Obtener roles para select', [PermisoEnum.ROLES_VER])
+  @ApiResponse({ status: 200, type: () => ResponseRolesType })
+  getForSelect() {
+    return this.rolesService.getForSelect();
   }
 
   @Get()
@@ -67,8 +76,8 @@ export class RolesController {
   @BearerAuthPermision([PermisoEnum.ROLES_VER])
   @ApiResponse({ status: 200, type: () => ResponseRolDetailType })
   @ApiDescription('Obtener un rol por ID', [PermisoEnum.ROLES_VER])
-  findOne(@Param('id') id: string) {
-    return this.rolesService.findOne(+id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.rolesService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -82,11 +91,12 @@ export class RolesController {
     descripcion: 'Actualización de rol',
   })
   update(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.Id,
+
     @Body() updateRoleDto: UpdateRoleDto,
     @AuthUser() session: IToken,
   ) {
-    return this.rolesService.update(+id, updateRoleDto, session);
+    return this.rolesService.update(params.id, updateRoleDto, session);
   }
 
   @Delete(':id')
@@ -99,7 +109,7 @@ export class RolesController {
     tabla: 'Rol',
     descripcion: 'Eliminación de rol',
   })
-  remove(@Param('id') id: string) {
-    return this.rolesService.remove(+id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.rolesService.remove(params.id);
   }
 }

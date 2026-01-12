@@ -10,6 +10,7 @@ export default () => {
     appMaxSize: process.env.ENV_FILE_MAX_SIZE || '100mb',
     debugServer: process.env.ENV_DEBUG_SERVER || 'false',
     showSwagger: process.env.ENV_SWAGGER_SHOW || 'false',
+    twoFactorEnabled: process.env.ENV_2FA_ENABLED === 'true',
     endEntorno: process.env.ENV_ENTORNO || 'dev',
 
     googleClientId: process.env.GOOGLE_CLIENT_ID || null,

@@ -45,7 +45,7 @@ export const configSwagger = (
   const document = SwaggerModule.createDocument(app, documentBuilder);
   SwaggerModule.setup('api', app, document, {
     customSiteTitle: nameParsePresentation(packageJson.name),
-    customfavIcon: '../assets/favicon.ico',
+    customfavIcon: '/public/assets/favicon.ico',
     customCss: `
          .swagger-ui .topbar { display: none; }
          .swagger-ui .info { margin: 20px 0;}

@@ -26,7 +26,8 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Gastos')
 @Controller('gastos')
@@ -51,7 +52,7 @@ export class GastosController {
   @Get()
   @BearerAuthPermision([PermisoEnum.GASTOS_VER])
   @ApiDescription('Listar todos los gastos', [PermisoEnum.GASTOS_VER])
-  @ApiResponse({ type: ResponseListGastosType })
+  @ApiResponse({ status: 200, type: ResponseListGastosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.gastosService.findAll(query);
   }
@@ -68,8 +69,8 @@ export class GastosController {
   @BearerAuthPermision([PermisoEnum.GASTOS_VER])
   @ApiResponse({ status: 200, type: () => ResponseGastosDetailType })
   @ApiDescription('Obtener un gasto por ID', [PermisoEnum.GASTOS_VER])
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.gastosService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.gastosService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -83,11 +84,11 @@ export class GastosController {
     descripcion: 'Actualizar gasto',
   })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateDto: UpdateGastosDto,
     @AuthUser() session: IToken,
   ) {
-    return this.gastosService.update(id, updateDto, session);
+    return this.gastosService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')
@@ -100,7 +101,7 @@ export class GastosController {
     tabla: 'Gastos',
     descripcion: 'Eliminar gasto',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.gastosService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.gastosService.remove(params.id);
   }
 }

@@ -5,7 +5,11 @@ import {
   ListEstadoTramiteArgsDto,
 } from './dto/estado-tramite.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { EstadoTramite } from './estado-tramite.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -21,7 +25,7 @@ export class EstadoTramiteService {
       where: { nombre: inputDto.nombre },
       select: { id: true },
     });
-    if (exists) return dataResponseError('Ya existe un estado con ese nombre');
+    if (exists) return dataErrorValidations({ nombre: ['Ya existe un estado con ese nombre'] });
 
     const result = await this.prismaService.estadoTramite.create({
       data: {
@@ -52,6 +56,23 @@ export class EstadoTramiteService {
     });
   }
 
+  async getForSelect() {
+    const list = await this.prismaService.estadoTramite.findMany({
+      where: { estaActivo: true },
+      select: {
+        id: true,
+        nombre: true,
+        colorHex: true,
+        orden: true,
+      },
+      orderBy: { orden: 'asc' },
+    });
+
+    return dataResponseSuccess({
+      data: list,
+    });
+  }
+
   async filter(inputDto: ListEstadoTramiteArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
     const { nombre, descripcion, colorHex, orden, estaActivo } = inputDto.where || {};
@@ -79,7 +100,7 @@ export class EstadoTramiteService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     const item = await this.prismaService.estadoTramite.findUnique({
       where: { id },
     });
@@ -87,7 +108,7 @@ export class EstadoTramiteService {
     return dataResponseSuccess<EstadoTramite>({ data: item });
   }
 
-  async update(id: string, updateDto: UpdateEstadoTramiteDto, session: IToken) {
+  async update(id: number, updateDto: UpdateEstadoTramiteDto, session: IToken) {
     const exists = await this.prismaService.estadoTramite.findUnique({
       where: { id },
       select: { id: true },
@@ -102,7 +123,8 @@ export class EstadoTramiteService {
         },
         select: { id: true },
       });
-      if (duplicated) return dataResponseError('Ya existe un estado con ese nombre');
+      if (duplicated)
+        return dataErrorValidations({ nombre: ['Ya existe un estado con ese nombre'] });
     }
 
     const result = await this.prismaService.estadoTramite.update({
@@ -116,7 +138,7 @@ export class EstadoTramiteService {
     return dataResponseSuccess<EstadoTramite>({ data: result });
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     const exists = await this.prismaService.estadoTramite.findUnique({
       where: { id },
       select: { id: true },

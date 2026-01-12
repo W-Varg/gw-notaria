@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CuentaBancaria } from '../cuentas-bancarias/cuenta-bancaria.entity';
 
-export class Banco {
+export class BancoEntity {
   @ApiProperty({ type: Number })
   id: number;
 
@@ -8,7 +9,7 @@ export class Banco {
   nombre: string;
 }
 
-export class BancoDetail extends Banco {
-  @ApiProperty({ isArray: true })
-  cuentasBancarias: any[];
+export class BancoDetail extends BancoEntity {
+  @ApiProperty({ isArray: true, type: () => CuentaBancaria })
+  cuentasBancarias: CuentaBancaria[];
 }

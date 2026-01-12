@@ -5,7 +5,11 @@ import {
   ListArqueosDiariosArgsDto,
 } from './dto/arqueos-diarios.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { ArqueosDiarios } from './arqueos-diarios.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -22,7 +26,7 @@ export class ArqueosDiariosService {
       where: { fecha: new Date(inputDto.fecha) },
       select: { id: true },
     });
-    if (exists) return dataResponseError('Ya existe un arqueo para esta fecha');
+    if (exists) return dataErrorValidations({ fecha: ['Ya existe un arqueo para esta fecha'] });
 
     // Validar usuario de cierre si se proporciona
     if (inputDto.usuarioCierreId) {
@@ -30,7 +34,8 @@ export class ArqueosDiariosService {
         where: { id: inputDto.usuarioCierreId },
         select: { id: true },
       });
-      if (!usuarioExists) return dataResponseError('El usuario de cierre no existe');
+      if (!usuarioExists)
+        return dataErrorValidations({ usuarioCierreId: ['El usuario de cierre no existe'] });
     }
 
     const result = await this.prismaService.arqueosDiarios.create({

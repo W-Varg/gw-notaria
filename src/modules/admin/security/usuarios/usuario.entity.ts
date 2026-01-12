@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UsuarioRol } from './usuario-rol.entity';
+import { SucursalEntity } from '../../catalogos/sucursales/sucursal.entity';
 
 export class Usuario {
   @ApiProperty({ type: String })
@@ -23,6 +24,9 @@ export class Usuario {
   @ApiPropertyOptional({ type: String })
   avatar?: string;
 
+  @ApiPropertyOptional({ type: Number })
+  sucursalId?: number;
+
   @ApiProperty({ type: Boolean })
   estaActivo: boolean = true;
 
@@ -42,4 +46,7 @@ export class Usuario {
 export class UsuarioDetail extends Usuario {
   @ApiProperty({ isArray: true, type: () => UsuarioRol })
   roles: UsuarioRol[];
+
+  @ApiPropertyOptional({ type: () => SucursalEntity })
+  sucursal?: SucursalEntity;
 }

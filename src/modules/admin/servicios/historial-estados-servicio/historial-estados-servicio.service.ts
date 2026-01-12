@@ -5,7 +5,11 @@ import {
   ListHistorialEstadosServicioArgsDto,
 } from './dto/historial-estados-servicio.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { HistorialEstadosServicio } from './historial-estados-servicio.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -21,14 +25,14 @@ export class HistorialEstadosServicioService {
       where: { id: inputDto.servicioId },
       select: { id: true },
     });
-    if (!servicioExists) return dataResponseError('El servicio no existe');
+    if (!servicioExists) return dataErrorValidations({ servicioId: ['El servicio no existe'] });
 
     // Validar que el estado existe
     const estadoExists = await this.prismaService.estadoTramite.findUnique({
       where: { id: inputDto.estadoId },
       select: { id: true },
     });
-    if (!estadoExists) return dataResponseError('El estado no existe');
+    if (!estadoExists) return dataErrorValidations({ estadoId: ['El estado no existe'] });
 
     // Validar usuario si se proporciona
     if (inputDto.usuarioId) {
@@ -36,7 +40,7 @@ export class HistorialEstadosServicioService {
         where: { id: inputDto.usuarioId },
         select: { id: true },
       });
-      if (!usuarioExists) return dataResponseError('El usuario no existe');
+      if (!usuarioExists) return dataErrorValidations({ usuarioId: ['El usuario no existe'] });
     }
 
     const result = await this.prismaService.historialEstadosServicio.create({

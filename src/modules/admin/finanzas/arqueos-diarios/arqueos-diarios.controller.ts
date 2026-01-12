@@ -30,7 +30,8 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Arqueos Diarios')
 @Controller('arqueos-diarios')
@@ -55,7 +56,7 @@ export class ArqueosDiariosController {
   @Get()
   @BearerAuthPermision([PermisoEnum.ARQUEOS_DIARIOS_VER])
   @ApiDescription('Listar todos los arqueos diarios', [PermisoEnum.ARQUEOS_DIARIOS_VER])
-  @ApiResponse({ type: ResponseListArqueosDiariosType })
+  @ApiResponse({ status: 200, type: ResponseListArqueosDiariosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.arqueosDiariosService.findAll(query);
   }
@@ -74,8 +75,8 @@ export class ArqueosDiariosController {
   @BearerAuthPermision([PermisoEnum.ARQUEOS_DIARIOS_VER])
   @ApiResponse({ status: 200, type: () => ResponseArqueosDiariosDetailType })
   @ApiDescription('Obtener un arqueo diario por ID', [PermisoEnum.ARQUEOS_DIARIOS_VER])
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.arqueosDiariosService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.arqueosDiariosService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -89,11 +90,11 @@ export class ArqueosDiariosController {
     descripcion: 'Actualizar arqueo diario',
   })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateDto: UpdateArqueosDiariosDto,
     @AuthUser() session: IToken,
   ) {
-    return this.arqueosDiariosService.update(id, updateDto, session);
+    return this.arqueosDiariosService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')
@@ -106,7 +107,7 @@ export class ArqueosDiariosController {
     tabla: 'ArqueosDiarios',
     descripcion: 'Eliminar arqueo diario',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.arqueosDiariosService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.arqueosDiariosService.remove(params.id);
   }
 }

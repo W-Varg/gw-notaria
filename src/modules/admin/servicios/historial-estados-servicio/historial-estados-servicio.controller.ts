@@ -29,15 +29,14 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Historial Estados Servicio')
 @Controller('historial-estados-servicio')
 @UseInterceptors(AuditInterceptor)
 export class HistorialEstadosServicioController {
-  constructor(
-    private readonly historialEstadosServicioService: HistorialEstadosServicioService,
-  ) {}
+  constructor(private readonly historialEstadosServicioService: HistorialEstadosServicioService) {}
 
   @Post()
   @BearerAuthPermision([PermisoEnum.HISTORIAL_ESTADOS_SERVICIO_CREAR])
@@ -57,8 +56,10 @@ export class HistorialEstadosServicioController {
 
   @Get()
   @BearerAuthPermision([PermisoEnum.HISTORIAL_ESTADOS_SERVICIO_VER])
-  @ApiDescription('Listar todos los historiales de estados', [PermisoEnum.HISTORIAL_ESTADOS_SERVICIO_VER])
-  @ApiResponse({ type: ResponseHistorialEstadosServiciosType })
+  @ApiDescription('Listar todos los historiales de estados', [
+    PermisoEnum.HISTORIAL_ESTADOS_SERVICIO_VER,
+  ])
+  @ApiResponse({ status: 200, type: ResponseHistorialEstadosServiciosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.historialEstadosServicioService.findAll(query);
   }
@@ -76,9 +77,11 @@ export class HistorialEstadosServicioController {
   @Get(':id')
   @BearerAuthPermision([PermisoEnum.HISTORIAL_ESTADOS_SERVICIO_VER])
   @ApiResponse({ status: 200, type: () => ResponseHistorialEstadosServicioDetailType })
-  @ApiDescription('Obtener un historial de estado por ID', [PermisoEnum.HISTORIAL_ESTADOS_SERVICIO_VER])
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.historialEstadosServicioService.findOne(id);
+  @ApiDescription('Obtener un historial de estado por ID', [
+    PermisoEnum.HISTORIAL_ESTADOS_SERVICIO_VER,
+  ])
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.historialEstadosServicioService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -94,10 +97,10 @@ export class HistorialEstadosServicioController {
     descripcion: 'Actualizar historial de estado',
   })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateDto: UpdateHistorialEstadosServicioDto,
   ) {
-    return this.historialEstadosServicioService.update(id, updateDto);
+    return this.historialEstadosServicioService.update(params.id, updateDto);
   }
 
   @Delete(':id')
@@ -112,7 +115,7 @@ export class HistorialEstadosServicioController {
     tabla: 'HistorialEstadosServicio',
     descripcion: 'Eliminar historial de estado',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.historialEstadosServicioService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.historialEstadosServicioService.remove(params.id);
   }
 }

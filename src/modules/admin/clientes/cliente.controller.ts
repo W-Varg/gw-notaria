@@ -26,10 +26,11 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Clientes')
-@Controller('clientes')
+@Controller('admin/clientes')
 @UseInterceptors(AuditInterceptor)
 export class ClienteController {
   constructor(private readonly clienteService: ClienteService) {}
@@ -48,10 +49,18 @@ export class ClienteController {
     return this.clienteService.create(inputDto, session);
   }
 
+  @Get('select')
+  @BearerAuthPermision([PermisoEnum.CLIENTES_VER])
+  @ApiDescription('Obtener clientes para select', [PermisoEnum.CLIENTES_VER])
+  @ApiResponse({ status: 200, type: ResponseClientesType })
+  getForSelect() {
+    return this.clienteService.getForSelect();
+  }
+
   @Get()
   @BearerAuthPermision([PermisoEnum.CLIENTES_VER])
   @ApiDescription('Listar todos los clientes', [PermisoEnum.CLIENTES_VER])
-  @ApiResponse({ type: ResponseClientesType })
+  @ApiResponse({ status: 200, type: ResponseClientesType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.clienteService.findAll(query);
   }
@@ -68,8 +77,8 @@ export class ClienteController {
   @BearerAuthPermision([PermisoEnum.CLIENTES_VER])
   @ApiResponse({ status: 200, type: () => ResponseClienteDetailType })
   @ApiDescription('Obtener un cliente por ID', [PermisoEnum.CLIENTES_VER])
-  findOne(@Param('id') id: string) {
-    return this.clienteService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.IdUuid) {
+    return this.clienteService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -83,11 +92,11 @@ export class ClienteController {
     descripcion: 'Actualizar cliente',
   })
   update(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.IdUuid,
     @Body() updateDto: UpdateClienteDto,
     @AuthUser() session: IToken,
   ) {
-    return this.clienteService.update(id, updateDto, session);
+    return this.clienteService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')
@@ -100,7 +109,7 @@ export class ClienteController {
     tabla: 'Cliente',
     descripcion: 'Eliminar cliente',
   })
-  remove(@Param('id', ParseIntPipe) id: string) {
-    return this.clienteService.remove(id);
+  remove(@Param() params: CommonParamsDto.IdString) {
+    return this.clienteService.remove(params.id);
   }
 }

@@ -5,16 +5,24 @@ import {
   ListPagosIngresosArgsDto,
 } from './dto/pagos-ingresos.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { PagosIngresos } from './pagos-ingresos.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken } from 'src/common/decorators/token.decorator';
+import { PdfService } from 'src/modules/pdf/pdf.service';
 
 @Injectable()
 export class PagosIngresosService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly _pdfService: PdfService,
+  ) {}
 
   async create(inputDto: CreatePagosIngresosDto, session: IToken) {
     // Validar servicio si se proporciona
@@ -23,7 +31,7 @@ export class PagosIngresosService {
         where: { id: inputDto.servicioId },
         select: { id: true, saldoPendiente: true },
       });
-      if (!servicioExists) return dataResponseError('El servicio no existe');
+      if (!servicioExists) return dataErrorValidations({ servicioId: ['El servicio no existe'] });
     }
 
     // Validar cuenta bancaria si se proporciona
@@ -32,7 +40,8 @@ export class PagosIngresosService {
         where: { id: inputDto.cuentaBancariaId },
         select: { id: true },
       });
-      if (!cuentaExists) return dataResponseError('La cuenta bancaria no existe');
+      if (!cuentaExists)
+        return dataErrorValidations({ cuentaBancariaId: ['La cuenta bancaria no existe'] });
     }
 
     // Validar usuario de registro si se proporciona
@@ -41,7 +50,8 @@ export class PagosIngresosService {
         where: { id: inputDto.usuarioRegistroId },
         select: { id: true },
       });
-      if (!usuarioExists) return dataResponseError('El usuario de registro no existe');
+      if (!usuarioExists)
+        return dataErrorValidations({ usuarioRegistroId: ['El usuario de registro no existe'] });
     }
 
     const result = await this.prismaService.pagosIngresos.create({
@@ -198,5 +208,60 @@ export class PagosIngresosService {
 
     await this.prismaService.pagosIngresos.delete({ where: { id } });
     return dataResponseSuccess({ data: 'Pago/Ingreso eliminado' });
+  }
+
+  getRecibo() {
+    const documento: Parameters<typeof this._pdfService.generarPdf>[0] = {
+      pageSize: { width: 226, height: 'auto' },
+      pageMargins: [10, 10, 10, 10],
+      defaultStyle: {
+        fontSize: 10,
+        columnGap: 5,
+      },
+      content: [
+        {
+          text: 'data.tienda',
+          bold: true,
+          fontSize: 12,
+          alignment: 'center',
+        },
+        {
+          text: 'data.direccion',
+          alignment: 'center',
+        },
+        {
+          text: `Tel: ${'data.telefono'}`,
+          alignment: 'center',
+          margin: [0, 0, 0, 10],
+        },
+        // {
+        //   table: {
+        //     widths: ['*', 'auto', 'auto'],
+        //     body: [
+        //       ['Descripción', 'Cant.', 'Precio'],
+        //       ...data.items.map((item) => [
+        //         item.descripcion,
+        //         item.cantidad.toString(),
+        //         item.precio.toFixed(2),
+        //       ]),
+        //       [{ text: 'TOTAL', colSpan: 2, alignment: 'right' }, {}, data.total.toFixed(2)],
+        //     ],
+        //   },
+        //   layout: 'noBorders',
+        //   margin: [0, 0, 0, 10],
+        // },
+        {
+          text: `Fecha: ${'data.fecha'}`,
+          alignment: 'left',
+          fontSize: 8,
+        },
+        {
+          text: '¡Gracias por su compra!',
+          alignment: 'center',
+          margin: [0, 10, 0, 0],
+        },
+      ],
+    };
+    return this._pdfService.generarPdf(documento);
   }
 }

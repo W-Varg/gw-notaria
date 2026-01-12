@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  IsInt,
   MaxLength,
   MinLength,
   ValidateNested,
@@ -15,23 +16,22 @@ import {
 import { BaseFilterDto } from 'src/common/dtos/filters.dto';
 import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
 import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
-import { TipoClienteEnum } from 'src/generated/prisma/enums';
+import { TipoClienteEnum } from 'src/enums/tipo-cliente.enum';
 
 // DTOs para PersonaNatural
 export class CreatePersonaNaturalDto {
   @Expose()
-  @IsOptional()
   @IsString()
   @MaxLength(20)
-  @ApiPropertyOptional({ type: String })
-  ci?: string;
+  @ApiProperty({ type: String })
+  tipoDocumento: string;
 
   @Expose()
-  @IsOptional()
   @IsString()
-  @MaxLength(10)
-  @ApiPropertyOptional({ type: String })
-  expedido?: string;
+  @IsDefined()
+  @MaxLength(20)
+  @ApiProperty({ type: String })
+  numeroDocumento: string;
 
   @Expose()
   @IsDefined()
@@ -82,16 +82,16 @@ export class CreatePersonaJuridicaDto {
 export class CreateClienteDto {
   @Expose()
   @IsDefined()
-  @IsEnum(TipoClienteEnum)
-  @ApiProperty({ enum: TipoClienteEnum })
-  tipo: TipoClienteEnum;
+  @IsInt()
+  @ApiProperty({ type: Number, enum: TipoClienteEnum, description: '1 = NATURAL, 2 = JURIDICA' })
+  tipoCliente: TipoClienteEnum;
 
   @Expose()
-  @IsDefined()
   @IsEmail()
   @MaxLength(100)
-  @ApiProperty({ type: String })
-  email: string;
+  @IsOptional()
+  @ApiPropertyOptional({ type: String })
+  email?: string;
 
   @Expose()
   @IsOptional()
@@ -109,7 +109,7 @@ export class CreateClienteDto {
 
   // Datos específicos según tipo
   @Expose()
-  @ValidateIf((o) => o.tipo === TipoClienteEnum.NATURAL)
+  @ValidateIf((o) => o.tipoCliente === TipoClienteEnum.NATURAL)
   @IsDefined()
   @ValidateNested()
   @Type(() => CreatePersonaNaturalDto)
@@ -117,7 +117,7 @@ export class CreateClienteDto {
   personaNatural?: CreatePersonaNaturalDto;
 
   @Expose()
-  @ValidateIf((o) => o.tipo === TipoClienteEnum.JURIDICA)
+  @ValidateIf((o) => o.tipoCliente === TipoClienteEnum.JURIDICA)
   @IsDefined()
   @ValidateNested()
   @Type(() => CreatePersonaJuridicaDto)
@@ -129,10 +129,14 @@ export class UpdateClienteDto extends PartialType(CreateClienteDto) {}
 
 class ClienteWhereInput {
   @Expose()
-  @ApiPropertyOptional({ enum: TipoClienteEnum })
+  @ApiPropertyOptional({
+    type: Number,
+    enum: TipoClienteEnum,
+    description: '1 = NATURAL, 2 = JURIDICA',
+  })
   @IsOptional()
-  @IsEnum(TipoClienteEnum)
-  tipo?: TipoClienteEnum;
+  @IsInt()
+  tipoCliente?: TipoClienteEnum;
 
   @Expose()
   @ApiPropertyOptional({ type: StringFilter })

@@ -1,41 +1,53 @@
 import { Injectable } from '@nestjs/common';
 import { CreateClienteDto, UpdateClienteDto, ListClienteArgsDto } from './dto/cliente.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
-import { Cliente } from './cliente.entity';
+import { ClienteEntity } from './cliente.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { IToken } from 'src/common/decorators/token.decorator';
-import { TipoClienteEnum } from 'src/generated/prisma/enums';
+import { TipoClienteEnum } from 'src/enums/tipo-cliente.enum';
 
 @Injectable()
 export class ClienteService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async create(inputDto: CreateClienteDto, session: IToken) {
-    // Validar correo único
-    const emailExists = await this.prismaService.cliente.findFirst({
-      where: { email: inputDto.email },
-      select: { id: true },
-    });
-    if (emailExists) return dataResponseError('El correo electrónico ya está registrado');
+    // Validar correo único solo si se proporciona
+    if (inputDto.email) {
+      const emailExists = await this.prismaService.cliente.findFirst({
+        where: { email: inputDto.email },
+        select: { id: true },
+      });
+      if (emailExists)
+        return dataErrorValidations({ email: ['El correo electrónico ya está registrado'] });
+    }
 
     // Validar que se proporcionen los datos específicos según el tipo
-    if (inputDto.tipo === TipoClienteEnum.NATURAL && !inputDto.personaNatural) {
-      return dataResponseError('Debe proporcionar los datos de persona natural');
+    if (inputDto.tipoCliente === TipoClienteEnum.NATURAL && !inputDto.personaNatural) {
+      return dataErrorValidations({
+        personaNatural: ['Debe proporcionar los datos de persona natural'],
+      });
     }
-    if (inputDto.tipo === TipoClienteEnum.JURIDICA && !inputDto.personaJuridica) {
-      return dataResponseError('Debe proporcionar los datos de persona jurídica');
+    if (inputDto.tipoCliente === TipoClienteEnum.JURIDICA && !inputDto.personaJuridica) {
+      return dataErrorValidations({
+        personaJuridica: ['Debe proporcionar los datos de persona jurídica'],
+      });
     }
 
     // Validar CI único si se proporciona
-    if (inputDto.personaNatural?.ci) {
+    if (inputDto.personaNatural?.numeroDocumento) {
       const ciExists = await this.prismaService.personaNatural.findUnique({
-        where: { ci: inputDto.personaNatural.ci },
+        where: { numeroDocumento: inputDto.personaNatural.numeroDocumento },
         select: { clienteId: true },
       });
-      if (ciExists) return dataResponseError('El CI ya está registrado');
+      if (ciExists)
+        return dataErrorValidations({ 'personaNatural.ci': ['El CI ya está registrado'] });
     }
 
     // Validar NIT único si se proporciona
@@ -44,17 +56,18 @@ export class ClienteService {
         where: { nit: inputDto.personaJuridica.nit },
         select: { clienteId: true },
       });
-      if (nitExists) return dataResponseError('El NIT ya está registrado');
+      if (nitExists)
+        return dataErrorValidations({ 'personaJuridica.nit': ['El NIT ya está registrado'] });
     }
 
     const result = await this.prismaService.cliente.create({
       data: {
-        tipo: inputDto.tipo,
+        tipoCliente: inputDto.tipoCliente,
         email: inputDto.email,
         telefono: inputDto.telefono,
         direccion: inputDto.direccion,
         userCreateId: session.usuarioId,
-        ...(inputDto.tipo === TipoClienteEnum.NATURAL && {
+        ...(inputDto.tipoCliente === TipoClienteEnum.NATURAL && {
           personaNatural: {
             create: {
               ...inputDto.personaNatural,
@@ -62,7 +75,7 @@ export class ClienteService {
             },
           },
         }),
-        ...(inputDto.tipo === TipoClienteEnum.JURIDICA && {
+        ...(inputDto.tipoCliente === TipoClienteEnum.JURIDICA && {
           personaJuridica: {
             create: {
               ...inputDto.personaJuridica,
@@ -77,7 +90,7 @@ export class ClienteService {
       },
     });
 
-    return dataResponseSuccess<Cliente>({ data: result });
+    return dataResponseSuccess<ClienteEntity>({ data: result });
   }
 
   async findAll(query: ListFindAllQueryDto) {
@@ -98,18 +111,47 @@ export class ClienteService {
 
     if (pagination && total !== undefined) pagination.total = total;
 
-    return dataResponseSuccess<Cliente[]>({
+    return dataResponseSuccess<ClienteEntity[]>({
       data: list,
       pagination,
     });
   }
 
+  async getForSelect() {
+    const list = await this.prismaService.cliente.findMany({
+      select: {
+        id: true,
+        tipoCliente: true,
+        email: true,
+        telefono: true,
+        personaNatural: {
+          select: {
+            nombres: true,
+            apellidos: true,
+            numeroDocumento: true,
+          },
+        },
+        personaJuridica: {
+          select: {
+            razonSocial: true,
+            nit: true,
+          },
+        },
+      },
+      orderBy: { fechaCreacion: 'desc' },
+    });
+
+    return dataResponseSuccess({
+      data: list,
+    });
+  }
+
   async filter(inputDto: ListClienteArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
-    const { tipo, email, telefono, direccion } = inputDto.where || {};
+    const { tipoCliente: tipo, email, telefono, direccion } = inputDto.where || {};
     const whereInput: Prisma.ClienteWhereInput = {};
 
-    if (tipo) whereInput.tipo = tipo;
+    if (tipo) whereInput.tipoCliente = tipo;
     if (email) whereInput.email = email;
     if (telefono) whereInput.telefono = telefono;
     if (direccion) whereInput.direccion = direccion;
@@ -128,7 +170,7 @@ export class ClienteService {
       this.prismaService.cliente.count({ where: whereInput }),
     ]);
 
-    return dataResponseSuccess<Cliente[]>({
+    return dataResponseSuccess<ClienteEntity[]>({
       data: list,
       pagination: { ...pagination, total },
     });
@@ -143,13 +185,13 @@ export class ClienteService {
       },
     });
     if (!item) return dataResponseError('Cliente no encontrado');
-    return dataResponseSuccess<Cliente>({ data: item });
+    return dataResponseSuccess<ClienteEntity>({ data: item });
   }
 
   async update(id: string, updateDto: UpdateClienteDto, session: IToken) {
     const exists = await this.prismaService.cliente.findUnique({
       where: { id },
-      select: { id: true, tipo: true },
+      select: { id: true, tipoCliente: true },
     });
     if (!exists) return dataResponseError('Cliente no encontrado');
 
@@ -162,19 +204,21 @@ export class ClienteService {
         },
         select: { id: true },
       });
-      if (emailDup) return dataResponseError('El correo electrónico ya está registrado');
+      if (emailDup)
+        return dataErrorValidations({ email: ['El correo electrónico ya está registrado'] });
     }
 
     // Validar CI único si se actualiza
-    if (updateDto.personaNatural?.ci) {
+    if (updateDto.personaNatural?.numeroDocumento) {
       const ciExists = await this.prismaService.personaNatural.findFirst({
         where: {
-          ci: updateDto.personaNatural.ci,
+          numeroDocumento: updateDto.personaNatural.numeroDocumento,
           NOT: { clienteId: id },
         },
         select: { clienteId: true },
       });
-      if (ciExists) return dataResponseError('El CI ya está registrado');
+      if (ciExists)
+        return dataErrorValidations({ 'personaNatural.ci': ['El CI ya está registrado'] });
     }
 
     // Validar NIT único si se actualiza
@@ -186,13 +230,14 @@ export class ClienteService {
         },
         select: { clienteId: true },
       });
-      if (nitExists) return dataResponseError('El NIT ya está registrado');
+      if (nitExists)
+        return dataErrorValidations({ 'personaJuridica.nit': ['El NIT ya está registrado'] });
     }
 
     const result = await this.prismaService.cliente.update({
       where: { id },
       data: {
-        tipo: updateDto.tipo,
+        tipoCliente: updateDto.tipoCliente,
         email: updateDto.email,
         telefono: updateDto.telefono,
         direccion: updateDto.direccion,
@@ -220,7 +265,7 @@ export class ClienteService {
       },
     });
 
-    return dataResponseSuccess<Cliente>({ data: result });
+    return dataResponseSuccess<ClienteEntity>({ data: result });
   }
 
   async remove(id: string) {

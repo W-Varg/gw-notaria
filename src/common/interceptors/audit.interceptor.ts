@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { AUDIT_KEY, AuditMetadata } from 'src/common/decorators/audit.decorator';
-import { TipoAccionEnum } from '../../generated/prisma/client';
+import { TipoAccionEnum } from '../../enums/tipo-accion.enum';
 import { AuditService } from 'src/global/services/audit.service';
 
 @Injectable()

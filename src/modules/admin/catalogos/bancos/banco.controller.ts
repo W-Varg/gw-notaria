@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  ParseIntPipe,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
@@ -26,7 +25,8 @@ import {
 } from './dto/banco.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Bancos')
 @Controller('bancos')
@@ -48,10 +48,18 @@ export class BancoController {
     return this.bancoService.create(inputDto, session);
   }
 
+  @Get('select')
+  @BearerAuthPermision()
+  @ApiDescription('Obtener bancos para select')
+  @ApiResponse({ status: 200, type: ResponseBancosType })
+  getForSelect() {
+    return this.bancoService.getForSelect();
+  }
+
   @Get()
   @BearerAuthPermision([PermisoEnum.BANCOS_VER])
   @ApiDescription('Listar todos los bancos', [PermisoEnum.BANCOS_VER])
-  @ApiResponse({ type: ResponseBancosType })
+  @ApiResponse({ status: 200, type: ResponseBancosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.bancoService.findAll(query);
   }
@@ -68,8 +76,8 @@ export class BancoController {
   @BearerAuthPermision([PermisoEnum.BANCOS_VER])
   @ApiResponse({ status: 200, type: () => ResponseBancoDetailType })
   @ApiDescription('Obtener un banco por ID', [PermisoEnum.BANCOS_VER])
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.bancoService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.bancoService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -83,11 +91,11 @@ export class BancoController {
     descripcion: 'Actualización de banco',
   })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateBancoDto: UpdateBancoDto,
     @AuthUser() session: IToken,
   ) {
-    return this.bancoService.update(id, updateBancoDto, session);
+    return this.bancoService.update(params.id, updateBancoDto, session);
   }
 
   @Delete(':id')
@@ -100,7 +108,7 @@ export class BancoController {
     tabla: 'Banco',
     descripcion: 'Eliminación de banco',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.bancoService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.bancoService.remove(params.id);
   }
 }

@@ -1,5 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
-import { TipoAccionEnum } from '../../generated/prisma/client';
+import { TipoAccionEnum } from '../../enums/tipo-accion.enum';
 
 export const AUDIT_KEY = 'audit';
 

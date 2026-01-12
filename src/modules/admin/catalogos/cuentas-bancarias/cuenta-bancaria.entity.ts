@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Banco } from '../bancos/banco.entity';
+import { BancoEntity } from '../bancos/banco.entity';
 
 export class CuentaBancaria {
   @ApiProperty({ type: Number })
@@ -19,6 +19,6 @@ export class CuentaBancaria {
 }
 
 export class CuentaBancariaDetail extends CuentaBancaria {
-  @ApiProperty({ type: () => Banco })
-  banco: Banco;
+  @ApiProperty({ type: () => BancoEntity })
+  banco: BancoEntity;
 }

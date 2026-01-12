@@ -1,15 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { TipoClienteEnum } from 'src/generated/prisma/enums';
+import { TipoClienteEnum } from 'src/enums/tipo-cliente.enum';
 
 export class PersonaNatural {
   @ApiProperty()
   clienteId: string;
 
-  @ApiPropertyOptional()
-  ci?: string;
+  @ApiProperty()
+  tipoDocumento: string;
 
-  @ApiPropertyOptional()
-  expedido?: string;
+  @ApiProperty()
+  numeroDocumento: string;
 
   @ApiProperty()
   nombres: string;
@@ -59,15 +59,15 @@ export class PersonaJuridica {
   fechaActualizacion: Date;
 }
 
-export class Cliente {
+export class ClienteEntity {
   @ApiProperty()
   id: string;
 
-  @ApiProperty({ enum: TipoClienteEnum })
-  tipo: TipoClienteEnum;
+  @ApiProperty({ type: Number, enum: TipoClienteEnum, description: '1 = NATURAL, 2 = JURIDICA' })
+  tipoCliente: TipoClienteEnum;
 
-  @ApiProperty()
-  email: string;
+  @ApiPropertyOptional()
+  email?: string;
 
   @ApiPropertyOptional()
   telefono?: string;
@@ -92,4 +92,7 @@ export class Cliente {
 
   @ApiPropertyOptional({ type: PersonaJuridica })
   personaJuridica?: PersonaJuridica;
+
+  @ApiPropertyOptional({ type: Array })
+  comercializadoras?: any[];
 }

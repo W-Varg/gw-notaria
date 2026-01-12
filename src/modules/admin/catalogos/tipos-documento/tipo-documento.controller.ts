@@ -29,7 +29,8 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Tipos de Documento')
 @Controller('tipos-documento')
@@ -54,7 +55,7 @@ export class TipoDocumentoController {
   @Get()
   @BearerAuthPermision([PermisoEnum.TIPOS_DOCUMENTO_VER])
   @ApiDescription('Listar todos los tipos de documento', [PermisoEnum.TIPOS_DOCUMENTO_VER])
-  @ApiResponse({ type: ResponseTipoDocumentosType })
+  @ApiResponse({ status: 200, type: ResponseTipoDocumentosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.tipoDocumentoService.findAll(query);
   }
@@ -73,8 +74,8 @@ export class TipoDocumentoController {
   @BearerAuthPermision([PermisoEnum.TIPOS_DOCUMENTO_VER])
   @ApiResponse({ status: 200, type: () => ResponseTipoDocumentoDetailType })
   @ApiDescription('Obtener un tipo de documento por ID', [PermisoEnum.TIPOS_DOCUMENTO_VER])
-  findOne(@Param('id') id: string) {
-    return this.tipoDocumentoService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.IdUuid) {
+    return this.tipoDocumentoService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -88,11 +89,11 @@ export class TipoDocumentoController {
     descripcion: 'Actualizar tipo de documento',
   })
   update(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.IdUuid,
     @Body() updateDto: UpdateTipoDocumentoDto,
     @AuthUser() session: IToken,
   ) {
-    return this.tipoDocumentoService.update(id, updateDto, session);
+    return this.tipoDocumentoService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')
@@ -105,7 +106,7 @@ export class TipoDocumentoController {
     tabla: 'TipoDocumento',
     descripcion: 'Eliminar tipo de documento',
   })
-  remove(@Param('id') id: string) {
-    return this.tipoDocumentoService.remove(id);
+  remove(@Param() params: CommonParamsDto.IdUuid) {
+    return this.tipoDocumentoService.remove(params.id);
   }
 }

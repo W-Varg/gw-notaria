@@ -5,7 +5,11 @@ import {
   ListResponsableServicioArgsDto,
 } from './dto/responsable-servicio.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { ResponsableServicio } from './responsable-servicio.entity';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
@@ -21,14 +25,14 @@ export class ResponsableServicioService {
       where: { id: inputDto.usuarioId },
       select: { id: true },
     });
-    if (!usuarioExists) return dataResponseError('El usuario no existe');
+    if (!usuarioExists) return dataErrorValidations({ usuarioId: ['El usuario no existe'] });
 
     // Validar que el servicio existe
     const servicioExists = await this.prismaService.servicio.findUnique({
       where: { id: inputDto.servicioId },
       select: { id: true },
     });
-    if (!servicioExists) return dataResponseError('El servicio no existe');
+    if (!servicioExists) return dataErrorValidations({ servicioId: ['El servicio no existe'] });
 
     // Verificar si ya existe una asignación activa
     const existingActive = await this.prismaService.responsableServicio.findFirst({
@@ -40,7 +44,10 @@ export class ResponsableServicioService {
       select: { id: true },
     });
     if (existingActive)
-      return dataResponseError('El usuario ya está asignado activamente a este servicio');
+      return dataErrorValidations({
+        usuarioId: ['El usuario ya está asignado activamente a este servicio'],
+        servicioId: ['El usuario ya está asignado activamente a este servicio'],
+      });
 
     const result = await this.prismaService.responsableServicio.create({
       data: inputDto,

@@ -9,6 +9,7 @@ import {
   Query,
   UseInterceptors,
   ParseIntPipe,
+  StreamableFile,
 } from '@nestjs/common';
 import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 import { PagosIngresosService } from './pagos-ingresos.service';
@@ -30,13 +31,24 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Pagos e Ingresos')
 @Controller('pagos-ingresos')
 @UseInterceptors(AuditInterceptor)
 export class PagosIngresosController {
   constructor(private readonly pagosIngresosService: PagosIngresosService) {}
+
+  @Get('recibo')
+  async recibo() {
+    const documento = await this.pagosIngresosService.getRecibo();
+
+    return new StreamableFile(documento, {
+      disposition: `inline; filename="recibo.pdf"`,
+      type: 'application/pdf',
+    });
+  }
 
   @Post()
   @BearerAuthPermision([PermisoEnum.PAGOS_INGRESOS_CREAR])
@@ -55,7 +67,7 @@ export class PagosIngresosController {
   @Get()
   @BearerAuthPermision([PermisoEnum.PAGOS_INGRESOS_VER])
   @ApiDescription('Listar todos los pagos e ingresos', [PermisoEnum.PAGOS_INGRESOS_VER])
-  @ApiResponse({ type: ResponseListPagosIngresosType })
+  @ApiResponse({ status: 200, type: ResponseListPagosIngresosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.pagosIngresosService.findAll(query);
   }
@@ -74,8 +86,8 @@ export class PagosIngresosController {
   @BearerAuthPermision([PermisoEnum.PAGOS_INGRESOS_VER])
   @ApiResponse({ status: 200, type: () => ResponsePagosIngresosDetailType })
   @ApiDescription('Obtener un pago/ingreso por ID', [PermisoEnum.PAGOS_INGRESOS_VER])
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.pagosIngresosService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.pagosIngresosService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -89,11 +101,11 @@ export class PagosIngresosController {
     descripcion: 'Actualizar pago/ingreso',
   })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateDto: UpdatePagosIngresosDto,
     @AuthUser() session: IToken,
   ) {
-    return this.pagosIngresosService.update(id, updateDto, session);
+    return this.pagosIngresosService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')
@@ -106,7 +118,7 @@ export class PagosIngresosController {
     tabla: 'PagosIngresos',
     descripcion: 'Eliminar pago/ingreso',
   })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.pagosIngresosService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.pagosIngresosService.remove(params.id);
   }
 }

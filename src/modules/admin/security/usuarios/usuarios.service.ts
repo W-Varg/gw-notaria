@@ -6,7 +6,11 @@ import {
   UpdateUsuarioDto,
 } from './dto/usuarios.input.dto';
 import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { Usuario } from './usuario.entity';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
@@ -38,12 +42,23 @@ export class UsuariosService {
       // 1. Validaciones usando UserValidationService
       const isEmailUnique = await this.userValidationService.isEmailUnique(usuarioData.email);
       if (!isEmailUnique) {
-        return dataResponseError('El email ya está registrado');
+        return dataErrorValidations({ email: ['El email ya está registrado'] });
       }
 
       const areRolesValid = await this.userValidationService.doRolesExist(rolesIds);
       if (!areRolesValid) {
-        return dataResponseError('Uno o más roles no existen');
+        return dataErrorValidations({ rolesIds: ['Uno o más roles no existen'] });
+      }
+
+      // Validar sucursal si se proporciona
+      if (usuarioData.sucursalId) {
+        const sucursalExists = await this.prismaService.sucursal.findUnique({
+          where: { id: usuarioData.sucursalId },
+          select: { id: true },
+        });
+        if (!sucursalExists) {
+          return dataErrorValidations({ sucursalId: ['La sucursal no existe'] });
+        }
       }
 
       // 2. Procesar avatar usando FileStorageService
@@ -132,6 +147,24 @@ export class UsuariosService {
     });
   }
 
+  async getForSelect() {
+    const list = await this.prismaService.usuario.findMany({
+      where: { estaActivo: true },
+      select: {
+        id: true,
+        nombre: true,
+        apellidos: true,
+        email: true,
+        avatar: true,
+      },
+      orderBy: { nombre: 'asc' },
+    });
+
+    return dataResponseSuccess({
+      data: list,
+    });
+  }
+
   async filter(inputDto: ListUsuarioArgsDto) {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(inputDto, true);
     const { email, nombre, estaActivo, apellidos, telefono, direccion, emailVerificado } =
@@ -167,7 +200,17 @@ export class UsuariosService {
   async findOne(id: string) {
     const usuario = await this.prismaService.usuario.findUnique({
       where: { id },
-      include: { roles: { include: { rol: true } } },
+      include: {
+        roles: { include: { rol: true } },
+        sucursal: {
+          select: {
+            id: true,
+            nombre: true,
+            abreviacion: true,
+            departamento: true,
+          },
+        },
+      },
     });
     if (!usuario) return dataResponseError('Usuario no encontrado');
 
@@ -212,6 +255,17 @@ export class UsuariosService {
         const areRolesValid = await this.userValidationService.doRolesExist(rolesIds);
         if (!areRolesValid) {
           return dataResponseError('No existen los roles indicados');
+        }
+      }
+
+      // Validar sucursal si se proporciona
+      if (usuarioData.sucursalId) {
+        const sucursalExists = await this.prismaService.sucursal.findUnique({
+          where: { id: usuarioData.sucursalId },
+          select: { id: true },
+        });
+        if (!sucursalExists) {
+          return dataErrorValidations({ sucursalId: ['La sucursal no existe'] });
         }
       }
 

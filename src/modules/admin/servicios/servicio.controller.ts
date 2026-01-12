@@ -17,6 +17,11 @@ import {
   UpdateServicioDto,
   ListServicioArgsDto,
 } from './dto/servicio.input.dto';
+import {
+  ServiciosDashboardFilterDto,
+  UpdateServicioProgresoDto,
+  RegistrarPagoServicioDto,
+} from './dto/servicio.input-extended.dto';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { PermisoEnum } from 'src/enums/permisos.enum';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -25,12 +30,14 @@ import {
   ResponseServicioType,
   ResponseServicioDetailType,
   ResponseServiciosType,
+  ResponseServiciosStatsType,
 } from './dto/servicio.response';
 import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
 
 @ApiTags('[admin] Servicios')
 @Controller('servicios')
@@ -55,7 +62,7 @@ export class ServicioController {
   @Get()
   @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
   @ApiDescription('Listar todos los servicios', [PermisoEnum.SERVICIOS_VER])
-  @ApiResponse({ type: ResponseServiciosType })
+  @ApiResponse({ status: 200, type: ResponseServiciosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.servicioService.findAll(query);
   }
@@ -72,8 +79,8 @@ export class ServicioController {
   @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
   @ApiResponse({ status: 200, type: () => ResponseServicioDetailType })
   @ApiDescription('Obtener un servicio por ID', [PermisoEnum.SERVICIOS_VER])
-  findOne(@Param('id') id: string) {
-    return this.servicioService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.IdUuid) {
+    return this.servicioService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -87,11 +94,11 @@ export class ServicioController {
     descripcion: 'Actualizar servicio',
   })
   update(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.IdUuid,
     @Body() updateDto: UpdateServicioDto,
     @AuthUser() session: IToken,
   ) {
-    return this.servicioService.update(id, updateDto, session);
+    return this.servicioService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')
@@ -104,7 +111,59 @@ export class ServicioController {
     tabla: 'Servicio',
     descripcion: 'Eliminar servicio',
   })
-  remove(@Param('id') id: string) {
-    return this.servicioService.remove(id);
+  remove(@Param() params: CommonParamsDto.IdUuid) {
+    return this.servicioService.remove(params.id);
+  }
+
+  @Get('stats/dashboard')
+  @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
+  @ApiDescription('Obtener estadísticas del dashboard', [PermisoEnum.SERVICIOS_VER])
+  @ApiResponse({ status: 200, type: () => ResponseServiciosStatsType })
+  getStats() {
+    return this.servicioService.getStats();
+  }
+
+  @Post('dashboard/list')
+  @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
+  @ApiDescription('Listar servicios para el dashboard con filtros', [PermisoEnum.SERVICIOS_VER])
+  @ApiResponse({ status: 200, type: () => PaginateServiciosType })
+  findAllDashboard(@Body() filters: ServiciosDashboardFilterDto) {
+    return this.servicioService.findAllDashboard(filters);
+  }
+
+  @Patch(':id/progreso')
+  @BearerAuthPermision([PermisoEnum.SERVICIOS_EDITAR])
+  @ApiResponse({ status: 200, type: () => ResponseServicioType })
+  @ApiDescription('Actualizar el estado/progreso de un servicio', [PermisoEnum.SERVICIOS_EDITAR])
+  @Audit({
+    accion: TipoAccionEnum.UPDATE,
+    modulo: 'servicios',
+    tabla: 'Servicio',
+    descripcion: 'Actualizar progreso de servicio',
+  })
+  updateProgreso(
+    @Param() params: CommonParamsDto.IdUuid,
+    @Body() dto: UpdateServicioProgresoDto,
+    @AuthUser() session: IToken,
+  ) {
+    return this.servicioService.updateProgreso(params.id, dto, session.usuarioId);
+  }
+
+  @Post(':id/pagos')
+  @BearerAuthPermision([PermisoEnum.SERVICIOS_EDITAR])
+  @ApiResponse({ status: 200, type: () => ResponseServicioType })
+  @ApiDescription('Registrar un pago para un servicio', [PermisoEnum.SERVICIOS_EDITAR])
+  @Audit({
+    accion: TipoAccionEnum.CREATE,
+    modulo: 'servicios',
+    tabla: 'PagosIngresos',
+    descripcion: 'Registrar pago de servicio',
+  })
+  registrarPago(
+    @Param() params: CommonParamsDto.IdUuid,
+    @Body() dto: RegistrarPagoServicioDto,
+    @AuthUser() session: IToken,
+  ) {
+    return this.servicioService.registrarPago(params.id, dto, session.usuarioId);
   }
 }

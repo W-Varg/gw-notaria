@@ -167,27 +167,52 @@ export const permisos: Prisma.PermisoUncheckedCreateInput[] = [
   // Admin - Catálogo
   // ==========================
   {
-    nombre: PermisoEnum.CATEGORIAS_VER,
-    descripcion: 'Permite ver categorías',
-    modulo: 'categorias',
+    nombre: PermisoEnum.SUCURSALES_VER,
+    descripcion: 'Permite ver sucursales',
+    modulo: 'sucursales',
     accion: 'ver',
   },
   {
-    nombre: PermisoEnum.CATEGORIAS_CREAR,
-    descripcion: 'Permite crear categorías',
-    modulo: 'categorias',
+    nombre: PermisoEnum.SUCURSALES_CREAR,
+    descripcion: 'Permite crear sucursales',
+    modulo: 'sucursales',
     accion: 'crear',
   },
   {
-    nombre: PermisoEnum.CATEGORIAS_EDITAR,
-    descripcion: 'Permite editar categorías',
-    modulo: 'categorias',
+    nombre: PermisoEnum.SUCURSALES_EDITAR,
+    descripcion: 'Permite editar sucursales',
+    modulo: 'sucursales',
+    accion: 'editar',
+  },
+  {
+    nombre: PermisoEnum.SUCURSALES_ELIMINAR,
+    descripcion: 'Permite eliminar sucursales',
+    modulo: 'sucursales',
+    accion: 'eliminar',
+  },
+
+  {
+    nombre: PermisoEnum.TIPOS_TRAMITE_VER,
+    descripcion: 'Permite ver tipos de trámite',
+    modulo: 'tipos-tramite',
+    accion: 'ver',
+  },
+  {
+    nombre: PermisoEnum.TIPOS_TRAMITE_CREAR,
+    descripcion: 'Permite crear tipos de trámite',
+    modulo: 'tipos-tramite',
+    accion: 'crear',
+  },
+  {
+    nombre: PermisoEnum.TIPOS_TRAMITE_EDITAR,
+    descripcion: 'Permite editar tipos de trámite',
+    modulo: 'tipos-tramite',
     accion: 'actualizar',
   },
   {
-    nombre: PermisoEnum.CATEGORIAS_ELIMINAR,
-    descripcion: 'Permite eliminar categorías',
-    modulo: 'categorias',
+    nombre: PermisoEnum.TIPOS_TRAMITE_ELIMINAR,
+    descripcion: 'Permite eliminar tipos de trámite',
+    modulo: 'tipos-tramite',
     accion: 'eliminar',
   },
 
@@ -419,6 +444,31 @@ export const permisos: Prisma.PermisoUncheckedCreateInput[] = [
     nombre: PermisoEnum.RESPONSABLES_SERVICIO_ELIMINAR,
     descripcion: 'Permite eliminar responsables de servicio',
     modulo: 'responsables_servicio',
+    accion: 'eliminar',
+  },
+
+  {
+    nombre: PermisoEnum.DERIVACIONES_SERVICIO_VER,
+    descripcion: 'Permite ver derivaciones de servicio',
+    modulo: 'derivaciones_servicio',
+    accion: 'ver',
+  },
+  {
+    nombre: PermisoEnum.DERIVACIONES_SERVICIO_CREAR,
+    descripcion: 'Permite crear derivaciones de servicio',
+    modulo: 'derivaciones_servicio',
+    accion: 'crear',
+  },
+  {
+    nombre: PermisoEnum.DERIVACIONES_SERVICIO_EDITAR,
+    descripcion: 'Permite editar derivaciones de servicio',
+    modulo: 'derivaciones_servicio',
+    accion: 'editar',
+  },
+  {
+    nombre: PermisoEnum.DERIVACIONES_SERVICIO_ELIMINAR,
+    descripcion: 'Permite eliminar derivaciones de servicio',
+    modulo: 'derivaciones_servicio',
     accion: 'eliminar',
   },
 

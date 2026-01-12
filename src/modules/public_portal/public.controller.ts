@@ -3,7 +3,7 @@ import { PublicService } from './public.service';
 import { ApiDescription } from 'src/common/decorators/controller.decorator';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
-  CategoriasTypePublic,
+  // CategoriasTypePublic,
   ResponseMensajeType,
   ResponsePoliticasType,
   ResponseFAQsType,
@@ -17,13 +17,13 @@ import { ContactoMensajeDto, FAQsDto } from './dto/public.input';
 export class PublicController {
   constructor(private readonly publicService: PublicService) {}
 
-  @Get('categorias')
-  @UseCache({ ttl: 5 * 60, keyPrefix: 'categorias' }) // Cache for 5 minutes
-  @ApiDescription('Obtener categorías activas')
-  @ApiResponse({ status: 200, type: () => CategoriasTypePublic })
-  async getCategorias() {
-    return this.publicService.getCategorias();
-  }
+  // @Get('categorias')
+  // @UseCache({ ttl: 5 * 60, keyPrefix: 'categorias' }) // Cache for 5 minutes
+  // @ApiDescription('Obtener categorías activas')
+  // @ApiResponse({ status: 200, type: () => CategoriasTypePublic })
+  // async getCategorias() {
+  //   return this.publicService.getCategorias();
+  // }
 
   /* ---------------------------------------------------------------------------------------------------------------- */
   /*                                                     Contacto                                                     */

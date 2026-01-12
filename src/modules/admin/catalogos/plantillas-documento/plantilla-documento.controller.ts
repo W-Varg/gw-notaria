@@ -29,7 +29,8 @@ import { BearerAuthPermision } from 'src/common/decorators/authorization.decorat
 import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
 import { Audit } from 'src/common/decorators/audit.decorator';
 import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Plantillas de Documento')
 @Controller('plantillas-documento')
@@ -58,7 +59,7 @@ export class PlantillaDocumentoController {
   @ApiDescription('Listar todas las plantillas de documento', [
     PermisoEnum.PLANTILLAS_DOCUMENTO_VER,
   ])
-  @ApiResponse({ type: ResponsePlantillaDocumentosType })
+  @ApiResponse({ status: 200, type: ResponsePlantillaDocumentosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.plantillaDocumentoService.findAll(query);
   }
@@ -79,8 +80,8 @@ export class PlantillaDocumentoController {
   @ApiDescription('Obtener una plantilla de documento por ID', [
     PermisoEnum.PLANTILLAS_DOCUMENTO_VER,
   ])
-  findOne(@Param('id') id: number) {
-    return this.plantillaDocumentoService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.plantillaDocumentoService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -96,11 +97,11 @@ export class PlantillaDocumentoController {
     descripcion: 'Actualizar plantilla de documento',
   })
   update(
-    @Param('id') id: number,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateDto: UpdatePlantillaDocumentoDto,
     @AuthUser() session: IToken,
   ) {
-    return this.plantillaDocumentoService.update(id, updateDto, session);
+    return this.plantillaDocumentoService.update(params.id, updateDto, session);
   }
 
   @Delete(':id')
@@ -115,7 +116,7 @@ export class PlantillaDocumentoController {
     tabla: 'PlantillaDocumento',
     descripcion: 'Eliminar plantilla de documento',
   })
-  remove(@Param('id') id: number) {
-    return this.plantillaDocumentoService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.plantillaDocumentoService.remove(params.id);
   }
 }

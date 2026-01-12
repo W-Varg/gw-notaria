@@ -414,7 +414,7 @@ async create(@Body() inputDto: CreateFaqDto) {
   tabla: 'Faq',
   descripcion: 'Actualizar FAQ',
 })
-async update(@Param('id') id: string, @Body() inputDto: UpdateFaqDto) {
+async update(@Param() params: CommonParamsDto.IdUuid, @Body() inputDto: UpdateFaqDto) {
   return this.faqService.update(id, inputDto);
 }
 
@@ -425,7 +425,7 @@ async update(@Param('id') id: string, @Body() inputDto: UpdateFaqDto) {
   tabla: 'Faq',
   descripcion: 'Eliminar FAQ',
 })
-async remove(@Param('id') id: string) {
+async remove(@Param() params: CommonParamsDto.IdUuid) {
   return this.faqService.remove(id);
 }
 ```

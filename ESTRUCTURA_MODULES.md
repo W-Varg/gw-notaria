@@ -22,7 +22,8 @@ Cada módulo debe seguir esta estructura:
 ```
 src/modules/admin/catalogos/[nombre-modulo]/
 ├── dto/
-│   ├── [nombre].input.dto.ts      # DTOs de entrada (Create, Update, Filter)
+│   ├── [nombre].input.dto.ts      # DTOs de entrada (Create, Update)
+│   ├── [nombre].where.input.ts    # DTOs de filtros (WhereInput, SelectInput, ListArgsDto)
 │   └── [nombre].response.ts       # DTOs de respuesta (tipos de retorno)
 ├── [nombre].controller.ts         # Controlador con endpoints
 ├── [nombre].service.ts            # Lógica de negocio
@@ -31,18 +32,29 @@ src/modules/admin/catalogos/[nombre-modulo]/
 └── README.md                      # Documentación del módulo
 ```
 
+**Nota sobre separación de archivos:**
+- `[nombre].input.dto.ts`: Contiene solo `CreateDto` y `UpdateDto`
+- `[nombre].where.input.ts`: Contiene `WhereInput`, `SelectInput` y `ListArgsDto` (filtros)
+- Esta separación mejora la organización y mantiene los archivos más pequeños y enfocados
+
 ---
 
 ## 📥 DTOs de Entrada (Input)
 
 ### Archivo: `[nombre].input.dto.ts`
 
-Este archivo contiene todos los DTOs para las operaciones de entrada del módulo.
+Este archivo contiene los DTOs para crear y actualizar registros del módulo.
 
 ### 1️⃣ CreateDto - DTO de Creación
 
 ```typescript
-export class CreateCategoriaDto {
+export class CreateTipoTramiteDto {
+  @Expose()
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ type: String, description: 'ID del tipo de documento (opcional)' })
+  tipoDocumentoId?: string;
+
   @Expose()
   @IsDefined()
   @IsString()
@@ -60,8 +72,21 @@ export class CreateCategoriaDto {
 
   @Expose()
   @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  @ApiPropertyOptional({ type: String })
+  claseTramite?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({ type: Number, description: 'Costo base del trámite' })
+  costoBase?: number;
+
+  @Expose()
+  @IsOptional()
   @IsBoolean()
-  @ApiPropertyOptional({ type: Boolean })
+  @ApiPropertyOptional({ type: Boolean, default: true })
   estaActiva?: boolean;
 }
 ```
@@ -74,6 +99,11 @@ export class CreateCategoriaDto {
 - `@MinLength()`, `@MaxLength()`: Validación de longitud
 - `@ApiProperty()`: Documentación Swagger (requerido)
 - `@ApiPropertyOptional()`: Documentación Swagger (opcional)
+
+**Nota sobre campos opcionales:**
+- En Prisma, un campo con `?` es nullable en la base de datos
+- En DTOs de creación, usa `@IsOptional()` para campos no requeridos
+- Ejemplo: `tipoDocumentoId String?` en schema → `tipoDocumentoId?: string` con `@IsOptional()` en DTO
 
 **Orden de decoradores:**
 1. `@Expose()` - Siempre primero
@@ -98,6 +128,12 @@ export class Update[Nombre]Dto extends PartialType(Create[Nombre]Dto) {
 ```
 
 **Nota:** `PartialType` convierte automáticamente todos los campos del DTO base en opcionales.
+
+---
+
+### Archivo: `[nombre].where.input.ts`
+
+Este archivo contiene los DTOs para filtrado, selección de campos y listado paginado.
 
 ### 3️⃣ WhereInput - DTO de Filtros
 
@@ -131,12 +167,26 @@ class [Nombre]WhereInput {
   @Type(() => IntFilter)
   cantidad?: IntFilter;
 
+  // Filtros para números decimales (Prisma Decimal)
+  @Expose()
+  @ApiPropertyOptional({ type: DecimalFilter })
+  @IsOptional()
+  @Type(() => DecimalFilter)
+  costoBase?: DecimalFilter;
+
   // Filtros para fechas
   @Expose()
   @ApiPropertyOptional({ type: DateTimeFilter })
   @IsOptional()
   @Type(() => DateTimeFilter)
   fechaCreacion?: DateTimeFilter;
+
+  // Filtros para fechas opcionales (nullable)
+  @Expose()
+  @ApiPropertyOptional({ type: DateTimeNullableFilter })
+  @IsOptional()
+  @Type(() => DateTimeNullableFilter)
+  fechaFinalizacion?: DateTimeNullableFilter;
 }
 ```
 
@@ -147,12 +197,14 @@ class [Nombre]WhereInput {
 4. `@Type(() => TipoFiltro)` - Transformación de tipo
 
 **Tipos de filtros disponibles:**
-- `StringFilter`: Para campos `string`
-- `StringNullableFilter`: Para campos `string | null`
+- `StringFilter`: Para campos `string` (required)
+- `StringNullableFilter`: Para campos `string | null` (optional)
 - `IntFilter`: Para campos `number` (enteros)
 - `FloatFilter`: Para campos `number` (decimales)
+- `DecimalFilter`: Para campos `Decimal` de Prisma
 - `BoolFilter`: Para campos `boolean`
-- `DateTimeFilter`: Para campos `Date`
+- `DateTimeFilter`: Para campos `Date` / `DateTime`
+- `DateTimeNullableFilter`: Para campos `DateTime?` (optional)
 
 ### 4️⃣ SelectInput - DTO de Selección de Campos
 
@@ -194,6 +246,37 @@ export class List[Nombre]ArgsDto extends BaseFilterDto {
   @ValidateNested()
   @Type(() => [Nombre]SelectInput)
   select?: [Nombre]SelectInput;
+}
+```
+
+### 6️⃣ Filtros en Relaciones
+
+Cuando necesitas filtrar por campos de relaciones (ej: filtrar derivaciones por tipo de trámite del servicio):
+
+```typescript
+class DerivacionWhereInput {
+  // Filtros directos
+  @Expose()
+  @ApiPropertyOptional({ type: StringFilter })
+  @IsOptional()
+  @Type(() => StringFilter)
+  servicioId?: StringFilter;
+
+  // Filtro simple por ID de relación (recomendado)
+  @Expose()
+  @ApiPropertyOptional({ type: String, description: 'Filtrar por ID del tipo de trámite del servicio' })
+  @IsOptional()
+  @IsString()
+  tramiteId?: string;
+}
+```
+
+**En el servicio, aplica el filtro así:**
+```typescript
+if (tramiteId) {
+  whereInput.servicio = {
+    tipoTramiteId: tramiteId,
+  };
 }
 ```
 
@@ -420,10 +503,20 @@ create(@Body() inputDto: Create[Nombre]Dto, @AuthUser() session: IToken) {
 - `@ApiResponse({...})`: Define tipo de respuesta en Swagger
 - `@Audit({...})`: Registra la acción de creación en logs
   - `accion`: Tipo de acción (CREATE, UPDATE, DELETE, etc.)
-  - `modulo`: Módulo al que pertenece (ej: 'catalogos', 'security')
-  - `tabla`: Nombre de la tabla/modelo
-  - `descripcion`: Descripción de la acción
+  - `modulo`: Módulo al que pertenece (ej: 'catalogos', 'security', 'servicios')
+  - `tabla`: Nombre de la tabla/modelo en Prisma (ej: 'Categoria', 'DerivacionServicio')
+  - `descripcion`: Descripción legible de la acción
 - `@AuthUser()`: Inyecta sesión del usuario autenticado
+
+**Ejemplo de @Audit en módulo de servicios:**
+```typescript
+@Audit({
+  accion: TipoAccionEnum.CREATE,
+  modulo: 'servicios',
+  tabla: 'DerivacionServicio',
+  descripcion: 'Crear derivación de servicio',
+})
+```
 
 **Retorna:** `Response[Nombre]Type` (registro individual)
 
@@ -433,7 +526,7 @@ create(@Body() inputDto: Create[Nombre]Dto, @AuthUser() session: IToken) {
 @Get()
 @BearerAuthPermision([PermisoEnum.[NOMBRE]_VER])
 @ApiDescription('Listar todos los [nombre]s', [PermisoEnum.[NOMBRE]_VER])
-@ApiResponse({ type: Response[Nombre]sType })
+@ApiResponse({ status: 200, type: Response[Nombre]sType })
 findAll(@Query() query: ListFindAllQueryDto) {
   return this.[nombre]Service.findAll(query);
 }
@@ -457,6 +550,45 @@ list(@Body() inputDto: List[Nombre]ArgsDto) {
 
 **Retorna:** `Paginate[Nombre]sType` (lista paginada)
 
+### 3.5️⃣ Endpoint SELECT (Opcional) - `GET /select`
+
+**Nota importante sobre orden:** Este endpoint debe declararse **ANTES** del `GET /:id` para evitar que Express lo interprete como un parámetro.
+
+```typescript
+@Get('select')
+@BearerAuthPermision()
+@ApiDescription('Obtener [nombre]s para select/dropdown')
+@ApiResponse({ status: 200, type: Response[Nombre]sType })
+getForSelect() {
+  return this.[nombre]Service.getForSelect();
+}
+```
+
+**Características:**
+- Usa `@BearerAuthPermision()` sin permisos específicos (cualquier usuario autenticado puede acceder)
+- Retorna solo campos necesarios para selects: `id`, `nombre`, y opcionalmente `abreviacion`
+- Filtra solo registros activos (`estaActivo: true` o `estaActiva: true`)
+- Ordenado alfabéticamente por nombre
+
+**Implementación en el servicio:**
+```typescript
+async getForSelect() {
+  const list = await this.prismaService.[nombre].findMany({
+    where: { estaActiva: true }, // o estaActivo según el modelo
+    select: {
+      id: true,
+      nombre: true,
+      // campos adicionales según necesidad
+    },
+    orderBy: { nombre: 'asc' },
+  });
+
+  return dataResponseSuccess({ data: list });
+}
+```
+
+**Retorna:** `Response[Nombre]sType` (lista simple de registros activos)
+
 ### 4️⃣ Endpoint READ ONE - `GET /:id`
 
 ```typescript
@@ -464,10 +596,15 @@ list(@Body() inputDto: List[Nombre]ArgsDto) {
 @BearerAuthPermision([PermisoEnum.[NOMBRE]_VER])
 @ApiResponse({ status: 200, type: () => Response[Nombre]DetailType })
 @ApiDescription('Obtener un [nombre] por ID', [PermisoEnum.[NOMBRE]_VER])
-findOne(@Param('id') id: string) {
-  return this.[nombre]Service.findOne(id);
+findOne(@Param() params: CommonParamsDto.Id) {
+  return this.[nombre]Service.findOne(params.id);
 }
 ```
+
+**Nota sobre parámetros:**
+- Se usa `CommonParamsDto.Id` para validación automática del parámetro `id`
+- `CommonParamsDto` proporciona validación de tipos (number, string, etc.)
+- Elimina la necesidad de usar `ParseIntPipe` o `ParseUUIDPipe` manualmente
 
 **Retorna:** `Response[Nombre]DetailType` (con relaciones)
 
@@ -485,11 +622,11 @@ findOne(@Param('id') id: string) {
   descripcion: 'Actualizar [nombre]',
 })
 update(
-  @Param('id') id: string,
+  @Param() params: CommonParamsDto.Id,
   @Body() updateDto: Update[Nombre]Dto,
   @AuthUser() session: IToken,
 ) {
-  return this.[nombre]Service.update(id, updateDto, session);
+  return this.[nombre]Service.update(params.id, updateDto, session);
 }
 ```
 
@@ -508,8 +645,8 @@ update(
   tabla: '[Nombre]',
   descripcion: 'Eliminar [nombre]',
 })
-remove(@Param('id') id: string) {
-  return this.[nombre]Service.remove(id);
+remove(@Param() params: CommonParamsDto.Id) {
+  return this.[nombre]Service.remove(params.id);
 }
 ```
 
@@ -517,14 +654,18 @@ remove(@Param('id') id: string) {
 
 ### Tabla de Mapeo: Endpoint → Response Type
 
-| Método HTTP | Ruta | Operación | Response Type | Service Method |
-|-------------|------|-----------|---------------|----------------|
-| `POST` | `/` | Crear | `Response[Nombre]Type` | `create()` |
-| `GET` | `/` | Listar todo | `Response[Nombre]sType` | `findAll()` |
-| `POST` | `/list` | Listar filtrado | `Paginate[Nombre]sType` | `filter()` |
-| `GET` | `/:id` | Obtener uno | `Response[Nombre]DetailType` | `findOne()` |
-| `PATCH` | `/:id` | Actualizar | `Response[Nombre]Type` | `update()` |
-| `DELETE` | `/:id` | Eliminar | `Response[Nombre]Type` | `remove()` |
+| Método HTTP | Ruta | Operación | Response Type | Service Method | Notas |
+|-------------|------|-----------|---------------|----------------|-------|
+| `POST` | `/` | Crear | `Response[Nombre]Type` | `create()` | Requiere autenticación y permisos |
+| `GET` | `/select` | Select/Dropdown | `Response[Nombre]sType` | `getForSelect()` | Solo autenticación, sin permisos específicos |
+| `GET` | `/` | Listar todo | `Response[Nombre]sType` | `findAll()` | Con paginación básica |
+| `POST` | `/list` | Listar filtrado | `Paginate[Nombre]sType` | `filter()` | Con filtros avanzados |
+| `GET` | `/:id` | Obtener uno | `Response[Nombre]DetailType` | `findOne()` | Puede incluir relaciones |
+| `PATCH` | `/:id` | Actualizar | `Response[Nombre]Type` | `update()` | Requiere autenticación y permisos |
+| `DELETE` | `/:id` | Eliminar | `Response[Nombre]Type` | `remove()` | Requiere autenticación y permisos |
+
+**Nota sobre orden de endpoints:**
+Los endpoints con rutas específicas (como `/select`, `/list`) deben declararse **ANTES** de los endpoints con parámetros dinámicos (como `/:id`), ya que Express evalúa las rutas en el orden en que se declaran.
 
 ---
 
@@ -569,6 +710,7 @@ remove(@Param('id') id: string) {
 | Módulo | `[nombre].module.ts` | `categoria.module.ts` |
 | Entidad | `[nombre].entity.ts` | `categoria.entity.ts` |
 | Input DTOs | `[nombre].input.dto.ts` | `categoria.input.dto.ts` |
+| Where DTOs | `[nombre].where.input.ts` | `categoria.where.input.ts` |
 | Response DTOs | `[nombre].response.ts` | `categoria.response.ts` |
 
 **Nota:** 
@@ -582,6 +724,12 @@ remove(@Param('id') id: string) {
 
 A continuación se muestra un ejemplo completo del módulo de Categorías siguiendo todos los estándares documentados:
 
+**Nota sobre tipos Decimal de Prisma:**
+- En el schema: `Decimal @db.Decimal(10, 2)`
+- En DTOs: Usa `@IsNumber()` y `number` en TypeScript
+- Prisma convierte automáticamente entre `Decimal` y `number`
+- En filtros: Usa `DecimalFilter` si necesitas comparaciones precisas
+
 ### categoria.input.dto.ts
 
 ```typescript
@@ -592,6 +740,7 @@ import {
   IsDefined,
   IsOptional,
   IsString,
+  IsNumber,
   MaxLength,
   MinLength,
   ValidateNested,
@@ -600,6 +749,8 @@ import { BaseFilterDto } from 'src/common/dtos/filters.dto';
 import { BoolFilter } from 'src/common/dtos/prisma/bool-filter.input';
 import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
 import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
+import { DecimalFilter } from 'src/common/dtos/prisma/decimal-filter.input';
+import { DateTimeFilter, DateTimeNullableFilter } from 'src/common/dtos';
 
 export class CreateCategoriaDto {
   @Expose()
@@ -656,6 +807,12 @@ class CategoriaWhereInput {
   @IsOptional()
   @Type(() => BoolFilter)
   estaActiva?: BoolFilter;
+
+  @Expose()
+  @ApiPropertyOptional({ type: DateTimeFilter })
+  @IsOptional()
+  @Type(() => DateTimeFilter)
+  fechaCreacion?: DateTimeFilter;
 }
 
 class CategoriaSelectInput {
@@ -769,6 +926,7 @@ import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PermisoEnum } from 'src/enums/permisos.enum';
 import { TipoAccionEnum } from 'src/generated/prisma/enums';
+import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 
 @ApiTags('[admin] Categorías')
 @Controller('categorias')
@@ -793,7 +951,7 @@ export class CategoriaController {
   @Get()
   @BearerAuthPermision([PermisoEnum.CATEGORIAS_VER])
   @ApiDescription('Listar todas las categorías', [PermisoEnum.CATEGORIAS_VER])
-  @ApiResponse({ type: ResponseCategoriasType })
+  @ApiResponse({ status: 200, type: ResponseCategoriasType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.categoriaService.findAll(query);
   }
@@ -812,8 +970,8 @@ export class CategoriaController {
   @BearerAuthPermision([PermisoEnum.CATEGORIAS_VER])
   @ApiResponse({ status: 200, type: () => ResponseCategoriaDetailType })
   @ApiDescription('Obtener una categoría por ID', [PermisoEnum.CATEGORIAS_VER])
-  findOne(@Param('id') id: string) {
-    return this.categoriaService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.categoriaService.findOne(params.id);
   }
 
   @Patch(':id')
@@ -827,11 +985,11 @@ export class CategoriaController {
     descripcion: 'Actualizar categoría',
   })
   update(
-    @Param('id') id: string,
+    @Param() params: CommonParamsDto.Id,
     @Body() updateCategoriaDto: UpdateCategoriaDto,
     @AuthUser() session: IToken,
   ) {
-    return this.categoriaService.update(id, updateCategoriaDto, session);
+    return this.categoriaService.update(params.id, updateCategoriaDto, session);
   }
 
   @Delete(':id')
@@ -844,8 +1002,8 @@ export class CategoriaController {
     tabla: 'Categoria',
     descripcion: 'Eliminar categoría',
   })
-  remove(@Param('id') id: string) {
-    return this.categoriaService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.categoriaService.remove(params.id);
   }
 }
 ```
@@ -867,7 +1025,7 @@ export class ProductoController {
   @Get()
   @BearerAuthPermision([PermisoEnum.PRODUCTOS_VER])
   @ApiDescription('Listar todos los productos', [PermisoEnum.PRODUCTOS_VER])
-  @ApiResponse({ type: ResponseProductosType })
+  @ApiResponse({ status: 200, type: ResponseProductosType })
   findAll(@Query() query: ListFindAllQueryDto) {
     return this.productoService.findAll(query);
   }
@@ -886,57 +1044,73 @@ export class ProductoController {
   @BearerAuthPermision([PermisoEnum.PRODUCTOS_VER])
   @ApiResponse({ status: 200, type: () => ResponseProductoType })
   @ApiDescription('Obtener un producto por ID', [PermisoEnum.PRODUCTOS_VER])
-  findOne(@Param('id') id: string) {
-    return this.productoService.findOne(id);
+  findOne(@Param() params: CommonParamsDto.Id) {
+    return this.productoService.findOne(params.id);
   }
 
   @Patch(':id')
   @BearerAuthPermision([PermisoEnum.PRODUCTOS_EDITAR])
   @ApiResponse({ status: 200, type: () => ResponseProductoType })
   @ApiDescription('Actualizar un producto por ID', [PermisoEnum.PRODUCTOS_EDITAR])
-  update(@Param('id') id: string, @Body() updateDto: UpdateProductoDto) {
-    return this.productoService.update(id, updateDto);
+  update(@Param() params: CommonParamsDto.Id, @Body() updateDto: UpdateProductoDto) {
+    return this.productoService.update(params.id, updateDto);
   }
 
   @Delete(':id')
   @BearerAuthPermision([PermisoEnum.PRODUCTOS_ELIMINAR])
   @ApiResponse({ status: 200, type: () => ResponseProductoType })
   @ApiDescription('Eliminar un producto por ID', [PermisoEnum.PRODUCTOS_ELIMINAR])
-  remove(@Param('id') id: string) {
-    return this.productoService.remove(id);
+  remove(@Param() params: CommonParamsDto.Id) {
+    return this.productoService.remove(params.id);
   }
 }
 ```
 
 ---
 
-## ✅ Checklist de Creación de Módulo
+## ✅Permisos
+- [ ] Agregar permisos al enum `PermisoEnum` en `src/enums/permisos.enum.ts`:
+  ```typescript
+  // [Nombre del Módulo]
+  [NOMBRE]_VER = '[NOMBRE]_VER',
+  [NOMBRE]_CREAR = '[NOMBRE]_CREAR',
+  [NOMBRE]_EDITAR = '[NOMBRE]_EDITAR',
+  [NOMBRE]_ELIMINAR = '[NOMBRE]_ELIMINAR',
+  ```
+- [ ] Registrar permisos en la base de datos mediante seed o panel admin
+- [ ] Asignar permisos a roles según sea necesario
+
+###  Checklist de Creación de Módulo
 
 Al crear un nuevo módulo CRUD, asegúrate de:
 
 ### Input DTOs (`[nombre].input.dto.ts`)
 - [ ] `Create[Nombre]Dto` con todos los campos requeridos y opcionales
+- [ ] Campos opcionales en Prisma (`field?`) → `@IsOptional()` en DTO
+- [ ] Campos con valor por defecto → `@IsOptional()` en DTO (el default se aplica en DB)
+- [ ] Campos tipo `Decimal` → `@IsNumber()` en DTO
+- [ ] Campos tipo `DateTime` → `@IsDateString()` o `@IsISO8601()` si se envían como string
 - [ ] `Update[Nombre]Dto` usando `PartialType`
-- [ ] `[Nombre]WhereInput` con filtros apropiados
-- [ ] `[Nombre]SelectInput` con todos los campos del modelo
-- [ ] `List[Nombre]ArgsDto` extendiendo `BaseFilterDto`
 - [ ] Todos los decoradores de validación (`@IsString`, `@IsOptional`, etc.)
 - [ ] Todos los decoradores de Swagger (`@ApiProperty`, `@ApiPropertyOptional`)
 - [ ] Decorador `@Expose()` en todos los campos
 
-### Response Types (`[nombre].response.ts`)
-- [ ] `Response[Nombre]Type` para operaciones individuales
-- [ ] `Response[Nombre]DetailType` para lecturas con relaciones (si aplica)
-- [ ] `Response[Nombre]sType` para listas simples
-- [ ] `Paginate[Nombre]sType` para listas paginadas
-- [ ] Clases `Data` intermedias correctamente definidas
-- [ ] Usar `OmitType` correctamente según el tipo de respuesta
+### Where DTOs (`[nombre].where.input.ts`)
+- [ ] `[Nombre]WhereInput` con filtros apropiados
+  - [ ] `StringFilter` / `StringNullableFilter` para strings
+  - [ ] `IntFilter` / `FloatFilter` / `DecimalFilter` para números
+  - [ ] `BoolFilter` para booleanos
+  - [ ] `DateTimeFilter` / `DateTimeNullableFilter` para fechas
+  - [ ] Campos de relación como `string` simple para filtrar por ID
+- [ ] `[Nombre]SelectInput` con todos los campos del modelo
+- [ ] `List[Nombre]ArgsDto` extendiendo `BaseFilterDto`
+- [ ] Todos los decoradores (`@Expose()`, `@IsOptional()`, `@Type()`, `@ValidateNested()`)
+- [ ] Todos los decoradores de Swagger (`@ApiPropertyOptional`)
 
-### Controller (`[nombre].controller.ts`)
-- [ ] Tag `@ApiTags('[admin] [Nombre]s')`
-- [ ] Decorador `@Controller('[nombre]s')` con ruta en plural
-- [ ] Decorador `@UseInterceptors(AuditInterceptor)` a nivel de clase
-- [ ] Endpoint `POST /` con `Response[Nombre]Type` y `@Audit`
+### Response Types (`[nombre].response.ts`)
+- [ ] `Response[Nombrselect` con `Response[Nombre]sType` (opcional, para dropdowns)
+  - Sin permisos específicos (`@BearerAuthPermision()`)
+  - Debe ir **antes** del `GET /:id`
 - [ ] Endpoint `GET /` con `Response[Nombre]sType`
 - [ ] Endpoint `POST /list` con `Paginate[Nombre]sType`
 - [ ] Endpoint `GET /:id` con `Response[Nombre]DetailType`
@@ -947,6 +1121,507 @@ Al crear un nuevo módulo CRUD, asegúrate de:
 - [ ] Todos los endpoints con `@ApiResponse`
 - [ ] Endpoints de creación/actualización con `@AuthUser() session: IToken`
 - [ ] Decorador `@Audit` en CREATE, UPDATE y DELETE con:
+  - `accion`: Tipo de acción (TipoAccionEnum)
+  - `modulo`: Nombre del módulo
+  - `tabla`: Nombre de la tabla/modelo
+  - `descripcion`: Descripción de la acción
+
+### Service (`[nombre].service.ts`)
+- [ ] Método `create()` con validaciones de unicidad
+- [ ] Método `findAll()` con paginación
+- [ ] Método `filter()` con filtros avanzados
+- [ ] Método `findOne()` con manejo de no encontrado
+- [ ] Método `update()` con validaciones
+- [ ] Método `remove()` con verificación de dependencias
+- [ ] Método `getForSelect()` (opcional) que retorna:
+  - Solo campos necesarios (`id`, `nombre`, etc.)
+  - Solo registros activos
+  - Ordenados alfabéticamente
+- [ ] Usar `dataErrorValidations()` para errores de validación de campos específicos
+- [ ] Usar `dataResponseError()` para errores generales (no encontrado, permisos, etc.)
+- [ ] Importar funciones: `import { dataErrorValidations, dataResponseError, dataResponseSuccess } from 'src/common/dtos';`
+- [ ] **Usar `dayjs` en vez de `new Date()` para conversiones de fechas**: `import dayjs from 'dayjs';`
+- [ ] Usar `dataErrorValidations()` para errores de validación de campos
+- [ ] Usar `dataResponseError()` para errores generales (no encontrado, etc.)ombre]sType`
+- [ ] Endpoint `GET /:id` con `Response[Nombre]DetailType`
+- [ ] Endpoint `PATCH /:id` con `Response[Nombre]Type` y `@Audit`
+- [ ] Endpoint `DELETE /:id` con `Response[Nombre]Type` y `@Audit`
+- [ ] Todos los endpoints con `@BearerAuthPermision`
+- [ ] Todos los endpoints con `@ApiDescription`
+- [ ] Todos los endpoints con `@ApiResponse`
+- [ ] Endpoints de creación/actualización con `@AuthUser() session: IToken`
+- [ � Gestión de Permisos para Nuevos Módulos
+
+### 1. Agregar Permisos al Enum
+
+Ubicación: `src/enums/permisos.enum.ts`
+
+```typescript
+export enum PermisoEnum {
+  // ... permisos existentes
+
+  // [Nombre del Módulo]
+  [NOMBRE]_VER = '[NOMBRE]_VER',
+  [NOMBRE]_CREAR = '[NOMBRE]_CREAR',
+  [NOMBRE]_EDITAR = '[NOMBRE]_EDITAR',
+  [NOMBRE]_ELIMINAR = '[NOMBRE]_ELIMINAR',
+}
+```
+
+**Ejemplo para Sucursales:**
+```typescript
+// Sucursales
+SUCURSALES_VER = 'SUCURSALES_VER',
+SUCURSALES_CREAR = 'SUCURSALES_CREAR',
+SUCURSALES_EDITAR = 'SUCURSALES_EDITAR',
+SUCURSALES_ELIMINAR = 'SUCURSALES_ELIMINAR',
+```
+
+### 2. Registrar Permisos en la Base de Datos
+
+#### Opción A: Mediante Seed (Recomendado)
+
+Ubicación: `prisma/seed/auth.seed.ts` o crear un nuevo archivo de seed
+
+```typescript
+// Crear permisos
+const permisosSucursales = [
+  {
+    nombre: 'SUCURSALES_VER',
+    descripcion: 'Ver sucursales',
+    modulo: 'catalogos',
+    accion: 'ver',
+    estaActivo: true,
+  },
+  {
+    nombre: 'SUCURSALES_CREAR',
+    descripcion: 'Crear sucursales',
+    modulo: 'catalogos',
+    accion: 'crear',
+    estaActivo: true,
+  },
+  {
+    nombre: 'SUCURSALES_EDITAR',
+    descripcion: 'Editar sucursales',
+    modulo: 'catalogos',
+    accion: 'editar',
+    estaActivo: true,
+  },
+  {
+    nombre: 'SUCURSALES_ELIMINAR',
+    descripcion: 'Eliminar sucursales',
+    modulo: 'catalogos',
+    accion: 'eliminar',
+    estaActivo: true,
+  },
+];
+
+// Insertar permisos
+for (const permiso of permisosSucursales) {
+  await prisma.permiso.upsert({
+    where: { nombre: permiso.nombre },
+    update: {},
+    create: permiso,
+  });
+}
+```
+
+Ejecutar seed: `yarn prisma:seed`
+
+#### Opción B: Mediante Panel de Administración
+
+1. Acceder al módulo de permisos en el panel admin
+2. Crear cada permiso manualmente con:
+   - **Nombre**: `[NOMBRE]_[ACCION]` (ej: `SUCURSALES_VER`)
+   - **Descripción**: Texto descriptivo
+   - **Módulo**: Categoría del módulo (ej: `catalogos`, `finanzas`, `security`)
+   - **Acción**: `ver`, `crear`, `editar`, `eliminar`
+   - **Estado**: Activo
+
+### 3. Asignar Permisos a Roles
+
+Una vez creados los permisos, asígnalos a los roles correspondientes:
+
+```typescript
+// En seed o manualmente
+const adminRole = await prisma.rol.findUnique({ where: { nombre: 'Administrador' } });
+
+const permisosSucursales = await prisma.permiso.findMany({
+  where: {
+    nombre: {
+      in: ['SUCURSALES_VER', 'SUCURSALES_CREAR', 'SUCURSALES_EDITAR', 'SUCURSALES_ELIMINAR'],
+    },
+  },
+});
+
+for (const permiso of permisosSucursales) {
+  await prisma.rolPermiso.create({
+    data: {
+      rolId: adminRole.id,
+      permisoId: permiso.id,
+    },
+  });
+}
+```
+
+### 4. Usar Permisos en el Controlador
+
+```typescript
+@Get()
+@BearerAuthPermision([PermisoEnum.SUCURSALES_VER])
+@ApiDescription('Listar todas las sucursales', [PermisoEnum.SUCURSALES_VER])
+findAll() {
+  return this.service.findAll();
+}
+```
+
+**Nota sobre `@BearerAuthPermision()`:**
+- **Sin parámetros**: `@BearerAuthPermision()` - Solo requiere autenticación, sin permisos específicos
+- **Con permisos**: `@BearerAuthPermision([PermisoEnum.X])` - Requiere autenticación y el permiso especificado
+
+---
+
+## 📦 Endpoint Select para Dropdowns
+
+El endpoint `/select` es un patrón común para proporcionar datos optimizados para componentes select/dropdown en el frontend.
+
+### Características del Endpoint Select
+
+1. **Ruta**: `GET /[modulo]/select`
+2. **Autenticación**: Requiere `@BearerAuthPermision()` sin permisos específicos
+3. **Posición**: Debe declararse **ANTES** del endpoint `GET /:id`
+4. **Respuesta**: Lista simple sin paginación
+5. **Filtrado**: Solo registros activos
+6. **Campos**: Solo los necesarios (id, nombre, abreviacion, etc.)
+7. **Ordenamiento**: Alfabético por nombre
+
+### Implementación Completa
+
+#### En el Controller
+
+```typescript
+@Get('select')
+@BearerAuthPermision()
+@ApiDescription('Obtener [nombre]s para select/dropdown')
+@ApiResponse({ status: 200, type: Response[Nombre]sType })
+getForSelect() {
+  return this.[nombre]Service.getForSelect();
+}
+```
+
+#### En el Service
+
+```typescript
+async getForSelect() {
+  const list = await this.prismaService.[nombre].findMany({
+    where: { estaActiva: true }, // o estaActivo según el modelo
+    select: {
+      id: true,
+      nombre: true,
+      abreviacion: true, // opcional, según necesidad
+    },
+    orderBy: { nombre: 'asc' },
+  });
+
+  return dataResponseSuccess({ data: list });
+}
+```
+
+#### Ejemplo con Sucursales
+
+**Controller:**
+```typescript
+@Get('select')
+@BearerAuthPermision()
+@ApiDescription('Obtener sucursales para select/dropdown')
+@ApiResponse({ status: 200, type: ResponseSucursalesType })
+getForSelect() {
+  return this.sucursalService.getForSelect();
+}
+```
+
+**Service:**
+```typescript
+async getForSelect() {
+  const list = await this.prismaService.sucursal.findMany({
+    where: { estaActiva: true },
+    select: {
+      id: true,
+      nombre: true,
+      abreviacion: true,
+    },
+    orderBy: { nombre: 'asc' },
+  });
+
+  return dataResponseSuccess({ data: list });
+}
+```
+
+### Respuesta Esperada
+
+```json
+{
+  "error": false,
+  "message": "Operación exitosa",
+  "response": {
+    "data": [
+      {
+        "id": 1,
+        "nombre": "Sucursal Central",
+        "abreviacion": "SC"
+      },
+      {
+        "id": 2,
+        "nombre": "Sucursal Norte",
+        "abreviacion": "SN"
+      }
+    ]
+  },
+  "status": 200
+}
+```
+
+### Cuándo Implementar el Endpoint Select
+
+✅ **Implementar cuando:**
+- El módulo será usado en dropdowns/selects del frontend
+- Se necesita una lista simplificada de opciones
+- El frontend necesita obtener datos sin paginación
+- Los datos se usan frecuentemente en formularios
+
+❌ **No implementar cuando:**
+- El módulo nunca se usará en selects
+- No hay necesidad de filtrar solo activos
+- El listado general ya es suficiente
+
+### Ventajas del Endpoint Select
+
+1. **Performance**: Retorna solo campos necesarios
+2. **Simplicidad**: No requiere paginación ni filtros complejos
+3. **Seguridad**: Disponible para todos los usuarios autenticados
+4. **Cache**: Ideal para cachear en el frontend por su simplicidad
+5. **UX**: Mejora la experiencia al cargar selects más rápido
+
+---
+
+## ⚠️ Manejo de Errores y Validaciones en Services
+
+El backend proporciona dos funciones principales para manejar errores, cada una con un propósito específico:
+
+### 1. `dataErrorValidations()` - Errores de Validación de Campos
+
+**Cuándo usar:** Para errores de validación de reglas de negocio relacionados con campos específicos del formulario.
+
+**Características:**
+- Retorna un objeto con errores por campo
+- El frontend puede asociar cada error al campo correspondiente
+- Ideal para validaciones de unicidad, formato, dependencias entre campos
+- HTTP Status: 400 (Bad Request)
+
+**Estructura de respuesta:**
+```typescript
+{
+  "error": true,
+  "message": "Validation error",
+  "response": {
+    "validationErrors": {
+      "nombreCampo": ["Mensaje de error 1", "Mensaje de error 2"],
+      "otroCampo": ["Mensaje de error"]
+    }
+  },
+  "status": 400
+}
+```
+
+**Uso en el servicio:**
+```typescript
+// Validar unicidad de nombre
+const existeNombre = await this.prismaService.sucursal.findUnique({
+  where: { nombre: inputDto.nombre },
+});
+if (existeNombre)
+  return dataErrorValidations({ nombre: ['El nombre de la sucursal ya existe'] });
+
+// Múltiples errores de validación
+if (errorCondition1 && errorCondition2)
+  return dataErrorValidations({
+    campo1: ['Error en campo 1'],
+    campo2: ['Error en campo 2', 'Otro error en campo 2'],
+  });
+```
+
+**Ejemplo completo en `create()`:**
+```typescript
+async create(inputDto: CreateSucursalDto, session: IToken) {
+  // Validar que el nombre sea único
+  const existeNombre = await this.prismaService.sucursal.findUnique({
+    where: { nombre: inputDto.nombre },
+    select: { id: true },
+  });
+  if (existeNombre)
+    return dataErrorValidations({ nombre: ['El nombre de la sucursal ya existe'] });
+
+  // Validar que la abreviación sea única
+  const existeAbreviacion = await this.prismaService.sucursal.findUnique({
+    where: { abreviacion: inputDto.abreviacion },
+    select: { id: true },
+  });
+  if (existeAbreviacion)
+    return dataErrorValidations({ abreviacion: ['La abreviación de la sucursal ya existe'] });
+
+  const result = await this.prismaService.sucursal.create({
+    data: {
+      ...inputDto,
+      userCreateId: session.usuarioId,
+    },
+  });
+
+  return dataResponseSuccess<Sucursal>({ data: result });
+}
+```
+
+**Ejemplo en `update()`:**
+```typescript
+async update(id: number, updateDto: UpdateSucursalDto, session: IToken) {
+  const exists = await this.prismaService.sucursal.findUnique({
+    where: { id },
+  });
+  if (!exists) return dataResponseError('Sucursal no encontrada');
+
+  // Validar nombre único si se actualiza
+  if (updateDto.nombre) {
+    const existeNombre = await this.prismaService.sucursal.findFirst({
+      where: {
+        nombre: updateDto.nombre,
+        NOT: { id },
+      },
+    });
+    if (existeNombre)
+      return dataErrorValidations({ nombre: ['El nombre de la sucursal ya existe'] });
+  }
+
+  // Validar abreviación única si se actualiza
+  if (updateDto.abreviacion) {
+    const existeAbreviacion = await this.prismaService.sucursal.findFirst({
+      where: {
+        abreviacion: updateDto.abreviacion,
+        NOT: { id },
+      },
+    });
+    if (existeAbreviacion)
+      return dataErrorValidations({ abreviacion: ['La abreviación de la sucursal ya existe'] });
+  }
+
+  const result = await this.prismaService.sucursal.update({
+    where: { id },
+    data: {
+      ...updateDto,
+      userUpdateId: session.usuarioId,
+    },
+  });
+
+  return dataResponseSuccess<Sucursal>({ data: result });
+}
+```
+
+### 2. `dataResponseError()` - Errores Generales
+
+**Cuándo usar:** Para errores generales que no están relacionados con campos específicos del formulario.
+
+**Características:**
+- Retorna un mensaje de error general
+- No está asociado a ningún campo específico
+- Ideal para: recurso no encontrado, permisos insuficientes, errores de negocio generales
+- HTTP Status: Variable (404, 403, 500, etc.)
+
+**Estructura de respuesta:**
+```typescript
+{
+  "error": true,
+  "message": "Mensaje de error general",
+  "response": {},
+  "status": 404 // o el código apropiado
+}
+```
+
+**Uso en el servicio:**
+```typescript
+// Recurso no encontrado
+const item = await this.prismaService.sucursal.findUnique({ where: { id } });
+if (!item) return dataResponseError('Sucursal no encontrada');
+
+// Error de negocio general
+if (!puedaEliminar)
+  return dataResponseError('No se puede eliminar la sucursal porque tiene registros asociados');
+
+// Permisos insuficientes
+if (!tienePermiso)
+  return dataResponseError('No tiene permisos para realizar esta acción');
+```
+
+### 3. `dataResponseSuccess()` - Respuestas Exitosas
+
+**Uso:** Para todas las respuestas exitosas.
+
+**Estructura:**
+```typescript
+return dataResponseSuccess<Sucursal>({
+  data: result,
+  pagination: { page: 1, limit: 10, total: 100 }, // opcional
+});
+```
+
+### Tabla de Decisión: ¿Cuál usar?
+
+| Escenario | Función | Ejemplo |
+|-----------|---------|----------|
+| Campo duplicado | `dataErrorValidations()` | `{ nombre: ['El nombre ya existe'] }` |
+| Formato inválido | `dataErrorValidations()` | `{ email: ['Email inválido'] }` |
+| Dependencia entre campos | `dataErrorValidations()` | `{ fechaFin: ['Debe ser mayor a fecha inicio'] }` |
+| Recurso no encontrado | `dataResponseError()` | `'Sucursal no encontrada'` |
+| No se puede eliminar | `dataResponseError()` | `'No se puede eliminar por dependencias'` |
+| Permisos insuficientes | `dataResponseError()` | `'Sin permisos para esta acción'` |
+| Operación exitosa | `dataResponseSuccess()` | `{ data: result }` |
+
+### Buenas Prácticas
+
+1. **Validaciones de unicidad**: Siempre usa `dataErrorValidations()` con el nombre del campo
+   ```typescript
+   if (existeDuplicado)
+     return dataErrorValidations({ campo: ['Ya existe un registro con este valor'] });
+   ```
+
+2. **Múltiples validaciones**: Agrupa todas las validaciones de campos antes de ejecutar la operación
+   ```typescript
+   const errores: Record<string, string[]> = {};
+   if (existeNombre) errores.nombre = ['El nombre ya existe'];
+   if (existeEmail) errores.email = ['El email ya existe'];
+   if (Object.keys(errores).length > 0) return dataErrorValidations(errores);
+   ```
+
+3. **Orden de validaciones**:
+   - Primero: Validar que el recurso existe (usar `dataResponseError` si no existe)
+   - Segundo: Validar campos específicos (usar `dataErrorValidations`)
+   - Tercero: Ejecutar la operación
+   - Cuarto: Retornar éxito con `dataResponseSuccess`
+
+4. **Mensajes descriptivos**: Usa mensajes claros que el usuario pueda entender y actuar sobre ellos
+
+5. **Importación**: Ambas funciones se importan desde el mismo lugar
+   ```typescript
+   import { dataErrorValidations, dataResponseError, dataResponseSuccess } from 'src/common/dtos';
+   ```
+
+6. **Conversión de fechas**: Usa `dayjs` en vez de `new Date()` para convertir fechas
+   ```typescript
+   import dayjs from 'dayjs';
+
+   ademas usar fechas en formato iso
+   ```
+
+---
+
+## �] Decorador `@Audit` en CREATE, UPDATE y DELETE con:
   - `accion`: Tipo de acción (TipoAccionEnum)
   - `modulo`: Nombre del módulo
   - `tabla`: Nombre de la tabla/modelo
@@ -1021,5 +1696,16 @@ Al crear un nuevo módulo CRUD, asegúrate de:
     - Usa `@AuthUser() session: IToken` en lugar de `@Request() req`
     - Pasa `session` al servicio para rastrear `userCreateId` y `userUpdateId`
     - La sesión incluye: `usuarioId`, `nombreCompleto`, `estaActivo`, `token`, `expireIn`, `client`
+
+12. **Manejo de Fechas (DateTime)**:
+    - En Prisma: `@db.Timestamptz()` para fechas con zona horaria
+    - En DTOs: Usa `@IsDateString()` o `@IsISO8601()` para validación
+    - Para fechas opcionales en filtros: `DateTimeNullableFilter`
+    - Ejemplo de campo fecha: `fechaDerivacion DateTime @default(now()) @db.Timestamptz()`
+
+13. **Campos Opcionales con Valor por Defecto**:
+    - En schema: `prioridad String @default("normal") @db.VarChar(20)`
+    - En CreateDTO: Marca como `@IsOptional()` para que el usuario pueda omitirlo
+    - El valor por defecto se aplica automáticamente en la base de datos
 
 ---
