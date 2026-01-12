@@ -4721,22 +4721,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pdfkit@npm:*, @types/pdfkit@npm:^0.17.4":
+"@types/pdfkit@npm:^0.17.4":
   version: 0.17.4
   resolution: "@types/pdfkit@npm:0.17.4"
   dependencies:
     "@types/node": "npm:*"
   checksum: 10c0/d2e5c8b951627bf725c7b29592011ec69df44447f334a9dc5a30b0cc1c7c32381d9b3de0d8c3cfc51114f497586bb2538d07bd937be5d8a73a09aa383f5a34ee
-  languageName: node
-  linkType: hard
-
-"@types/pdfmake@npm:^0.2.12":
-  version: 0.2.12
-  resolution: "@types/pdfmake@npm:0.2.12"
-  dependencies:
-    "@types/node": "npm:*"
-    "@types/pdfkit": "npm:*"
-  checksum: 10c0/0634ab107abe1c90df4e05c9cdef1cc06fc438a1ea01d57eeef76225550e7872f39320bf3b9205da2a93e39ca0baf27252bf9bb6e03d71c42949d4084e1277ff
   languageName: node
   linkType: hard
 
@@ -5907,7 +5897,6 @@ __metadata:
     "@types/passport-google-oauth20": "npm:^2.0.17"
     "@types/passport-local": "npm:^1.0.38"
     "@types/pdfkit": "npm:^0.17.4"
-    "@types/pdfmake": "npm:^0.2.12"
     "@types/pg": "npm:^8.15.6"
     "@types/qrcode": "npm:^1.5.6"
     "@types/supertest": "npm:^6.0.3"
