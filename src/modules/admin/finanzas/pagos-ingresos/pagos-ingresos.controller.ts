@@ -9,6 +9,7 @@ import {
   Query,
   UseInterceptors,
   ParseIntPipe,
+  StreamableFile,
 } from '@nestjs/common';
 import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 import { PagosIngresosService } from './pagos-ingresos.service';
@@ -38,6 +39,16 @@ import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
 @UseInterceptors(AuditInterceptor)
 export class PagosIngresosController {
   constructor(private readonly pagosIngresosService: PagosIngresosService) {}
+
+  @Get('recibo')
+  async recibo() {
+    const documento = await this.pagosIngresosService.getRecibo();
+
+    return new StreamableFile(documento, {
+      disposition: `inline; filename="recibo.pdf"`,
+      type: 'application/pdf',
+    });
+  }
 
   @Post()
   @BearerAuthPermision([PermisoEnum.PAGOS_INGRESOS_CREAR])
