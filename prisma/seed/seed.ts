@@ -39,6 +39,7 @@ import {
   crearTransaccionesEgresos,
   crearArqueosDiarios,
 } from './plantillas-finanzas.seed';
+import { crearGastos2 } from './gastos2.seed';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 export const prisma = new PrismaClient({ adapter });
@@ -162,11 +163,12 @@ async function main() {
   // Crear derivaciones entre usuarios
   await crearDerivaciones(prisma, servicios, usuarios);
 
+  const gastosIds = await crearGastos2(prisma, adminUserId);
   // Crear gastos
   const gastos = await crearGastos(prisma, adminUserId);
 
   // Crear pagos e ingresos
-  await crearPagosIngresos(prisma, adminUserId);
+  await crearPagosIngresos(prisma, adminUserId, cuentasIds);
 
   // Crear transacciones de egresos
   await crearTransaccionesEgresos(prisma, gastos, cuentasBancarias);
@@ -184,8 +186,6 @@ async function main() {
   await crearMensajesContacto(prisma, adminUserId, usuarios);
 
   await crearPagosIngresos(prisma, adminUserId, cuentasIds)
-  
-  const gastosIds = await crearGastos(prisma, adminUserId);
 
   await crearTransaccionesEgresos2(prisma, gastosIds, cuentasIds)
   
