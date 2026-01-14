@@ -58,7 +58,7 @@ export async function crearCuentasBancarias(
   ];
 
   await prisma.$executeRawUnsafe(`
-    TRUNCATE TABLE "cuentas_bancarias"
+    TRUNCATE TABLE "cont_cuentas_bancarias"
     RESTART IDENTITY
     CASCADE;
   `);

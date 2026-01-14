@@ -5,7 +5,7 @@ import { crearGastos } from './gastos.seed';
 import { crearPagosIngresos } from './pagos-ingresos.seed';
 import { crearBancos } from './bancos.seed';
 import { crearCuentasBancarias } from './cuentas-bancarias.seed';
-import { crearTransaccionesEgresos as crearTransaccionesEgresos2} from './transacciones-egresos.seed';
+import { crearTransaccionesEgresos as crearTransaccionesEgresos2 } from './transacciones-egresos.seed';
 import {
   createUsuarios,
   createRoles,
@@ -30,10 +30,7 @@ import {
   crearDerivaciones,
 } from './clientes-servicios.seed';
 import { crearComercializadoras } from './comercializadoras.seed';
-import {
-  crearNotificaciones,
-  crearMensajesContacto,
-} from './notificaciones-mensajes.seed';
+import { crearNotificaciones, crearMensajesContacto } from './notificaciones-mensajes.seed';
 import {
   crearPlantillasDocumento,
   crearTransaccionesEgresos,
@@ -64,7 +61,7 @@ async function main() {
     where: { userCreateId: 'temp-user-id' },
     data: { userCreateId: adminUserId },
   });
-  
+
   // Asignar responsables a sucursales
   await prisma.sucursal.update({
     where: { id: sucursalesTemp[0].id },
@@ -110,12 +107,6 @@ async function main() {
     roles.allRoles.find((r) => r.nombre === 'ASISTENTE').id,
   );
 
-  // Crear bancos
-  const bancos = await createBancos(prisma, adminUserId);
-
-  // Crear cuentas bancarias
-  const cuentasBancarias = await createCuentasBancarias(prisma, adminUserId, bancos);
-
   // Crear tipos de documento
   const tiposDocumento = await createTiposDocumento(prisma, adminUserId);
 
@@ -130,10 +121,13 @@ async function main() {
 
   // Crear FAQs
   await createFaqs(adminUserId);
-  
-  const bancoIds = await crearBancos(prisma, adminUserId)
 
-  const cuentasIds = await crearCuentasBancarias(prisma, adminUserId, bancoIds)
+  const bancoIds = await crearBancos(prisma, adminUserId);
+
+  // Crear bancos
+  const bancos = await createBancos(prisma, adminUserId);
+
+  const cuentasIds = await crearCuentasBancarias(prisma, adminUserId, bancoIds);
 
   // Crear clientes (personas naturales y jurídicas)
   const clientes = await crearClientes(prisma, adminUserId);
@@ -170,6 +164,9 @@ async function main() {
   // Crear pagos e ingresos
   await crearPagosIngresos(prisma, adminUserId, cuentasIds);
 
+  // Crear cuentas bancarias
+  const cuentasBancarias = await createCuentasBancarias(prisma, adminUserId, bancos);
+
   // Crear transacciones de egresos
   await crearTransaccionesEgresos(prisma, gastos, cuentasBancarias);
 
@@ -185,10 +182,10 @@ async function main() {
   // Crear mensajes de contacto
   await crearMensajesContacto(prisma, adminUserId, usuarios);
 
-  await crearPagosIngresos(prisma, adminUserId, cuentasIds)
+  await crearPagosIngresos(prisma, adminUserId, cuentasIds);
 
-  await crearTransaccionesEgresos2(prisma, gastosIds, cuentasIds)
-  
+  await crearTransaccionesEgresos2(prisma, gastosIds, cuentasIds);
+
   console.info('Seeding finished');
 }
 

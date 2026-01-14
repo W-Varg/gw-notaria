@@ -89,7 +89,7 @@ export async function crearBancos(prisma: PrismaClient, usuarioId: string) {
   ];
 
   await prisma.$executeRawUnsafe(`
-    TRUNCATE TABLE "bancos"
+    TRUNCATE TABLE "cat_bancos"
     RESTART IDENTITY
     CASCADE;
   `);

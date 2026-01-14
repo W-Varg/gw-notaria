@@ -324,7 +324,7 @@ export async function crearTransaccionesEgresos(
         gastoId: gastoArray[0].id,
         monto: 800.0,
         fecha: new Date('2025-12-05T10:00:00Z'),
-        cuentaBancariaId: null, // Efectivo
+        cuentaBancariaId: cuentasBancarias[0].id, // Efectivo
         metodoPago: 1, // EFECTIVO
       },
       {

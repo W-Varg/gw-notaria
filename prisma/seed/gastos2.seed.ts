@@ -70,7 +70,7 @@ export async function crearGastos2(prisma: PrismaClient, usuarioId: string) {
   ];
 
   await prisma.$executeRawUnsafe(`
-    TRUNCATE TABLE "gastos"
+    TRUNCATE TABLE "cont_gastos"
     RESTART IDENTITY
     CASCADE;
   `);
