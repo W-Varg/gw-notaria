@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../global/database/prisma.service';
+
 // import { CategoriaPublica } from './dto/public.response';
 import { ContactoMensajeDto, FAQsDto } from './dto/public.input';
 import { dataResponseSuccess } from 'src/common/dtos/response.dto';

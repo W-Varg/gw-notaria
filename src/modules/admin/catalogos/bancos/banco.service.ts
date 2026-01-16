@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateBancoDto, UpdateBancoDto, ListBancoArgsDto } from './dto/banco.input.dto';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../../../global/database/prisma.service';
+
 import {
   dataErrorValidations,
   dataResponseError,

@@ -4,7 +4,8 @@ import {
   UpdateArqueosDiariosDto,
   ListArqueosDiariosArgsDto,
 } from './dto/arqueos-diarios.input.dto';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../../../global/database/prisma.service';
+
 import {
   dataErrorValidations,
   dataResponseError,

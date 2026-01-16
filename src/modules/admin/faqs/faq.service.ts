@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateFaqDto, UpdateFaqDto, ListFaqArgsDto } from './dto/faq.input.dto';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../../global/database/prisma.service';
 import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
 import { Prisma } from 'src/generated/prisma/client';
 import { Faq } from './faq.entity';

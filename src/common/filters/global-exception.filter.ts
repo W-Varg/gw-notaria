@@ -12,7 +12,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ExecutionContextHost } from '@nestjs/core/helpers/execution-context-host';
-import { IResponseDTO, ResponseDTO } from 'src/common/dtos/response.dto';
+import { IResponseDTO, ResponseDTO } from '../dtos/response.dto';
 import { printRequestUrl } from '../pipes/http-service.pipe';
 import { Prisma } from '../../generated/prisma/client';
 

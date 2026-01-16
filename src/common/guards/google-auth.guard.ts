@@ -2,7 +2,7 @@ import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
-import { dataResponseError } from 'src/common/dtos/response.dto';
+import { dataResponseError } from '../dtos/response.dto';
 
 @Injectable()
 export class GoogleAuthGuard extends AuthGuard('google') {

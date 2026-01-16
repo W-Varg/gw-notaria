@@ -1,16 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from 'src/generated/prisma/client';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { Prisma } from '../../../generated/prisma/client';
+import { PrismaService } from '../../../global/database/prisma.service';
+
 import {
   CreateNotificacionDto,
   UpdateNotificacionDto,
   ListNotificacionArgsDto,
 } from './dto/notificacion.input.dto';
-import { paginationParamsFormat } from 'src/helpers/prisma.helper';
-import { IToken } from 'src/common/decorators/token.decorator';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos';
+import { paginationParamsFormat } from '../../../helpers/prisma.helper';
+import { IToken } from '../../../common/decorators/token.decorator';
+import { dataResponseError, dataResponseSuccess } from '../../../common/dtos';
 import { Notificacion } from './notificacion.entity';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { ListFindAllQueryDto } from '../../../common/dtos/filters.dto';
 
 @Injectable()
 export class NotificacionService {

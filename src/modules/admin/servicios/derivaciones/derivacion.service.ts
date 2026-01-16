@@ -7,7 +7,8 @@ import {
   RechazarDerivacionDto,
 } from './dto/derivacion.input.dto';
 import { DerivacionesStatsDto } from './dto/derivacion.response';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../../../global/database/prisma.service';
+
 import {
   dataErrorValidations,
   dataResponseError,

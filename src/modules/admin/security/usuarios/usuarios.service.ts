@@ -5,24 +5,25 @@ import {
   ListUsuarioArgsDto,
   UpdateUsuarioDto,
 } from './dto/usuarios.input.dto';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../../../global/database/prisma.service';
+
 import {
   dataErrorValidations,
   dataResponseError,
   dataResponseSuccess,
-} from 'src/common/dtos/response.dto';
-import { Prisma } from 'src/generated/prisma/client';
+} from '../../../../common/dtos/response.dto';
+import { Prisma } from '../../../../generated/prisma/client';
 import { Usuario } from './usuario.entity';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
-import { paginationParamsFormat } from 'src/helpers/prisma.helper';
+import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
+import { paginationParamsFormat } from '../../../../helpers/prisma.helper';
 import { basename } from 'node:path';
 import { hash } from 'bcrypt';
-import { AuthService } from 'src/modules/auth/auth.service';
-import { ProfileService } from 'src/modules/auth/profile/profile.service';
-import { FileStorageService } from 'src/global/services/file-storage.service';
-import { UserValidationService } from 'src/global/services/user-validation.service';
-import { IToken } from 'src/common/decorators/token.decorator';
-import { AuditService } from 'src/global/services/audit.service';
+import { AuthService } from '../../../auth/auth.service';
+import { ProfileService } from '../../../auth/profile/profile.service';
+import { FileStorageService } from '../../../../global/services/file-storage.service';
+import { UserValidationService } from '../../../../global/services/user-validation.service';
+import { IToken } from '../../../../common/decorators/token.decorator';
+import { AuditService } from '../../../../global/services/audit.service';
 
 @Injectable()
 export class UsuariosService {

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../../global/database/prisma.service';
+
 import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
 import { randomBytes } from 'node:crypto';
 import { compare, hash } from 'bcrypt';

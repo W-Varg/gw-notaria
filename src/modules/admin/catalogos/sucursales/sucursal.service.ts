@@ -7,7 +7,8 @@ import {
   ListSucursalArgsDto,
 } from './dto/sucursal.input.dto';
 import { SucursalEntity } from './sucursal.entity';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../../../global/database/prisma.service';
+
 import { dataErrorValidations, dataResponseError, dataResponseSuccess } from 'src/common/dtos';
 import { paginationParamsFormat } from 'src/helpers/prisma.helper';
 

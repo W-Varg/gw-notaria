@@ -10,7 +10,7 @@ import {
   UpdateServicioProgresoDto,
   RegistrarPagoServicioDto,
 } from './dto/servicio.input-extended.dto';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../../global/database/prisma.service';
 import {
   dataErrorValidations,
   dataResponseError,
