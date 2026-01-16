@@ -37,6 +37,7 @@ import {
   crearArqueosDiarios,
 } from './plantillas-finanzas.seed';
 import { crearGastos2 } from './gastos2.seed';
+import { CatalogoServiciosSeed } from './catalogo-servicios.seed';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 export const prisma = new PrismaClient({ adapter });
@@ -185,6 +186,8 @@ async function main() {
   await crearPagosIngresos(prisma, adminUserId, cuentasIds);
 
   await crearTransaccionesEgresos2(prisma, gastosIds, cuentasIds);
+
+  await CatalogoServiciosSeed(prisma)
 
   console.info('Seeding finished');
 }
