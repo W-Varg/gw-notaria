@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Query,
-  ParseIntPipe,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthUser, IToken } from '../../../../common/decorators/token.decorator';

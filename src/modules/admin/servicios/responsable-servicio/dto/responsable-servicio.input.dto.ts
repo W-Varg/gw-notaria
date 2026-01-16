@@ -11,7 +11,6 @@ import {
 } from 'class-validator';
 import { BaseFilterDto } from '../../../../../common/dtos/filters.dto';
 import { BoolFilter } from '../../../../../common/dtos/prisma/bool-filter.input';
-import { IntFilter } from '../../../../../common/dtos/prisma/int-filter.input';
 import { StringFilter } from '../../../../../common/dtos/prisma/string-filter.input';
 
 export class CreateResponsableServicioDto {

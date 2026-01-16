@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  ParseIntPipe,
   UseInterceptors,
 } from '@nestjs/common';
 import { ComercializadoraService } from './comercializadora.service';
