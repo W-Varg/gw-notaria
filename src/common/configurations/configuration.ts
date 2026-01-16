@@ -3,7 +3,7 @@ import { join } from 'path';
 export default () => {
   return {
     packageJson: require(join(process.cwd(), 'package.json')),
-    port: parseInt(process.env.ENV_PORT, 10) || 8001,
+    port: parseInt(process.env.ENV_PORT, 10) || 3000,
     // app
     appUrlBase: process.env.ENV_BASE_URL,
     appFrontUrlBase: process.env.ENV_FRONT_APP_URL,
