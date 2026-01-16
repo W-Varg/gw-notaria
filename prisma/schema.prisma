@@ -512,6 +512,7 @@ model Cliente {
   personaJuridica   PersonaJuridica?
   servicios         Servicio[]
   comercializadoras Comercializadora[]
+  ventaServicios    VentaServicio[]
 
   @@map("cat_clientes")
   @@schema("public")
@@ -965,4 +966,73 @@ model ErrorLog {
   @@index([modulo])
   @@map("logs_errors")
   @@schema("logs")
+}
+
+model CatalogoServicio {
+  id             String   @id @default(cuid())
+  codigo         String   @db.VarChar(20) // Código oficial SIN
+  nombre         String   @db.VarChar(255)
+  descripcion    String?  @db.Text
+  precioBase     Decimal? @db.Decimal(12, 2)
+  tarifaVariable Boolean  @default(false)
+  activo         Boolean  @default(true)
+
+  userCreateId String
+  userUpdateId String?
+  fechaCreacion         DateTime               @default(now())
+  fechaActualizacion    DateTime               @updatedAt
+
+  ventaServicioDetalles VentaServicioDetalle[]
+
+  @@map("fac_catalogos_servicios")
+  @@schema("public")
+}
+
+model VentaServicio {
+  id        String  @id @default(cuid())
+  clienteId String
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+
+  tipoTransaccion   String   @db.VarChar(20) // 'RECIBO' o 'FACTURA'
+  numeroTransaccion String   @unique @db.VarChar(50)
+  fecha             DateTime @default(now())
+  total             Decimal  @default(0)
+
+  observaciones String?
+  estado        String  @default("PAGADO") @db.VarChar(20) // PENDIENTE, PAGADO, ANULADO
+
+  userCreateId       String
+  userUpdateId       String?
+  fechaCreacion      DateTime  @default(now())
+  fechaActualizacion DateTime?
+
+  detalles VentaServicioDetalle[]
+
+  @@map("ventas_servicios")
+  @@schema("public")
+}
+
+model VentaServicioDetalle {
+  id              String        @id @default(cuid())
+  ventaServicioId String
+  ventaServicio   VentaServicio @relation(fields: [ventaServicioId], references: [id])
+
+  catalogoServicioId String
+  catalogoServicio   CatalogoServicio @relation(fields: [catalogoServicioId], references: [id])
+
+  descripcion    String?
+  cantidad       Decimal @default(1)
+  precioUnitario Decimal
+  subtotal       Decimal
+
+  codigoActividadSin String? @db.VarChar(20)
+  tipoServicio       String? @db.VarChar(50)
+
+  userCreateId       String
+  userUpdateId       String?
+  fechaCreacion      DateTime  @default(now())
+  fechaActualizacion DateTime?
+
+  @@map("ventas_servicios_detalles")
+  @@schema("public")
 }
