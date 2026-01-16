@@ -1,6 +1,9 @@
 {
   "version": 2,
   "buildCommand": "yarn vercel-build",
+  "env": {
+    "NODE_PATH": "dist"
+  },
   "builds": [
     {
       "src": "src/main.ts",

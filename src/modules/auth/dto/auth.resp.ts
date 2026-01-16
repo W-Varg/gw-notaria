@@ -1,6 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { AuthUsuario, AuthResponse } from '../auth.entity';
-import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { ApiOkResponseDto, ResponseStructDTO } from '../../../common/dtos/response.dto';
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
