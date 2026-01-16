@@ -6,7 +6,7 @@
   },
   "builds": [
     {
-      "dest": "dist/main.js",
+      "src": "dist/main.js",
       "use": "@vercel/node"
     }
   ],
