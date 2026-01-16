@@ -1008,7 +1008,7 @@ model VentaServicio {
 
   detalles VentaServicioDetalle[]
 
-  @@map("ventas_servicios")
+  @@map("fac_ventas_servicios")
   @@schema("public")
 }
 
@@ -1033,6 +1033,6 @@ model VentaServicioDetalle {
   fechaCreacion      DateTime  @default(now())
   fechaActualizacion DateTime?
 
-  @@map("ventas_servicios_detalles")
+  @@map("fac_ventas_servicios_detalles")
   @@schema("public")
 }
