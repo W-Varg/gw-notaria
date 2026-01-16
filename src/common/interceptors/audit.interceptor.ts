@@ -2,9 +2,9 @@ import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nes
 import { Reflector } from '@nestjs/core';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { AUDIT_KEY, AuditMetadata } from 'src/common/decorators/audit.decorator';
+import { AUDIT_KEY, AuditMetadata } from '../../common/decorators/audit.decorator';
 import { TipoAccionEnum } from '../../enums/tipo-accion.enum';
-import { AuditService } from 'src/global/services/audit.service';
+import { AuditService } from '../../global/services/audit.service';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {

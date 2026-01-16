@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { TipoClienteEnum } from 'src/enums/tipo-cliente.enum';
+import { TipoClienteEnum } from '../../../enums/tipo-cliente.enum';
 
 export class PersonaNatural {
   @ApiProperty()

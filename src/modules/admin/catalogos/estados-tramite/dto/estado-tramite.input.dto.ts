@@ -11,11 +11,11 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { BaseFilterDto } from 'src/common/dtos/filters.dto';
-import { BoolFilter } from 'src/common/dtos/prisma/bool-filter.input';
-import { IntFilter } from 'src/common/dtos/prisma/int-filter.input';
-import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
-import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
+import { BaseFilterDto } from '../../../../../common/dtos/filters.dto';
+import { BoolFilter } from '../../../../../common/dtos/prisma/bool-filter.input';
+import { IntFilter } from '../../../../../common/dtos/prisma/int-filter.input';
+import { StringFilter } from '../../../../../common/dtos/prisma/string-filter.input';
+import { StringNullableFilter } from '../../../../../common/dtos/prisma/string-nullable-filter.input';
 
 export class CreateEstadoTramiteDto {
   @Expose()

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ComercializadoraService } from './comercializadora.service';
 import { ComercializadoraController } from './comercializadora.controller';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../../../global/database/prisma.service';
 
 @Module({
   controllers: [ComercializadoraController],

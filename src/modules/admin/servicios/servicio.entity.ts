@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Prisma } from 'src/generated/prisma/client';
+import { Prisma } from '../../../generated/prisma/client';
 import { ClienteEntity } from '../clientes/cliente.entity';
 import { TipoDocumentoEntity } from '../catalogos/tipos-documento/tipo-documento.entity';
 import { TipoTramiteEntity } from '../catalogos/tipos-tramite/tipo-tramite.entity';

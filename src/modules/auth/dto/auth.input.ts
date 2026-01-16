@@ -10,7 +10,7 @@ import {
   Matches,
   IsBoolean,
 } from 'class-validator';
-import { DtoPipePlainToClassOptions } from 'src/common/decorators/dto.decorator';
+import { DtoPipePlainToClassOptions } from '../../../common/decorators/dto.decorator';
 
 export class RegistrarUserInput {
   @Expose()

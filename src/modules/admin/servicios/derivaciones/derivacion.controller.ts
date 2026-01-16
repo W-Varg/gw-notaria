@@ -15,14 +15,14 @@ import {
   PaginateDerivacionesType,
   ResponseDerivacionesStatsType,
 } from './dto/derivacion.response';
-import { IToken, AuthUser } from 'src/common/decorators/token.decorator';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
-import { PermisoEnum } from 'src/enums/permisos.enum';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
-import { Audit } from 'src/common/decorators/audit.decorator';
-import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
-import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
+import { IToken, AuthUser } from '../../../../common/decorators/token.decorator';
+import { ApiDescription } from '../../../../common/decorators/controller.decorator';
+import { PermisoEnum } from '../../../../enums/permisos.enum';
+import { BearerAuthPermision } from '../../../../common/decorators/authorization.decorator';
+import { Audit } from '../../../../common/decorators/audit.decorator';
+import { AuditInterceptor } from '../../../../common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from '../../../../enums/tipo-accion.enum';
+import { CommonParamsDto } from '../../../../common/dtos/common-params.dto';
 
 @ApiTags('[admin] Derivaciones de Servicios')
 @Controller('admin/derivaciones')

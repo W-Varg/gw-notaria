@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../../global/database/prisma.service';
 import {
   ListAuditLogsArgsDto,
   ListSystemLogsArgsDto,
@@ -7,9 +7,9 @@ import {
   ListErrorLogsArgsDto,
   ListAccessLogsArgsDto,
 } from './dto/logs.input.dto';
-import { Prisma } from 'src/generated/prisma/client';
-import { dataResponseSuccess } from 'src/common/dtos/response.dto';
-import { paginationParamsFormat } from 'src/helpers/prisma.helper';
+import { Prisma } from '../../../generated/prisma/client';
+import { dataResponseSuccess } from '../../../common/dtos/response.dto';
+import { paginationParamsFormat } from '../../../helpers/prisma.helper';
 
 @Injectable()
 export class LogsService {

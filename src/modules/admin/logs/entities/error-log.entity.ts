@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Prisma } from 'src/generated/prisma/client';
+import { Prisma } from '../../../../generated/prisma/client';
 
 export class ErrorLog {
   @ApiProperty()

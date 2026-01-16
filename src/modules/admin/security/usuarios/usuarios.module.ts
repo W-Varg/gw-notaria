@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { UsuariosService } from './usuarios.service';
 import { UsuariosController } from './usuarios.controller';
-import { AuthModule } from 'src/modules/auth/auth.module';
-import { ProfileModule } from 'src/modules/auth/profile/profile.module';
+import { AuthModule } from '../../../../modules/auth/auth.module';
+import { ProfileModule } from '../../../../modules/auth/profile/profile.module';
 
 @Module({
   imports: [AuthModule, ProfileModule],

@@ -9,8 +9,8 @@ import {
   ValidateNested,
   IsBoolean,
 } from 'class-validator';
-import { BaseFilterDto } from 'src/common/dtos/filters.dto';
-import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
+import { BaseFilterDto } from '../../../../../common/dtos/filters.dto';
+import { StringFilter } from '../../../../../common/dtos/prisma/string-filter.input';
 
 export class CreateBancoDto {
   @Expose()

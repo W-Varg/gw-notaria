@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { ApiOkResponseDto, ResponseStructDTO } from '../../../../../common/dtos/response.dto';
 import { HistorialEstadosServicio } from '../historial-estados-servicio.entity';
 
 class HistorialEstadosServicioData extends OmitType(ResponseStructDTO, ['pagination']) {

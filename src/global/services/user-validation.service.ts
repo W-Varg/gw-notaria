@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { dataResponseError } from 'src/common/dtos/response.dto';
+import { dataResponseError } from '../../common/dtos/response.dto';
 
 /**
  * Servicio de validaciones comunes para usuarios

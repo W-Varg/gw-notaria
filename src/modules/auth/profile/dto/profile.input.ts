@@ -10,7 +10,12 @@ import {
   ValidateNested,
   IsBoolean,
 } from 'class-validator';
-import { BaseFilterDto, BoolFilter, DateTimeFilter, StringNullableFilter } from 'src/common/dtos';
+import {
+  BaseFilterDto,
+  BoolFilter,
+  DateTimeFilter,
+  StringNullableFilter,
+} from '../../../../common/dtos';
 
 /**
  * DTO para actualizar perfil de usuario

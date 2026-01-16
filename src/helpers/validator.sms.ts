@@ -1,5 +1,5 @@
 import { ValidationArguments, ValidationError } from 'class-validator';
-import { ResponseDTO, ValidationErrorsType } from 'src/common/dtos/response.dto';
+import { ResponseDTO, ValidationErrorsType } from '../common/dtos/response.dto';
 
 export const smsMin = (field) => `valor de  ${field} no válido`;
 

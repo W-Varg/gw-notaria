@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { TipoAccionEnum } from '../../../../enums/tipo-accion.enum';
 import { Usuario } from '../../security/usuarios/usuario.entity';
 
 export class AuditLog {

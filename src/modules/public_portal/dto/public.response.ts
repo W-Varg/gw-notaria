@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
-import { ApiOkResponseDto } from 'src/common/dtos/response.dto';
-import { TipoTramiteEntity } from 'src/modules/admin/catalogos/tipos-tramite/tipo-tramite.entity';
+import { ApiOkResponseDto } from '../../../common/dtos/response.dto';
+import { TipoTramiteEntity } from '../../../modules/admin/catalogos/tipos-tramite/tipo-tramite.entity';
 import { Expose, Type } from 'class-transformer';
 
 /* ------------------------------------------------------------------------------------------------------------------ */

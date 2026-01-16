@@ -9,10 +9,10 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { BaseFilterDto } from 'src/common/dtos/filters.dto';
-import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
-import { FloatFilter } from 'src/common/dtos/prisma/float-filter.input';
-import { DateTimeFilter } from 'src/common/dtos';
+import { BaseFilterDto } from '../../../../../common/dtos/filters.dto';
+import { StringNullableFilter } from '../../../../../common/dtos/prisma/string-nullable-filter.input';
+import { FloatFilter } from '../../../../../common/dtos/prisma/float-filter.input';
+import { DateTimeFilter } from '../../../../../common/dtos';
 
 export class CreateArqueosDiariosDto {
   @Expose()

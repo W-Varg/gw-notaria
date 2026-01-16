@@ -1,13 +1,12 @@
 import { Controller, Get, Post, Body, Query, Patch, Param, UseInterceptors } from '@nestjs/common';
-import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
 import { PermisosService } from './permisos.service';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
+import { ApiDescription } from '../../../../common/decorators/controller.decorator';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
-import { PermisoEnum } from 'src/enums/permisos.enum';
-import { Audit } from 'src/common/decorators/audit.decorator';
-import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { BearerAuthPermision } from '../../../../common/decorators/authorization.decorator';
+import { PermisoEnum } from '../../../../enums/permisos.enum';
+import { Audit } from '../../../../common/decorators/audit.decorator';
+import { AuditInterceptor } from '../../../../common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from '../../../../enums/tipo-accion.enum';
 import { ListPermisosArgsDto, UpdatePermisoActivoDto } from './dto/permisos.dto';
 import {
   ResponseMessageType,
@@ -16,8 +15,8 @@ import {
   ResponsePermisoDetailType,
 } from './dto/permisos.response';
 import { ResponseRolDetailType } from '../roles/dto/roles.response';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
-import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
+import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
+import { CommonParamsDto } from '../../../../common/dtos/common-params.dto';
 
 @ApiTags('[auth] Permisos')
 @Controller('permisos')

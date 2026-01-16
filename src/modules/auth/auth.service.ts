@@ -1,10 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess, ResponseDTO } from 'src/common/dtos/response.dto';
+import { PrismaService } from '../../global/database/prisma.service';
+import {
+  dataResponseError,
+  dataResponseSuccess,
+  ResponseDTO,
+} from '../../common/dtos/response.dto';
 import { randomBytes } from 'node:crypto';
 import { compare, hash } from 'bcrypt';
 import { authenticator } from 'otplib';
-import { parseUserAgent } from 'src/helpers/user-agent.helper';
+import { parseUserAgent } from '../../helpers/user-agent.helper';
 import dayjs from 'dayjs';
 import {
   RegistrarUserInput,
@@ -19,9 +23,9 @@ import { AuthResponse, AuthUsuario, GoogleUserData } from './auth.entity';
 import { TokenService } from '../../common/guards/token-auth.service';
 import { EmailService } from '../../global/emails/email.service';
 import { Usuario as UserModel } from '../../generated/prisma/client';
-import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
-import { TokenTemporalTipoEnum, TokenTemporalClaveEnum } from 'src/enums';
-import { AuditService } from 'src/global/services/audit.service';
+import { TipoAccionEnum } from '../../enums/tipo-accion.enum';
+import { TokenTemporalTipoEnum, TokenTemporalClaveEnum } from '../../enums';
+import { AuditService } from '../../global/services/audit.service';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

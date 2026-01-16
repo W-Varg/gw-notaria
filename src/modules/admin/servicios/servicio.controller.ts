@@ -10,7 +10,7 @@ import {
   UseInterceptors,
   ParseIntPipe,
 } from '@nestjs/common';
-import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
+import { AuthUser, IToken } from '../../../common/decorators/token.decorator';
 import { ServicioService } from './servicio.service';
 import {
   CreateServicioDto,
@@ -22,8 +22,8 @@ import {
   UpdateServicioProgresoDto,
   RegistrarPagoServicioDto,
 } from './dto/servicio.input-extended.dto';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
-import { PermisoEnum } from 'src/enums/permisos.enum';
+import { ApiDescription } from '../../../common/decorators/controller.decorator';
+import { PermisoEnum } from '../../../enums/permisos.enum';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   PaginateServiciosType,
@@ -32,12 +32,12 @@ import {
   ResponseServiciosType,
   ResponseServiciosStatsType,
 } from './dto/servicio.response';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
-import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
-import { Audit } from 'src/common/decorators/audit.decorator';
-import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { BearerAuthPermision } from '../../../common/decorators/authorization.decorator';
+import { CommonParamsDto } from '../../../common/dtos/common-params.dto';
+import { ListFindAllQueryDto } from '../../../common/dtos/filters.dto';
+import { Audit } from '../../../common/decorators/audit.decorator';
+import { AuditInterceptor } from '../../../common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from '../../../enums/tipo-accion.enum';
 
 @ApiTags('[admin] Servicios')
 @Controller('servicios')

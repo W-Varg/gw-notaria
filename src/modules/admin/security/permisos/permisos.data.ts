@@ -1,4 +1,4 @@
-import { Prisma } from 'src/generated/prisma/client';
+import { Prisma } from '../../../../generated/prisma/client';
 import { PermisoEnum } from '../../../../enums/permisos.enum';
 
 // Definición de los permisos estáticos, con descripciones y metadatos

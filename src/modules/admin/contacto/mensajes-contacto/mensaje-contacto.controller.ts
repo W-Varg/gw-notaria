@@ -9,15 +9,15 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
+import { AuthUser, IToken } from '../../../../common/decorators/token.decorator';
 import { MensajeContactoService } from './mensaje-contacto.service';
 import {
   CreateMensajeContactoDto,
   UpdateMensajeContactoDto,
   ListMensajeContactoArgsDto,
 } from './dto/mensaje-contacto.input.dto';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
-import { PermisoEnum } from 'src/enums/permisos.enum';
+import { ApiDescription } from '../../../../common/decorators/controller.decorator';
+import { PermisoEnum } from '../../../../enums/permisos.enum';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   PaginateMensajesContactoType,
@@ -25,12 +25,12 @@ import {
   ResponseMensajeContactoDetailType,
   ResponseMensajesContactoType,
 } from './dto/mensaje-contacto.response';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
-import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
-import { Audit } from 'src/common/decorators/audit.decorator';
-import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { BearerAuthPermision } from '../../../../common/decorators/authorization.decorator';
+import { CommonParamsDto } from '../../../../common/dtos/common-params.dto';
+import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
+import { Audit } from '../../../../common/decorators/audit.decorator';
+import { AuditInterceptor } from '../../../../common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from '../../../../enums/tipo-accion.enum';
 
 @ApiTags('[admin] Mensajes de Contacto')
 @Controller('mensajes-contacto')

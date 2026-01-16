@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional, IntersectionType } from '@nestjs/swagger';
 import { Expose, Transform, TransformFnParams } from 'class-transformer';
 import { IsDateString, IsIn, IsISO8601, IsOptional, IsString, Max, Min } from 'class-validator';
-import { smsIsDate } from 'src/helpers/validator.sms';
+import { smsIsDate } from '../../helpers/validator.sms';
 
 export class PaginationQueryDto {
   @Expose()

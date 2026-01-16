@@ -1,6 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Role, RoleDetail } from '../role.entity';
-import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { ApiOkResponseDto, ResponseStructDTO } from '../../../../../common/dtos/response.dto';
 
 class RolData extends OmitType(ResponseStructDTO, ['pagination']) {
   @ApiProperty({ type: Role })

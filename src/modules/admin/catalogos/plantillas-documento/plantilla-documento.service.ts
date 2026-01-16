@@ -4,17 +4,17 @@ import {
   UpdatePlantillaDocumentoDto,
   ListPlantillaDocumentoArgsDto,
 } from './dto/plantilla-documento.input.dto';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../../../global/database/prisma.service';
 import {
   dataErrorValidations,
   dataResponseError,
   dataResponseSuccess,
-} from 'src/common/dtos/response.dto';
-import { Prisma } from 'src/generated/prisma/client';
+} from '../../../../common/dtos/response.dto';
+import { Prisma } from '../../../../generated/prisma/client';
 import { PlantillaDocumento } from './plantilla-documento.entity';
-import { paginationParamsFormat } from 'src/helpers/prisma.helper';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
-import { IToken } from 'src/common/decorators/token.decorator';
+import { paginationParamsFormat } from '../../../../helpers/prisma.helper';
+import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
+import { IToken } from '../../../../common/decorators/token.decorator';
 
 @Injectable()
 export class PlantillaDocumentoService {

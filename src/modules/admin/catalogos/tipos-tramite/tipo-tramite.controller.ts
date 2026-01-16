@@ -1,36 +1,24 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-  UseInterceptors,
-} from '@nestjs/common';
-import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors } from '@nestjs/common';
+import { AuthUser, IToken } from '../../../../common/decorators/token.decorator';
 import { TipoTramiteService } from './tipo-tramite.service';
 import {
   CreateTipoTramiteDto,
   UpdateTipoTramiteDto,
   ListTipoTramiteArgsDto,
 } from './dto/tipo-tramite.input.dto';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
-import { PermisoEnum } from 'src/enums/permisos.enum';
+import { ApiDescription } from '../../../../common/decorators/controller.decorator';
+import { PermisoEnum } from '../../../../enums/permisos.enum';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   PaginateTiposTramiteType,
-  ResponseTiposTramiteType,
   ResponseTipoTramiteDetailType,
   ResponseTipoTramiteType,
 } from './dto/tipo-tramite.response';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
-import { Audit } from 'src/common/decorators/audit.decorator';
-import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
-import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
+import { BearerAuthPermision } from '../../../../common/decorators/authorization.decorator';
+import { Audit } from '../../../../common/decorators/audit.decorator';
+import { AuditInterceptor } from '../../../../common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from '../../../../enums/tipo-accion.enum';
+import { CommonParamsDto } from '../../../../common/dtos/common-params.dto';
 
 @ApiTags('[admin] Tipos de Trámite')
 @Controller('tipos-tramite')

@@ -1,5 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext, SetMetadata } from '@nestjs/common';
-import { ApiUnauthorizedError } from 'src/common/filters/global-exception.filter';
+import { ApiUnauthorizedError } from '../../common/filters/global-exception.filter';
 import { TokenService } from './token-auth.service';
 import { IToken } from '../decorators/token.decorator';
 

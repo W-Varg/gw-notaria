@@ -1,15 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { IToken } from 'src/common/decorators/token.decorator';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { IToken } from '../../../../common/decorators/token.decorator';
+import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
 import {
   CreateSucursalDto,
   UpdateSucursalDto,
   ListSucursalArgsDto,
 } from './dto/sucursal.input.dto';
 import { SucursalEntity } from './sucursal.entity';
-import { PrismaService } from 'src/global/database/prisma.service';
-import { dataErrorValidations, dataResponseError, dataResponseSuccess } from 'src/common/dtos';
-import { paginationParamsFormat } from 'src/helpers/prisma.helper';
+import { PrismaService } from '../../../../global/database/prisma.service';
+import {
+  dataErrorValidations,
+  dataResponseError,
+  dataResponseSuccess,
+} from '../../../../common/dtos';
+import { paginationParamsFormat } from '../../../../helpers/prisma.helper';
 
 @Injectable()
 export class SucursalService {

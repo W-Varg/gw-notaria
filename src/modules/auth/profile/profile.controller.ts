@@ -34,9 +34,9 @@ import {
   ResponseAvatarType,
   ResponseDeleteSessionType,
 } from './dto/profile.resp';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
-import { BearerAuthToken } from 'src/common/decorators/authorization.decorator';
-import { IToken, AuthUser } from 'src/common/decorators/token.decorator';
+import { ApiDescription } from '../../../common/decorators/controller.decorator';
+import { BearerAuthToken } from '../../../common/decorators/authorization.decorator';
+import { IToken, AuthUser } from '../../../common/decorators/token.decorator';
 
 @ApiTags('[profile] Perfil de Usuario')
 @Controller('auth/profile')

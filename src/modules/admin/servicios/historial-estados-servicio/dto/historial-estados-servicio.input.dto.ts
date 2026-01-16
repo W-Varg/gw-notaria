@@ -1,10 +1,10 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { IsDefined, IsInt, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
-import { BaseFilterDto } from 'src/common/dtos/filters.dto';
-import { IntFilter } from 'src/common/dtos/prisma/int-filter.input';
-import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
-import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
+import { BaseFilterDto } from '../../../../../common/dtos/filters.dto';
+import { IntFilter } from '../../../../../common/dtos/prisma/int-filter.input';
+import { StringFilter } from '../../../../../common/dtos/prisma/string-filter.input';
+import { StringNullableFilter } from '../../../../../common/dtos/prisma/string-nullable-filter.input';
 
 export class CreateHistorialEstadosServicioDto {
   @Expose()

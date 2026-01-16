@@ -1,5 +1,5 @@
 import { OmitType, ApiProperty } from '@nestjs/swagger';
-import { ResponseStructDTO, ApiOkResponseDto } from 'src/common/dtos/response.dto';
+import { ResponseStructDTO, ApiOkResponseDto } from '../../../../common/dtos/response.dto';
 import { AuthUsuario, TwoFactorSetup } from '../../auth.entity';
 
 /* ------------------------------------------------------------------------------------------------------------------ */

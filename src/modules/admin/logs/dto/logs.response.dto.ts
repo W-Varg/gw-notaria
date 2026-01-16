@@ -5,7 +5,7 @@ import { AccessLog } from '../entities/access-log.entity';
 import { DataChangeLog } from '../entities/data-change-log.entity';
 import { AuditLog } from '../entities/audig-log.entity';
 import { SystemLog } from '../system-log.entity';
-import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { ApiOkResponseDto, ResponseStructDTO } from '../../../../common/dtos/response.dto';
 
 // ============================================
 // AUDIT LOGS RESPONSES
