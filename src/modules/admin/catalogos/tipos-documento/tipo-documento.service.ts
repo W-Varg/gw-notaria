@@ -5,6 +5,7 @@ import {
   ListTipoDocumentoArgsDto,
 } from './dto/tipo-documento.input.dto';
 import { PrismaService } from '../../../../global/database/prisma.service';
+
 import {
   dataErrorValidations,
   dataResponseError,

@@ -5,14 +5,13 @@ import {
   ListDerivacionArgsDto,
 } from './dto/derivacion.input.dto';
 import { PrismaService } from '../../../../global/database/prisma.service';
+
 import {
   dataErrorValidations,
   dataResponseError,
   dataResponseSuccess,
 } from '../../../../common/dtos/response.dto';
-import { DerivacionEntity } from './derivacion.entity';
 import { paginationParamsFormat } from '../../../../helpers/prisma.helper';
-import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
 import { IToken } from '../../../../common/decorators/token.decorator';
 
 @Injectable()

@@ -3,6 +3,7 @@ import { Decimal } from '@prisma/client/runtime/client';
 import { MetodoPagoEnum } from '../../../../../enums/metodo-pago.enum';
 import { ConstanciaEnum } from '../../../../../generated/prisma/enums';
 import { BancoEntity } from '../../../../../modules/admin/catalogos/bancos/banco.entity';
+
 export class IMovimiento {
   @ApiProperty()
   gastoId?: number;

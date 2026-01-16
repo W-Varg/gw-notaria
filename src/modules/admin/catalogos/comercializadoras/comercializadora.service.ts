@@ -10,7 +10,7 @@ import {
   dataResponseSuccess,
 } from '../../../../common/dtos/response.dto';
 import { Prisma } from '../../../../generated/prisma/client';
-import { ComercializadoraEntity, ComercializadoraDetail } from './comercializadora.entity';
+import { ComercializadoraEntity } from './comercializadora.entity';
 import { paginationParamsFormat } from '../../../../helpers/prisma.helper';
 import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
 import { IToken } from '../../../../common/decorators/token.decorator';

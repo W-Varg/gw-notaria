@@ -5,6 +5,7 @@ import {
   ListPagosIngresosArgsDto,
 } from './dto/pagos-ingresos.input.dto';
 import { PrismaService } from '../../../../global/database/prisma.service';
+
 import {
   dataErrorValidations,
   dataResponseError,
@@ -15,7 +16,7 @@ import { PagosIngresos } from './pagos-ingresos.entity';
 import { paginationParamsFormat } from '../../../../helpers/prisma.helper';
 import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
 import { IToken } from '../../../../common/decorators/token.decorator';
-import { PdfService } from '../../../../modules/pdf/pdf.service';
+import { PdfService } from '../../../pdf/pdf.service';
 
 @Injectable()
 export class PagosIngresosService {

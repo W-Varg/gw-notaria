@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateGastosDto, UpdateGastosDto, ListGastosArgsDto } from './dto/gastos.input.dto';
 import { PrismaService } from '../../../../global/database/prisma.service';
+
 import {
   dataErrorValidations,
   dataResponseError,

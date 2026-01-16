@@ -5,6 +5,7 @@ import {
   ListEstadoTramiteArgsDto,
 } from './dto/estado-tramite.input.dto';
 import { PrismaService } from '../../../../global/database/prisma.service';
+
 import {
   dataErrorValidations,
   dataResponseError,
