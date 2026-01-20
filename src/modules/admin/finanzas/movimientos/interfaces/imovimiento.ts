@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Decimal } from '@prisma/client/runtime/client';
-import { MetodoPagoEnum } from 'src/enums/metodo-pago.enum';
-import { ConstanciaEnum } from 'src/generated/prisma/enums';
-import { BancoEntity } from 'src/modules/admin/catalogos/bancos/banco.entity';
+import { MetodoPagoEnum } from '../../../../../enums/metodo-pago.enum';
+import { ConstanciaEnum } from '../../../../../generated/prisma/enums';
+import { BancoEntity } from '../../../../../modules/admin/catalogos/bancos/banco.entity';
+
 export class IMovimiento {
   @ApiProperty()
   gastoId?: number;

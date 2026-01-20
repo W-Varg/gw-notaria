@@ -14,13 +14,13 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { BaseFilterDto } from 'src/common/dtos/filters.dto';
-import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
-import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
-import { DateTimeFilter, DateTimeNullableFilter } from 'src/common/dtos';
-import { IntFilter } from 'src/common/dtos/prisma/int-filter.input';
-import { FloatFilter } from 'src/common/dtos/prisma/float-filter.input';
-import { BoolFilter } from 'src/common/dtos/prisma/bool-filter.input';
+import { BaseFilterDto } from '../../../../common/dtos/filters.dto';
+import { StringFilter } from '../../../../common/dtos/prisma/string-filter.input';
+import { StringNullableFilter } from '../../../../common/dtos/prisma/string-nullable-filter.input';
+import { DateTimeFilter, DateTimeNullableFilter } from '../../../../common/dtos';
+import { IntFilter } from '../../../../common/dtos/prisma/int-filter.input';
+import { FloatFilter } from '../../../../common/dtos/prisma/float-filter.input';
+import { BoolFilter } from '../../../../common/dtos/prisma/bool-filter.input';
 
 /**
  * DTO para crear un servicio

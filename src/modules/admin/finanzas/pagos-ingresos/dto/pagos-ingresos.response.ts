@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { ApiOkResponseDto, ResponseStructDTO } from '../../../../../common/dtos/response.dto';
 import { PagosIngresos } from '../pagos-ingresos.entity';
 
 class PagosIngresosData extends OmitType(ResponseStructDTO, ['pagination']) {

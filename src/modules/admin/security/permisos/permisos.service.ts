@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
-import { Prisma } from 'src/generated/prisma/client';
+import { PrismaService } from '../../../../global/database/prisma.service';
+import { dataResponseError, dataResponseSuccess } from '../../../../common/dtos/response.dto';
+import { Prisma } from '../../../../generated/prisma/client';
 import { ListPermisosArgsDto } from './dto/permisos.dto';
-import { PermisoEnum } from 'src/enums/permisos.enum';
-import { paginationParamsFormat } from 'src/helpers/prisma.helper';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { PermisoEnum } from '../../../../enums/permisos.enum';
+import { paginationParamsFormat } from '../../../../helpers/prisma.helper';
+import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
 
 @Injectable()
 export class PermisosService {

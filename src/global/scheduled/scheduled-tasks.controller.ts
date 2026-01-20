@@ -1,9 +1,9 @@
 import { Controller, Post } from '@nestjs/common';
 import { ApiTags, ApiResponse } from '@nestjs/swagger';
 import { UserCleanupService } from './user-cleanup.service';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
-import { PermisoEnum } from 'src/enums/permisos.enum';
+import { ApiDescription } from '../../common/decorators/controller.decorator';
+import { BearerAuthPermision } from '../../common/decorators/authorization.decorator';
+import { PermisoEnum } from '../../enums/permisos.enum';
 
 @ApiTags('[scheduled-tasks] Tareas Programadas')
 @Controller('scheduled-tasks')

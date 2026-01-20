@@ -1,5 +1,9 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { ApiOkResponseDto, ResponseDTO, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import {
+  ApiOkResponseDto,
+  ResponseDTO,
+  ResponseStructDTO,
+} from '../../../../../common/dtos/response.dto';
 import { TipoTramiteEntity, TipoTramiteDetail } from '../tipo-tramite.entity';
 class TipoTramiteData extends OmitType(ResponseStructDTO, ['pagination']) {
   @ApiProperty({ type: TipoTramiteEntity })

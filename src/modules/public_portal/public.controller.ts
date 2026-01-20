@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { PublicService } from './public.service';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
+import { ApiDescription } from '../../common/decorators/controller.decorator';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   // CategoriasTypePublic,
@@ -9,7 +9,7 @@ import {
   ResponseFAQsType,
   ResponseInformacionCompletaType,
 } from './dto/public.response';
-import { UseCache } from 'src/common/decorators/cache.decorator';
+import { UseCache } from '../../common/decorators/cache.decorator';
 import { ContactoMensajeDto, FAQsDto } from './dto/public.input';
 
 @ApiTags('[public] Portal Público')

@@ -7,31 +7,30 @@ import {
   Param,
   Delete,
   Query,
-  ParseIntPipe,
   UseInterceptors,
 } from '@nestjs/common';
-import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
+import { AuthUser, IToken } from '../../../../common/decorators/token.decorator';
 import { CuentaBancariaService } from './cuenta-bancaria.service';
 import {
   CreateCuentaBancariaDto,
   UpdateCuentaBancariaDto,
   ListCuentaBancariaArgsDto,
 } from './dto/cuenta-bancaria.input.dto';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
-import { PermisoEnum } from 'src/enums/permisos.enum';
+import { ApiDescription } from '../../../../common/decorators/controller.decorator';
+import { PermisoEnum } from '../../../../enums/permisos.enum';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Audit } from 'src/common/decorators/audit.decorator';
-import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { Audit } from '../../../../common/decorators/audit.decorator';
+import { AuditInterceptor } from '../../../../common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from '../../../../enums/tipo-accion.enum';
 import {
   PaginateCuentasBancariasType,
   ResponseCuentaBancariaType,
   ResponseCuentaBancariaDetailType,
   ResponseCuentasBancariasType,
 } from './dto/cuenta-bancaria.response';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
-import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
+import { BearerAuthPermision } from '../../../../common/decorators/authorization.decorator';
+import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
+import { CommonParamsDto } from '../../../../common/dtos/common-params.dto';
 
 @ApiTags('[admin] Cuentas Bancarias')
 @Controller('cuentas-bancarias')

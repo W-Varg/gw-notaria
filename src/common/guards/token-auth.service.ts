@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../global/database/prisma.service';
 import { IToken, TokenPayload } from '../decorators/token.decorator';
 
 @Injectable()

@@ -1,6 +1,6 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { ApiTags, ApiResponse } from '@nestjs/swagger';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
+import { ApiDescription } from '../../../common/decorators/controller.decorator';
 import { LogsService } from './logs.service';
 import {
   ListAuditLogsArgsDto,
@@ -19,8 +19,8 @@ import {
   ResponseAuditStatsType,
   ResponseDataChangeHistoryType,
 } from './dto/logs.response.dto';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
-import { PermisoEnum } from 'src/enums/permisos.enum';
+import { BearerAuthPermision } from '../../../common/decorators/authorization.decorator';
+import { PermisoEnum } from '../../../enums/permisos.enum';
 
 @ApiTags('[admin] Logs y Auditoría')
 @Controller('admin/logs')

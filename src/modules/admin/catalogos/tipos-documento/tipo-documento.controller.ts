@@ -9,15 +9,15 @@ import {
   Query,
   UseInterceptors,
 } from '@nestjs/common';
-import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
+import { AuthUser, IToken } from '../../../../common/decorators/token.decorator';
 import { TipoDocumentoService } from './tipo-documento.service';
 import {
   CreateTipoDocumentoDto,
   UpdateTipoDocumentoDto,
   ListTipoDocumentoArgsDto,
 } from './dto/tipo-documento.input.dto';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
-import { PermisoEnum } from 'src/enums/permisos.enum';
+import { ApiDescription } from '../../../../common/decorators/controller.decorator';
+import { PermisoEnum } from '../../../../enums/permisos.enum';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   PaginateTipoDocumentosType,
@@ -25,12 +25,12 @@ import {
   ResponseTipoDocumentoDetailType,
   ResponseTipoDocumentosType,
 } from './dto/tipo-documento.response';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
-import { Audit } from 'src/common/decorators/audit.decorator';
-import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
-import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
+import { BearerAuthPermision } from '../../../../common/decorators/authorization.decorator';
+import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
+import { Audit } from '../../../../common/decorators/audit.decorator';
+import { AuditInterceptor } from '../../../../common/interceptors/audit.interceptor';
+import { TipoAccionEnum } from '../../../../enums/tipo-accion.enum';
+import { CommonParamsDto } from '../../../../common/dtos/common-params.dto';
 
 @ApiTags('[admin] Tipos de Documento')
 @Controller('tipos-documento')

@@ -9,15 +9,15 @@ import {
   ValidateNested,
   IsBoolean,
 } from 'class-validator';
-import { NivelLogEnum } from 'src/enums/nivel-log.enum';
-import { TipoAccionEnum } from 'src/enums/tipo-accion.enum';
+import { NivelLogEnum } from '../../../../enums/nivel-log.enum';
+import { TipoAccionEnum } from '../../../../enums/tipo-accion.enum';
 import {
   BaseFilterDto,
   StringFilter,
   StringNullableFilter,
   DateTimeFilter,
   BoolFilter,
-} from 'src/common/dtos';
+} from '../../../../common/dtos';
 
 // ============================================
 // WHERE INPUTS (Filtros)

@@ -9,10 +9,10 @@ import {
   MaxLength,
   ValidateNested,
 } from 'class-validator';
-import { BaseFilterDto } from 'src/common/dtos/filters.dto';
-import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
-import { BoolFilter } from 'src/common/dtos/prisma/bool-filter.input';
-import { DateTimeFilter } from 'src/common/dtos';
+import { BaseFilterDto } from '../../../../../common/dtos/filters.dto';
+import { StringFilter } from '../../../../../common/dtos/prisma/string-filter.input';
+import { BoolFilter } from '../../../../../common/dtos/prisma/bool-filter.input';
+import { DateTimeFilter } from '../../../../../common/dtos';
 
 export class CreateDerivacionDto {
   @Expose()

@@ -2,7 +2,7 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiProperty, ApiPropertyOptions } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { IsInt, IsOptional, IsPositive, IsString, Matches, MaxLength, Min } from 'class-validator';
-import { smsInteger, smsIsString } from 'src/helpers/validator.sms';
+import { smsInteger, smsIsString } from '../../helpers/validator.sms';
 import { IsSQLInjectionSafe } from './validator.decorator';
 
 interface ParamsStringValidatorOptions {

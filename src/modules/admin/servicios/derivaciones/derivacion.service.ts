@@ -7,15 +7,16 @@ import {
   RechazarDerivacionDto,
 } from './dto/derivacion.input.dto';
 import { DerivacionesStatsDto } from './dto/derivacion.response';
-import { PrismaService } from 'src/global/database/prisma.service';
+import { PrismaService } from '../../../../global/database/prisma.service';
+
 import {
   dataErrorValidations,
   dataResponseError,
   dataResponseSuccess,
-} from 'src/common/dtos/response.dto';
-import { paginationParamsFormat } from 'src/helpers/prisma.helper';
-import { IToken } from 'src/common/decorators/token.decorator';
-import { Prisma } from 'src/generated/prisma/client';
+} from '../../../../common/dtos/response.dto';
+import { paginationParamsFormat } from '../../../../helpers/prisma.helper';
+import { IToken } from '../../../../common/decorators/token.decorator';
+import { Prisma } from '../../../../generated/prisma/client';
 
 @Injectable()
 export class DerivacionService {

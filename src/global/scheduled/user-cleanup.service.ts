@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaService } from 'src/global/database/prisma.service';
-import { TokenTemporalTipoEnum } from 'src/enums';
+import { PrismaService } from '../../global/database/prisma.service';
+import { TokenTemporalTipoEnum } from '../../enums';
 import dayjs from 'dayjs';
 
 @Injectable()

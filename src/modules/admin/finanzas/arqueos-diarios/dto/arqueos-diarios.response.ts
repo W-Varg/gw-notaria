@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { ApiOkResponseDto, ResponseStructDTO } from '../../../../../common/dtos/response.dto';
 import { ArqueosDiarios } from '../arqueos-diarios.entity';
 
 class ArqueosDiariosData extends OmitType(ResponseStructDTO, ['pagination']) {

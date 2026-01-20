@@ -2,7 +2,7 @@ import { Controller, Get, HttpStatus, Query } from '@nestjs/common';
 import { MovimientosService } from './movimientos.service';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MovimientoResponseDto } from './dto/movimiento-response.dto';
-import { dataResponseFormat } from 'src/common/dtos';
+import { dataResponseFormat } from '../../../../common/dtos';
 import { FiltroInputDto } from './dto/filtro.input.dto';
 
 @ApiTags('[finanzas] Movimientos')

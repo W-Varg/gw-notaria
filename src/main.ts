@@ -20,7 +20,7 @@ async function bootstrap() {
   // __dirname en producción apunta a dist/src, necesitamos subir 2 niveles
   app.useStaticAssets(join(__dirname, '..', '..', 'storage'), { prefix: '/storage' });
   app.useStaticAssets(join(__dirname, '..', '..', 'uploads'), { prefix: '/uploads' });
-  app.useStaticAssets(join(__dirname, '..', '..', 'public'));
+  app.useStaticAssets(join(__dirname, '..', 'public'), { prefix: '/' });
 
   app.enableVersioning({ type: VersioningType.URI });
 

@@ -9,11 +9,11 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { BaseFilterDto } from 'src/common/dtos/filters.dto';
-import { IntFilter } from 'src/common/dtos/prisma/int-filter.input';
-import { IntNullableFilter } from 'src/common/dtos/prisma/int-nullable-filter.input';
-import { FloatFilter } from 'src/common/dtos/prisma/float-filter.input';
-import { MetodoPagoEnum } from 'src/enums/metodo-pago.enum';
+import { BaseFilterDto } from '../../../../../common/dtos/filters.dto';
+import { IntFilter } from '../../../../../common/dtos/prisma/int-filter.input';
+import { IntNullableFilter } from '../../../../../common/dtos/prisma/int-nullable-filter.input';
+import { FloatFilter } from '../../../../../common/dtos/prisma/float-filter.input';
+import { MetodoPagoEnum } from '../../../../../enums/metodo-pago.enum';
 
 export class CreateTransaccionesEgresosDto {
   @Expose()

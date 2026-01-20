@@ -1,4 +1,4 @@
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { ListFindAllQueryDto } from '../common/dtos/filters.dto';
 
 export const paginationParamsFormat = (args: ListFindAllQueryDto, defaultPagination = false) => {
   const { page, size, orderBy, orderDirection } = args || {};

@@ -2,7 +2,7 @@
 
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Permiso } from '../permisos.entity';
-import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { ApiOkResponseDto, ResponseStructDTO } from '../../../../../common/dtos/response.dto';
 
 class PermisosData {
   @ApiProperty({ type: [Permiso] })

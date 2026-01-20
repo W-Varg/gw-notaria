@@ -10,13 +10,13 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
-import { Audit } from 'src/common/decorators/audit.decorator';
-import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { PermisoEnum } from 'src/enums/permisos.enum';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
+import { AuthUser, IToken } from '../../../../common/decorators/token.decorator';
+import { ApiDescription } from '../../../../common/decorators/controller.decorator';
+import { BearerAuthPermision } from '../../../../common/decorators/authorization.decorator';
+import { Audit } from '../../../../common/decorators/audit.decorator';
+import { AuditInterceptor } from '../../../../common/interceptors/audit.interceptor';
+import { PermisoEnum } from '../../../../enums/permisos.enum';
+import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
 import { SucursalService } from './sucursal.service';
 import {
   CreateSucursalDto,
@@ -29,8 +29,8 @@ import {
   ResponseSucursalesType,
   PaginateSucursalesType,
 } from './dto/sucursal.response';
-import { TipoAccionEnum } from 'src/enums';
-import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
+import { TipoAccionEnum } from '../../../../enums';
+import { CommonParamsDto } from '../../../../common/dtos/common-params.dto';
 
 @ApiTags('[admin] Sucursales')
 @Controller('sucursales')

@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { CreateFaqDto, UpdateFaqDto, ListFaqArgsDto } from './dto/faq.input.dto';
-import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
-import { Prisma } from 'src/generated/prisma/client';
+import { PrismaService } from '../../../global/database/prisma.service';
+import { dataResponseError, dataResponseSuccess } from '../../../common/dtos/response.dto';
 import { Faq } from './faq.entity';
-import { paginationParamsFormat } from 'src/helpers/prisma.helper';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
-import { ConfiguracionAplicacionClaveEnum } from 'src/enums/configuraciones.enum';
-import { IToken } from 'src/common/decorators/token.decorator';
+import { paginationParamsFormat } from '../../../helpers/prisma.helper';
+import { ListFindAllQueryDto } from '../../../common/dtos/filters.dto';
+import { ConfiguracionAplicacionClaveEnum } from '../../../enums/configuraciones.enum';
+import { IToken } from '../../../common/decorators/token.decorator';
 
 @Injectable()
 export class FaqService {

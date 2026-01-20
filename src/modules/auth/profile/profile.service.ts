@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/global/database/prisma.service';
-import { dataResponseError, dataResponseSuccess } from 'src/common/dtos/response.dto';
+import { PrismaService } from '../../../global/database/prisma.service';
+import { dataResponseError, dataResponseSuccess } from '../../../common/dtos/response.dto';
 import { randomBytes } from 'node:crypto';
 import { compare, hash } from 'bcrypt';
 import { authenticator } from 'otplib';
@@ -12,11 +12,11 @@ import {
 } from './dto/profile.input';
 import { TwoFactorSetup } from '../auth.entity';
 import { EmailService } from '../../../global/emails/email.service';
-import { paginationParamsFormat } from 'src/helpers/prisma.helper';
-import { TokenTemporalTipoEnum, TokenTemporalClaveEnum } from 'src/enums';
-import { FileStorageService } from 'src/global/services/file-storage.service';
-import { QrCodeService } from 'src/global/services/qr-code.service';
-import { UserValidationService } from 'src/global/services/user-validation.service';
+import { paginationParamsFormat } from '../../../helpers/prisma.helper';
+import { TokenTemporalTipoEnum, TokenTemporalClaveEnum } from '../../../enums';
+import { FileStorageService } from '../../../global/services/file-storage.service';
+import { QrCodeService } from '../../../global/services/qr-code.service';
+import { UserValidationService } from '../../../global/services/user-validation.service';
 import dayjs from 'dayjs';
 
 @Injectable()

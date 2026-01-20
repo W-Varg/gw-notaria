@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { ApiOkResponseDto, ResponseStructDTO } from '../../../../../common/dtos/response.dto';
 import { PlantillaDocumento } from '../plantilla-documento.entity';
 
 class PlantillaDocumentoData extends OmitType(ResponseStructDTO, ['pagination']) {

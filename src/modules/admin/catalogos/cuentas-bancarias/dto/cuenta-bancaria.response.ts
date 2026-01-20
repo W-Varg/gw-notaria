@@ -1,6 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { CuentaBancaria, CuentaBancariaDetail } from '../cuenta-bancaria.entity';
-import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { ApiOkResponseDto, ResponseStructDTO } from '../../../../../common/dtos/response.dto';
 
 class CuentaBancariaData extends OmitType(ResponseStructDTO, ['pagination']) {
   @ApiProperty({ type: CuentaBancaria })

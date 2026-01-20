@@ -1,10 +1,10 @@
 import { ApiProperty, ApiPropertyOptional, IntersectionType } from '@nestjs/swagger';
 import { IsOptional, IsBoolean } from 'class-validator';
-import { OrderQueryDto, PaginationQueryDto } from 'src/common/dtos/filters.dto';
-import { BoolFilter } from 'src/common/dtos/prisma/bool-filter.input';
+import { OrderQueryDto, PaginationQueryDto } from '../../../../../common/dtos/filters.dto';
+import { BoolFilter } from '../../../../../common/dtos/prisma/bool-filter.input';
 import { Expose, Type } from 'class-transformer';
-import { StringNullableFilter } from 'src/common/dtos/prisma/string-nullable-filter.input';
-import { StringFilter } from 'src/common/dtos/prisma/string-filter.input';
+import { StringNullableFilter } from '../../../../../common/dtos/prisma/string-nullable-filter.input';
+import { StringFilter } from '../../../../../common/dtos/prisma/string-filter.input';
 
 export class UpdatePermisoActivoDto {
   @Expose()

@@ -1,6 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Usuario, UsuarioDetail } from '../usuario.entity';
-import { ApiOkResponseDto, ResponseStructDTO } from 'src/common/dtos/response.dto';
+import { ApiOkResponseDto, ResponseStructDTO } from '../../../../../common/dtos/response.dto';
 
 class UsuarioData extends OmitType(ResponseStructDTO, ['pagination']) {
   @ApiProperty({ type: Usuario })

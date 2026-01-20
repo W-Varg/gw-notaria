@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Prisma } from 'src/generated/prisma/client';
-import { MetodoPagoEnum } from 'src/enums/metodo-pago.enum';
+import { Prisma } from '../../../../generated/prisma/client';
+import { MetodoPagoEnum } from '../../../../enums/metodo-pago.enum';
 
 export class TransaccionesEgresos {
   @ApiProperty()

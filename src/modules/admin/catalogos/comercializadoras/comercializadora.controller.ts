@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  ParseIntPipe,
   UseInterceptors,
 } from '@nestjs/common';
 import { ComercializadoraService } from './comercializadora.service';
@@ -15,21 +14,21 @@ import {
   UpdateComercializadoraDto,
 } from './dto/comercializadora.input.dto';
 import { ApiTags, ApiResponse } from '@nestjs/swagger';
-import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
-import { ListFindAllQueryDto } from 'src/common/dtos/filters.dto';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
-import { PermisoEnum } from 'src/enums/permisos.enum';
-import { Audit } from 'src/common/decorators/audit.decorator';
-import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
-import { TipoAccionEnum } from 'src/enums';
+import { AuthUser, IToken } from '../../../../common/decorators/token.decorator';
+import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
+import { BearerAuthPermision } from '../../../../common/decorators/authorization.decorator';
+import { PermisoEnum } from '../../../../enums/permisos.enum';
+import { Audit } from '../../../../common/decorators/audit.decorator';
+import { AuditInterceptor } from '../../../../common/interceptors/audit.interceptor';
+import { ApiDescription } from '../../../../common/decorators/controller.decorator';
+import { TipoAccionEnum } from '../../../../enums';
 import {
   ResponseComercializadoraType,
   ResponseComercializadoraDetailType,
   ResponseComercializadorasType,
   PaginateComercializadorasType,
 } from './dto/comercializadora.response';
-import { CommonParamsDto } from 'src/common/dtos/common-params.dto';
+import { CommonParamsDto } from '../../../../common/dtos/common-params.dto';
 import { ListComercializadoraArgsDto } from './dto/comercializadora.where.input';
 
 @ApiTags('[admin] Comercializadoras')

@@ -2,7 +2,7 @@ import { Controller, Post, Body, Get, Query, Res, UseGuards, Req, Headers } from
 import { AuthService } from './auth.service';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
-import { getClientIp } from 'src/helpers/user-agent.helper';
+import { getClientIp } from '../../helpers/user-agent.helper';
 import {
   RegistrarUserInput,
   LoginUserInput,
@@ -16,7 +16,7 @@ import {
   SendResetPasswordEmailInput,
   Verify2FAInput,
 } from './dto/auth.input';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
+import { ApiDescription } from '../../common/decorators/controller.decorator';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   ResponseAuthType,
@@ -30,11 +30,11 @@ import {
   ResponseSendResetPasswordEmailType,
   ResponseRegisterType,
 } from './dto/auth.resp';
-import { BearerAuthToken } from 'src/common/decorators/authorization.decorator';
-import { GoogleAuthGuard } from 'src/common/guards/google-auth.guard';
-import { Prisma } from 'src/generated/prisma/client';
-import { dataResponseError } from 'src/common/dtos/response.dto';
-import { AuthUser, IToken } from 'src/common/decorators/token.decorator';
+import { BearerAuthToken } from '../../common/decorators/authorization.decorator';
+import { GoogleAuthGuard } from '../../common/guards/google-auth.guard';
+import { Prisma } from '../../generated/prisma/client';
+import { dataResponseError } from '../../common/dtos/response.dto';
+import { AuthUser, IToken } from '../../common/decorators/token.decorator';
 
 @ApiTags('[auth] Autenticación')
 @Controller('auth')

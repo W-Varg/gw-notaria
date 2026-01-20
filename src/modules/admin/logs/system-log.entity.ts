@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { NivelLogEnum } from 'src/enums/nivel-log.enum';
+import { NivelLogEnum } from '../../../enums/nivel-log.enum';
 
 export class SystemLog {
   @ApiProperty({ nullable: false })
