@@ -13,8 +13,9 @@ import { GuardsModule } from './common/guards/guards.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { PublicModule } from './modules/public_portal/public.module';
 import { CacheInterceptor } from './common/interceptors/cache.interceptor';
-import { MovimientosModule } from './modules/admin/finanzas/movimientos/movimientos.module';
 import { PdfModule } from './modules/pdf/pdf.module';
+import { CatalogosServiciosModule } from './modules/catalogos-servicios/catalogos-servicios.module';
+import { VentasServiciosModule } from './modules/ventas-servicios/ventas-servicios.module';
 
 @Module({
   imports: [
@@ -26,6 +27,8 @@ import { PdfModule } from './modules/pdf/pdf.module';
     AdminModule,
     PublicModule,
     PdfModule,
+    CatalogosServiciosModule,
+    VentasServiciosModule,
   ],
   controllers: [AppController],
   providers: [
