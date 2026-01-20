@@ -27,7 +27,7 @@ export default () => {
 
     // ## MS MYSQL
     msMysql: process.env.DATABASE_URL,
-    cors: process.env.ENV_CORS?.split(',') || ['*'],
+    cors: process.env.ENV_CORS?.split(',')?.map((el) => el.trim()) || ['*'],
 
     // ## NOTIFICATIONS
     webhookUrl: process.env.ENV_WEBHOOK_URL,
