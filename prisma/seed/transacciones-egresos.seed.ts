@@ -1,6 +1,5 @@
-import { MetodoPagoEnum } from 'src/enums';
+import { MetodoPagoEnum } from '../../src/enums';
 import { PrismaClient } from '../../src/generated/prisma/client';
-// import { MetodoPagoEnum } from './metodo-pago.const';
 import { randomFromArray } from './seed';
 
 export async function crearTransaccionesEgresos(

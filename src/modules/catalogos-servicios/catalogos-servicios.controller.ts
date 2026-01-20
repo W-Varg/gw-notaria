@@ -1,9 +1,9 @@
 import { Controller, Get, UseInterceptors } from '@nestjs/common';
 import { CatalogosServiciosService } from './catalogos-servicios.service';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AuditInterceptor } from 'src/common/interceptors/audit.interceptor';
-import { BearerAuthPermision } from 'src/common/decorators/authorization.decorator';
-import { ApiDescription } from 'src/common/decorators/controller.decorator';
+import { AuditInterceptor } from '../../common/interceptors/audit.interceptor';
+import { BearerAuthPermision } from '../../common/decorators/authorization.decorator';
+import { ApiDescription } from '../../common/decorators/controller.decorator';
 import { CatalogoServiciosResp } from './dto/catalogo-servicios.resp';
 
 @ApiTags('[admin] Bancos')

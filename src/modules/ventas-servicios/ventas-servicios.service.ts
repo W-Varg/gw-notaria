@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CrearVentaInput } from './dto/crear-venta.input';
-import { PrismaService } from 'src/global/database/prisma.service';
-import { Prisma } from 'src/generated/prisma/client';
-import { dataResponseSuccess, ListFindAllQueryDto } from 'src/common/dtos';
-import { paginationParamsFormat } from 'src/helpers/prisma.helper';
+import { PrismaService } from '../../global/database/prisma.service';
+import { Prisma } from '../../generated/prisma/client';
+import { dataResponseSuccess, ListFindAllQueryDto } from '../../common/dtos';
+import { paginationParamsFormat } from '../../helpers/prisma.helper';
 
 @Injectable()
 export class VentasServiciosService {

@@ -1,4 +1,4 @@
-import { MetodoPagoEnum } from 'src/enums';
+import { MetodoPagoEnum } from '../../src/enums';
 import { ConstanciaEnum, PrismaClient } from '../../src/generated/prisma/client';
 import { randomFromArray } from './seed';
 

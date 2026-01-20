@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { ApiOkResponseDto } from 'src/common/dtos';
+import { ApiOkResponseDto } from '../../../common/dtos';
 
 class CatalogoServiciosDto {
   @ApiProperty()
