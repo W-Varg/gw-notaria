@@ -973,14 +973,14 @@ model CatalogoServicio {
   codigo         String   @db.VarChar(20) // Código oficial SIN
   nombre         String   @db.VarChar(255)
   descripcion    String?  @db.Text
-  precioBase     Decimal? @db.Decimal(12, 2)
+  precioBase     Decimal? @default(0.00) @db.Decimal(12, 3)
   tarifaVariable Boolean  @default(false)
   activo         Boolean  @default(true)
 
-  userCreateId String
-  userUpdateId String?
-  fechaCreacion         DateTime               @default(now())
-  fechaActualizacion    DateTime               @updatedAt
+  userCreateId       String
+  userUpdateId       String?
+  fechaCreacion      DateTime @default(now())
+  fechaActualizacion DateTime @updatedAt
 
   ventaServicioDetalles VentaServicioDetalle[]
 
@@ -996,7 +996,7 @@ model VentaServicio {
   tipoTransaccion   String   @db.VarChar(20) // 'RECIBO' o 'FACTURA'
   numeroTransaccion String   @unique @db.VarChar(50)
   fecha             DateTime @default(now())
-  total             Decimal  @default(0)
+  total             Decimal  @default(0.00) @db.Decimal(10, 3)
 
   observaciones String?
   estado        String  @default("PAGADO") @db.VarChar(20) // PENDIENTE, PAGADO, ANULADO
@@ -1022,11 +1022,13 @@ model VentaServicioDetalle {
 
   descripcion    String?
   cantidad       Decimal @default(1)
-  precioUnitario Decimal
-  subtotal       Decimal
+  precioUnitario Decimal @default(0.00) @db.Decimal(10, 3)
+  precioCatalogo Decimal @default(0.00) @db.Decimal(10, 3)
+  subtotal       Decimal @default(0.00) @db.Decimal(10, 3)
+
+  descuento Decimal? @default(0.00) @db.Decimal(10, 3)
 
   codigoActividadSin String? @db.VarChar(20)
-  tipoServicio       String? @db.VarChar(50)
 
   userCreateId       String
   userUpdateId       String?
@@ -1034,5 +1036,13 @@ model VentaServicioDetalle {
   fechaActualizacion DateTime?
 
   @@map("fac_ventas_servicios_detalles")
+  @@schema("public")
+}
+
+model Secuencia {
+  id           Int @id @default(autoincrement())
+  numeroRecibo Int
+
+  @@map("secuencias")
   @@schema("public")
 }
