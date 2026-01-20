@@ -8,7 +8,7 @@
 
 ## 📖 Descripción del Proyecto
 
-Sistema backend https://gw-notaria-he2jg5hhe-w-vargs-projects.vercel.app  desarrollado para una **notaría** que ofrece múltiples **servicios notariales** (trámites) a sus clientes. El sistema gestiona el ciclo de vida completo de cada servicio desde su inicio hasta su finalización, permitiendo:
+Sistema backend https://gw-notaria.vercel.app desarrollado para una **notaría** que ofrece múltiples **servicios notariales** (trámites) a sus clientes. El sistema gestiona el ciclo de vida completo de cada servicio desde su inicio hasta su finalización, permitiendo:
 
 - **Gestión de Servicios**: Cada servicio (trámite notarial) es iniciado por un funcionario y puede involucrar múltiples documentos y requisitos.
 - **Sistema de Derivaciones**: Los servicios pueden ser derivados entre funcionarios según especialización, carga de trabajo o disponibilidad.

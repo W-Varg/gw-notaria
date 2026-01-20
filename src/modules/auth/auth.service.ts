@@ -277,6 +277,7 @@ export class AuthService {
         nombre: true,
         apellidos: true,
         telefono: true,
+        sucursalId: true,
         direccion: true,
         avatar: true,
         emailVerificado: true,
@@ -418,6 +419,7 @@ export class AuthService {
         direccion: user.direccion || null,
         avatar: user.avatar || null,
         twoFactorEnabled: user.twoFactorEnabled,
+        sucursalId: user.sucursalId,
       };
 
       // Extraer permisos únicos
@@ -487,6 +489,7 @@ export class AuthService {
         direccion: user.direccion || null,
         avatar: user.avatar || null,
         twoFactorEnabled: user.twoFactorEnabled,
+        sucursalId: user.sucursalId,
       };
 
       // Extraer permisos únicos
@@ -525,6 +528,7 @@ export class AuthService {
           direccion: user.direccion || null,
           avatar: user.avatar || null,
           twoFactorEnabled: true,
+          sucursalId: user.sucursalId,
         },
         requiresTwoFactor: true,
         otpMethod: 'authenticator', // Indica que debe usar Google Authenticator
@@ -582,6 +586,7 @@ export class AuthService {
           direccion: user.direccion || null,
           avatar: user.avatar || null,
           twoFactorEnabled: false,
+          sucursalId: user.sucursalId,
         },
         requiresTwoFactor: true,
         otpMethod: 'email', // Indica que debe usar código por email
@@ -612,6 +617,7 @@ export class AuthService {
       direccion: user.direccion || null,
       avatar: user.avatar || null,
       twoFactorEnabled: user.twoFactorEnabled,
+      sucursalId: user.sucursalId,
     };
 
     // Extraer permisos únicos
@@ -675,6 +681,7 @@ export class AuthService {
           nombre: true,
           apellidos: true,
           telefono: true,
+          sucursalId: true,
           direccion: true,
           avatar: true,
           emailVerificado: true,
@@ -711,6 +718,7 @@ export class AuthService {
         telefono: user.telefono || null,
         direccion: user.direccion || null,
         avatar: user.avatar || null,
+        sucursalId: user.sucursalId,
       };
 
       // Extraer permisos únicos
@@ -995,6 +1003,7 @@ export class AuthService {
         telefono: true,
         direccion: true,
         avatar: true,
+        sucursalId: true,
         estaActivo: true,
         emailVerificado: true,
         twoFactorSecret: true,
@@ -1134,6 +1143,7 @@ export class AuthService {
       direccion: user.direccion || null,
       avatar: user.avatar || null,
       twoFactorEnabled: user.twoFactorEnabled,
+      sucursalId: user.sucursalId,
     };
 
     // Extraer permisos únicos

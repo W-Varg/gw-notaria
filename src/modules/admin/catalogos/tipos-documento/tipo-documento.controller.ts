@@ -74,7 +74,7 @@ export class TipoDocumentoController {
   @BearerAuthPermision([PermisoEnum.TIPOS_DOCUMENTO_VER])
   @ApiResponse({ status: 200, type: () => ResponseTipoDocumentoDetailType })
   @ApiDescription('Obtener un tipo de documento por ID', [PermisoEnum.TIPOS_DOCUMENTO_VER])
-  findOne(@Param() params: CommonParamsDto.IdUuid) {
+  findOne(@Param() params: CommonParamsDto.IdCuid) {
     return this.tipoDocumentoService.findOne(params.id);
   }
 
@@ -89,7 +89,7 @@ export class TipoDocumentoController {
     descripcion: 'Actualizar tipo de documento',
   })
   update(
-    @Param() params: CommonParamsDto.IdUuid,
+    @Param() params: CommonParamsDto.IdCuid,
     @Body() updateDto: UpdateTipoDocumentoDto,
     @AuthUser() session: IToken,
   ) {
@@ -106,7 +106,7 @@ export class TipoDocumentoController {
     tabla: 'TipoDocumento',
     descripcion: 'Eliminar tipo de documento',
   })
-  remove(@Param() params: CommonParamsDto.IdUuid) {
+  remove(@Param() params: CommonParamsDto.IdCuid) {
     return this.tipoDocumentoService.remove(params.id);
   }
 }

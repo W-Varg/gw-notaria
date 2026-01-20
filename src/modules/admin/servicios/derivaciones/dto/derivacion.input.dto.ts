@@ -75,9 +75,9 @@ export class CreateDerivacionDto {
 export class CancelarDerivacionDto {
   @Expose()
   @IsDefined()
-  @IsInt()
-  @ApiProperty({ type: Number, description: 'ID de la derivación a cancelar' })
-  derivacionId: number;
+  @IsString()
+  @ApiProperty({ type: String, description: 'ID de la derivación a cancelar' })
+  derivacionId: string;
 
   @Expose()
   @IsOptional()
@@ -90,9 +90,9 @@ export class CancelarDerivacionDto {
 export class MarcarVisualizadaDto {
   @Expose()
   @IsDefined()
-  @IsInt()
-  @ApiProperty({ type: Number, description: 'ID de la derivación' })
-  derivacionId: number;
+  @IsString()
+  @ApiProperty({ type: String, description: 'ID de la derivación a rechazar' })
+  derivacionId: string;
 }
 
 export class NotaDerivacionDto {
@@ -106,9 +106,9 @@ export class NotaDerivacionDto {
 export class RechazarDerivacionDto {
   @Expose()
   @IsDefined()
-  @IsInt()
-  @ApiProperty({ type: Number, description: 'ID de la derivación a rechazar' })
-  derivacionId: number;
+  @IsString()
+  @ApiProperty({ type: String, description: 'ID de la derivación a rechazar' })
+  derivacionId: string;
 
   @Expose()
   @IsDefined()

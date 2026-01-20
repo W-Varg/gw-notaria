@@ -48,7 +48,7 @@ export class DerivacionController {
   @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
   @ApiDescription('Obtener detalle de una derivación', [PermisoEnum.SERVICIOS_VER])
   @ApiResponse({ status: 200, type: () => ResponseDerivacionDetailType })
-  findOne(@Param() params: CommonParamsDto.Id, @AuthUser() session: IToken) {
+  findOne(@Param() params: CommonParamsDto.IdCuid, @AuthUser() session: IToken) {
     return this.derivacionService.findOne(params.id, session);
   }
 

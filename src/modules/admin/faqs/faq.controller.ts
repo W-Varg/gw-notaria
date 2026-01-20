@@ -58,7 +58,7 @@ export class FaqController {
   @BearerAuthPermision([PermisoEnum.FAQS_VER])
   @ApiResponse({ status: 200, type: () => ResponseFaqType })
   @ApiDescription('Obtener una FAQ por ID', [PermisoEnum.FAQS_VER])
-  findOne(@Param() params: CommonParamsDto.IdUuid) {
+  findOne(@Param() params: CommonParamsDto.IdCuid) {
     return this.faqService.findOne(params.id);
   }
 
@@ -67,7 +67,7 @@ export class FaqController {
   @ApiResponse({ status: 200, type: () => ResponseFaqType })
   @ApiDescription('Actualizar una FAQ por ID', [PermisoEnum.FAQS_EDITAR])
   @Audit({ accion: TipoAccionEnum.UPDATE, modulo: 'faqs', tabla: 'logs_audit_logs' })
-  update(@Param() params: CommonParamsDto.IdUuid, @Body() updateDto: UpdateFaqDto) {
+  update(@Param() params: CommonParamsDto.IdCuid, @Body() updateDto: UpdateFaqDto) {
     return this.faqService.update(params.id, updateDto);
   }
 
@@ -76,7 +76,7 @@ export class FaqController {
   @ApiResponse({ status: 200, type: () => ResponseFaqType })
   @ApiDescription('Eliminar una FAQ por ID', [PermisoEnum.FAQS_ELIMINAR])
   @Audit({ accion: TipoAccionEnum.DELETE, modulo: 'faqs', tabla: 'logs_audit_logs' })
-  remove(@Param() params: CommonParamsDto.IdUuid) {
+  remove(@Param() params: CommonParamsDto.IdCuid) {
     return this.faqService.remove(params.id);
   }
 }

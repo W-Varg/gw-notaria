@@ -74,7 +74,7 @@ export class NotificacionController {
   @BearerAuthPermision([PermisoEnum.NOTIFICACIONES_VER])
   @ApiResponse({ status: 200, type: () => ResponseNotificacionDetailType })
   @ApiDescription('Obtener una notificación por ID', [PermisoEnum.NOTIFICACIONES_VER])
-  findOne(@Param() params: CommonParamsDto.IdUuid) {
+  findOne(@Param() params: CommonParamsDto.IdCuid) {
     return this.notificacionService.findOne(params.id);
   }
 
@@ -89,7 +89,7 @@ export class NotificacionController {
     descripcion: 'Actualizar notificación',
   })
   update(
-    @Param() params: CommonParamsDto.IdUuid,
+    @Param() params: CommonParamsDto.IdCuid,
     @Body() updateDto: UpdateNotificacionDto,
     @AuthUser() session: IToken,
   ) {
@@ -106,7 +106,7 @@ export class NotificacionController {
     tabla: 'Notificacion',
     descripcion: 'Eliminar notificación',
   })
-  remove(@Param() params: CommonParamsDto.IdUuid) {
+  remove(@Param() params: CommonParamsDto.IdCuid) {
     return this.notificacionService.remove(params.id);
   }
 
@@ -148,7 +148,7 @@ export class NotificacionController {
     tabla: 'Notificacion',
     descripcion: 'Marcar notificación como leída',
   })
-  markAsRead(@Param() params: CommonParamsDto.IdUuid) {
+  markAsRead(@Param() params: CommonParamsDto.IdCuid) {
     return this.notificacionService.markAsRead(params.id);
   }
 

@@ -37,4 +37,18 @@ export namespace CommonParamsDto {
     })
     id: string;
   }
+
+  /**
+   * DTO para ID CUID (Collision-resistant Unique ID)
+   */
+  export class IdCuid {
+    @Expose()
+    @Length(25, 26, { message: 'El ID CUID debe tener entre 25 y 26 caracteres' })
+    @ParamsStringValidator({
+      description: 'ID CUID',
+      maxLength: 26,
+      example: 'cjld2cjxh0000qzrmn831i7rn',
+    })
+    id: string;
+  }
 }

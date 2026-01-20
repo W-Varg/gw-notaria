@@ -663,7 +663,7 @@ export class DerivacionService {
   /**
    * Obtener detalle de una derivación
    */
-  async findOne(id: number, session: IToken) {
+  async findOne(id: string, session: IToken) {
     const derivacion = await this.prismaService.derivacionServicio.findUnique({
       where: { id },
       include: {

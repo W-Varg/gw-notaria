@@ -19,7 +19,7 @@ export async function crearComercializadoras(
         lote: '10',
         fechaRecepcion: '2026-01-05',
       },
-      sucursalId: sucursales[0]?.id || 1,
+      sucursalId: sucursales[0]?.id,
       clienteId: clientes[0].id, // Persona Natural
       consolidado: false,
       minuta: 'MIN-2026-001',
@@ -43,7 +43,7 @@ export async function crearComercializadoras(
         superficieTerreno: '500 m2',
         superficieConstruccion: '350 m2',
       },
-      sucursalId: sucursales[1]?.id || 1,
+      sucursalId: sucursales[1]?.id,
       clienteId: clientes[3].id, // Persona Jurídica
       consolidado: true,
       minuta: 'MIN-2026-002',
@@ -68,7 +68,7 @@ export async function crearComercializadoras(
         piso: '3',
         departamento: '3B',
       },
-      sucursalId: sucursales[0]?.id || 1,
+      sucursalId: sucursales[0]?.id,
       clienteId: clientes[1].id, // Persona Natural
       consolidado: false,
       minuta: 'MIN-2026-003',
@@ -91,7 +91,7 @@ export async function crearComercializadoras(
         fechaRecepcion: '2026-01-02',
         zona: 'Norte',
       },
-      sucursalId: sucursales[0]?.id || 1,
+      sucursalId: sucursales[0]?.id,
       clienteId: clientes[4].id, // Persona Jurídica
       consolidado: true,
       minuta: 'MIN-2026-004',
@@ -113,7 +113,7 @@ export async function crearComercializadoras(
         lote: '32',
         fechaRecepcion: '2026-01-04',
       },
-      sucursalId: sucursales[1]?.id || 1,
+      sucursalId: sucursales[1]?.id,
       clienteId: clientes[2].id, // Persona Natural
       consolidado: false,
       minuta: 'MIN-2026-005',

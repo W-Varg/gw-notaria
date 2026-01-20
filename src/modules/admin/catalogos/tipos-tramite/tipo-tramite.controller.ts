@@ -70,7 +70,7 @@ export class TipoTramiteController {
   @BearerAuthPermision([PermisoEnum.TIPOS_TRAMITE_VER])
   @ApiResponse({ status: 200, type: () => ResponseTipoTramiteDetailType })
   @ApiDescription('Obtener un tipo de trámite por ID', [PermisoEnum.TIPOS_TRAMITE_VER])
-  findOne(@Param() params: CommonParamsDto.IdUuid) {
+  findOne(@Param() params: CommonParamsDto.IdCuid) {
     return this.tipoTramiteService.findOne(params.id);
   }
 
@@ -85,7 +85,7 @@ export class TipoTramiteController {
     descripcion: 'Actualizar tipo de trámite',
   })
   update(
-    @Param() params: CommonParamsDto.IdUuid,
+    @Param() params: CommonParamsDto.IdCuid,
     @Body() updateTipoTramiteDto: UpdateTipoTramiteDto,
     @AuthUser() session: IToken,
   ) {
@@ -102,7 +102,7 @@ export class TipoTramiteController {
     tabla: 'TipoTramite',
     descripcion: 'Eliminar tipo de trámite',
   })
-  remove(@Param() params: CommonParamsDto.IdUuid) {
+  remove(@Param() params: CommonParamsDto.IdCuid) {
     return this.tipoTramiteService.remove(params.id);
   }
 }

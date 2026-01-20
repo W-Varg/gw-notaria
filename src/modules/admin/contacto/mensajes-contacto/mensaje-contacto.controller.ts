@@ -74,7 +74,7 @@ export class MensajeContactoController {
   @BearerAuthPermision([PermisoEnum.MENSAJES_CONTACTO_VER])
   @ApiResponse({ status: 200, type: () => ResponseMensajeContactoDetailType })
   @ApiDescription('Obtener un mensaje de contacto por ID', [PermisoEnum.MENSAJES_CONTACTO_VER])
-  findOne(@Param() params: CommonParamsDto.IdUuid) {
+  findOne(@Param() params: CommonParamsDto.IdCuid) {
     return this.mensajeContactoService.findOne(params.id);
   }
 
@@ -91,7 +91,7 @@ export class MensajeContactoController {
     descripcion: 'Actualizar mensaje de contacto',
   })
   update(
-    @Param() params: CommonParamsDto.IdUuid,
+    @Param() params: CommonParamsDto.IdCuid,
     @Body() updateDto: UpdateMensajeContactoDto,
     @AuthUser() session: IToken,
   ) {
@@ -110,7 +110,7 @@ export class MensajeContactoController {
     tabla: 'MensajeContacto',
     descripcion: 'Eliminar mensaje de contacto',
   })
-  remove(@Param() params: CommonParamsDto.IdUuid) {
+  remove(@Param() params: CommonParamsDto.IdCuid) {
     return this.mensajeContactoService.remove(params.id);
   }
 }

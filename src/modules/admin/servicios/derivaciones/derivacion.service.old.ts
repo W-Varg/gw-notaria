@@ -132,7 +132,7 @@ export class DerivacionService {
   /**
    * Rechazar una derivación recibida
    */
-  async rechazar(id: number, inputDto: RechazarDerivacionDto, session: IToken) {
+  async rechazar(id: string, inputDto: RechazarDerivacionDto, session: IToken) {
     // Buscar la derivación
     const derivacion = await this.prismaService.derivacionServicio.findUnique({
       where: { id },
@@ -408,7 +408,7 @@ export class DerivacionService {
   /**
    * Obtener una derivación por ID
    */
-  async findOne(id: number) {
+  async findOne(id: string) {
     const derivacion = await this.prismaService.derivacionServicio.findUnique({
       where: { id },
       include: {

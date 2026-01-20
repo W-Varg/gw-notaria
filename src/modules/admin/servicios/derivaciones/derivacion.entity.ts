@@ -4,7 +4,7 @@ import { ServicioEntity } from '../servicio.entity';
 
 export class DerivacionEntity {
   @ApiProperty()
-  id: number;
+  id: string;
 
   @ApiProperty()
   servicioId: string;

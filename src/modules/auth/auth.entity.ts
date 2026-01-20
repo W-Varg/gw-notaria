@@ -37,6 +37,13 @@ export class AuthUsuario {
   telefono?: string;
 
   @ApiPropertyOptional({
+    type: Number,
+    description: 'ID de la sucursal asociada al usuario',
+    example: 3,
+  })
+  sucursalId?: number;
+
+  @ApiPropertyOptional({
     type: String,
     description: 'Dirección del usuario',
     example: 'Calle Falsa 123, Santiago',

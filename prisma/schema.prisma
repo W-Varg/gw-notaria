@@ -653,7 +653,7 @@ model ResponsableServicio {
 }
 
 model DerivacionServicio {
-  id                   Int       @id @default(autoincrement())
+  id                   String    @id @default(cuid()) @db.VarChar(26)
   servicioId           String    @db.VarChar(26)
   usuarioOrigenId      String?   @db.VarChar(26)
   usuarioDestinoId     String    @db.VarChar(26)

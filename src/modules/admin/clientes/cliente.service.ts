@@ -26,7 +26,10 @@ export class ClienteService {
         select: { id: true },
       });
       if (emailExists)
-        return dataErrorValidations({ email: ['El correo electrónico ya está registrado'] });
+        return dataErrorValidations(
+          { email: ['El correo electrónico ya está registrado'] },
+          'El correo electrónico ya está registrado',
+        );
     }
 
     // Validar que se proporcionen los datos específicos según el tipo
@@ -48,7 +51,9 @@ export class ClienteService {
         select: { clienteId: true },
       });
       if (ciExists)
-        return dataErrorValidations({ 'personaNatural.ci': ['El CI ya está registrado'] });
+        return dataErrorValidations({
+          'personaNatural.numeroDocumento': ['El numero de documento ya está registrado'],
+        });
     }
 
     // Validar NIT único si se proporciona
@@ -219,7 +224,9 @@ export class ClienteService {
         select: { clienteId: true },
       });
       if (ciExists)
-        return dataErrorValidations({ 'personaNatural.ci': ['El CI ya está registrado'] });
+        return dataErrorValidations({
+          'personaNatural.numeroDocumento': ['El numero de documento ya está registrado'],
+        });
     }
 
     // Validar NIT único si se actualiza

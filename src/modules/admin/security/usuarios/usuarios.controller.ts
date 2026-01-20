@@ -85,7 +85,7 @@ export class UsuariosController {
   @BearerAuthPermision([PermisoEnum.USUARIOS_VER])
   @ApiResponse({ status: 200, type: () => ResponseUsuarioDetailType })
   @ApiDescription('Obtener un usuario por ID', [PermisoEnum.USUARIOS_VER])
-  findOne(@Param() params: CommonParamsDto.IdUuid) {
+  findOne(@Param() params: CommonParamsDto.IdCuid) {
     return this.usuariosService.findOne(params.id);
   }
 
@@ -100,7 +100,7 @@ export class UsuariosController {
     descripcion: 'Actualizar usuario',
   })
   update(
-    @Param() params: CommonParamsDto.IdUuid,
+    @Param() params: CommonParamsDto.IdCuid,
     @Body() updateUsuarioDto: UpdateUsuarioDto,
     @AuthUser() session: IToken,
   ) {
@@ -117,7 +117,7 @@ export class UsuariosController {
     tabla: 'Usuario',
     descripcion: 'Eliminar usuario',
   })
-  remove(@Param() params: CommonParamsDto.IdUuid) {
+  remove(@Param() params: CommonParamsDto.IdCuid) {
     return this.usuariosService.delete(params.id);
   }
 
@@ -131,7 +131,7 @@ export class UsuariosController {
     tabla: 'Usuario',
     descripcion: 'Cambiar contraseña de usuario',
   })
-  changePassword(@Param() params: CommonParamsDto.IdUuid, @Body() inputDto: ResetPasswordDto) {
+  changePassword(@Param() params: CommonParamsDto.IdCuid, @Body() inputDto: ResetPasswordDto) {
     return this.usuariosService.changePassword(params.id, inputDto);
   }
 
@@ -139,7 +139,7 @@ export class UsuariosController {
   @BearerAuthPermision([PermisoEnum.USUARIOS_EDITAR])
   @ApiDescription('Enviar código de verificación a un usuario', [PermisoEnum.USUARIOS_EDITAR])
   @ApiResponse({ status: 200, type: () => ResponseUsuarioType })
-  sendVerificationCode(@Param() params: CommonParamsDto.IdUuid) {
+  sendVerificationCode(@Param() params: CommonParamsDto.IdCuid) {
     return this.usuariosService.sendVerificationCode(params.id);
   }
 }

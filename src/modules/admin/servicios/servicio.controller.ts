@@ -79,7 +79,7 @@ export class ServicioController {
   @BearerAuthPermision([PermisoEnum.SERVICIOS_VER])
   @ApiResponse({ status: 200, type: () => ResponseServicioDetailType })
   @ApiDescription('Obtener un servicio por ID', [PermisoEnum.SERVICIOS_VER])
-  findOne(@Param() params: CommonParamsDto.IdUuid) {
+  findOne(@Param() params: CommonParamsDto.IdCuid) {
     return this.servicioService.findOne(params.id);
   }
 
@@ -94,7 +94,7 @@ export class ServicioController {
     descripcion: 'Actualizar servicio',
   })
   update(
-    @Param() params: CommonParamsDto.IdUuid,
+    @Param() params: CommonParamsDto.IdCuid,
     @Body() updateDto: UpdateServicioDto,
     @AuthUser() session: IToken,
   ) {
@@ -111,7 +111,7 @@ export class ServicioController {
     tabla: 'Servicio',
     descripcion: 'Eliminar servicio',
   })
-  remove(@Param() params: CommonParamsDto.IdUuid) {
+  remove(@Param() params: CommonParamsDto.IdCuid) {
     return this.servicioService.remove(params.id);
   }
 
@@ -142,7 +142,7 @@ export class ServicioController {
     descripcion: 'Actualizar progreso de servicio',
   })
   updateProgreso(
-    @Param() params: CommonParamsDto.IdUuid,
+    @Param() params: CommonParamsDto.IdCuid,
     @Body() dto: UpdateServicioProgresoDto,
     @AuthUser() session: IToken,
   ) {
@@ -160,7 +160,7 @@ export class ServicioController {
     descripcion: 'Registrar pago de servicio',
   })
   registrarPago(
-    @Param() params: CommonParamsDto.IdUuid,
+    @Param() params: CommonParamsDto.IdCuid,
     @Body() dto: RegistrarPagoServicioDto,
     @AuthUser() session: IToken,
   ) {

@@ -6,7 +6,9 @@ import { smsIsDate } from '../../helpers/validator.sms';
 export class PaginationQueryDto {
   @Expose()
   @ApiPropertyOptional({ required: false, description: 'Página iniciando en 1', default: 0 })
-  @Transform(({ value }: TransformFnParams) => (value && !Number.isNaN(value) ? Number(value) : value))
+  @Transform(({ value }: TransformFnParams) =>
+    value && !Number.isNaN(value) ? Number(value) : value,
+  )
   @IsOptional()
   @Min(0)
   @Expose()
@@ -14,7 +16,9 @@ export class PaginationQueryDto {
 
   @Expose()
   @ApiPropertyOptional({ required: false, description: 'Tamaño de página', default: 10 })
-  @Transform(({ value }: TransformFnParams) => (value && !Number.isNaN(value) ? Number(value) : value))
+  @Transform(({ value }: TransformFnParams) =>
+    value && !Number.isNaN(value) ? Number(value) : value,
+  )
   @IsOptional()
   @Min(1)
   @Max(1000)
