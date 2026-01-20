@@ -19,6 +19,12 @@ export class CreateDerivacionDto {
   @IsDefined()
   @IsString()
   @ApiProperty({ type: String, description: 'ID del servicio a derivar' })
+  derivacionId: string;
+
+  @Expose()
+  @IsDefined()
+  @IsString()
+  @ApiProperty({ type: String, description: 'ID del servicio a derivar' })
   servicioId: string;
 
   @Expose()

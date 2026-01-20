@@ -28,18 +28,23 @@ export class DerivacionService {
    */
   async create(inputDto: CreateDerivacionDto, session: IToken) {
     // Validar que el servicio existe
-    const servicio = await this.prismaService.servicio.findUnique({
-      where: { id: inputDto.servicioId },
-      select: { id: true, codigoTicket: true, estaActivo: true, estadoActualId: true },
+    const derivacion = await this.prismaService.derivacionServicio.findUnique({
+      where: { id: inputDto.derivacionId },
+      select: {
+        id: true,
+        servicio: {
+          select: { id: true, codigoTicket: true, estaActivo: true, estadoActualId: true },
+        },
+      },
     });
 
-    if (!servicio) {
-      return dataErrorValidations({ servicioId: ['El servicio no existe'] });
+    if (!derivacion) {
+      return dataErrorValidations({ derivacionId: ['La derivación no existe'] });
     }
 
-    if (!servicio.estaActivo) {
+    if (!derivacion.servicio.estaActivo) {
       return dataErrorValidations({
-        servicioId: ['El servicio está cerrado, no se puede derivar'],
+        derivacionId: ['El servicio está cerrado, no se puede derivar'],
       });
     }
 
@@ -92,15 +97,15 @@ export class DerivacionService {
       }
 
       // Solo cambiar si es diferente del actual
-      if (servicio.estadoActualId !== inputDto.nuevoEstadoId) {
+      if (derivacion.servicio.estadoActualId !== inputDto.nuevoEstadoId) {
         cambiarEstado = true;
       }
     }
 
     // Usar transacción para crear derivación, cambiar responsable y opcionalmente cambiar estado
-    const resultado = await this.prismaService.$transaction(async (prisma) => {
+    const resultado = await this.prismaService.$transaction(async (tx) => {
       // Desactivar responsable actual
-      await prisma.responsableServicio.update({
+      await tx.responsableServicio.update({
         where: { id: responsableActual.id },
         data: {
           activo: false,
@@ -109,7 +114,7 @@ export class DerivacionService {
       });
 
       // Crear nuevo responsable
-      await prisma.responsableServicio.create({
+      await tx.responsableServicio.create({
         data: {
           servicioId: inputDto.servicioId,
           usuarioId: inputDto.usuarioDestinoId,
@@ -120,7 +125,7 @@ export class DerivacionService {
       // Si hay cambio de estado, actualizar servicio y crear registro en historial
       if (cambiarEstado && inputDto.nuevoEstadoId) {
         // Actualizar estado del servicio
-        await prisma.servicio.update({
+        await tx.servicio.update({
           where: { id: inputDto.servicioId },
           data: {
             estadoActualId: inputDto.nuevoEstadoId,
@@ -128,7 +133,7 @@ export class DerivacionService {
         });
 
         // Crear registro en historial de estados
-        await prisma.historialEstadosServicio.create({
+        await tx.historialEstadosServicio.create({
           data: {
             servicioId: inputDto.servicioId,
             estadoId: inputDto.nuevoEstadoId,
@@ -140,11 +145,12 @@ export class DerivacionService {
       }
 
       // Crear la derivación
-      const derivacion = await prisma.derivacionServicio.create({
+      const derivacionCreated = await tx.derivacionServicio.create({
         data: {
           servicioId: inputDto.servicioId,
           usuarioOrigenId: session.usuarioId,
           usuarioDestinoId: inputDto.usuarioDestinoId,
+          derivacionPadreId: derivacion.id,
           motivo: inputDto.motivo,
           prioridad: inputDto.prioridad || 'normal',
           comentario: inputDto.comentario,
@@ -156,63 +162,29 @@ export class DerivacionService {
             select: {
               id: true,
               codigoTicket: true,
-              tipoTramite: {
-                select: {
-                  nombre: true,
-                  colorHex: true,
-                  icon: true,
-                },
-              },
+              tipoTramite: { select: { nombre: true, colorHex: true, icon: true } },
               cliente: {
                 select: {
                   id: true,
                   tipoCliente: true,
-                  personaNatural: {
-                    select: {
-                      nombres: true,
-                      apellidos: true,
-                    },
-                  },
-                  personaJuridica: {
-                    select: {
-                      razonSocial: true,
-                    },
-                  },
+                  personaNatural: { select: { nombres: true, apellidos: true } },
+                  personaJuridica: { select: { razonSocial: true } },
                 },
               },
-              estadoActual: {
-                select: {
-                  nombre: true,
-                  colorHex: true,
-                },
-              },
+              estadoActual: { select: { nombre: true, colorHex: true } },
             },
           },
-          usuarioOrigen: {
-            select: {
-              id: true,
-              nombre: true,
-              apellidos: true,
-              email: true,
-            },
-          },
-          usuarioDestino: {
-            select: {
-              id: true,
-              nombre: true,
-              apellidos: true,
-              email: true,
-            },
-          },
+          usuarioOrigen: { select: { id: true, nombre: true, apellidos: true, email: true } },
+          usuarioDestino: { select: { id: true, nombre: true, apellidos: true, email: true } },
         },
       });
 
       // Crear notificación para el usuario destino
-      await prisma.notificacion.create({
+      await tx.notificacion.create({
         data: {
           usuarioId: inputDto.usuarioDestinoId,
           titulo: 'Nueva derivación de servicio',
-          mensaje: `Has recibido una derivación del servicio ${servicio.codigoTicket}`,
+          mensaje: `Has recibido una derivación del servicio ${derivacionCreated.servicio.codigoTicket}`,
           tipo: 'info',
           icono: 'pi-arrow-right',
           ruta: `/admin/servicios/${inputDto.servicioId}`,
@@ -220,7 +192,12 @@ export class DerivacionService {
         },
       });
 
-      return derivacion;
+      await tx.derivacionServicio.update({
+        where: { id: derivacion.id },
+        data: { estaActiva: false },
+      });
+
+      return derivacionCreated;
     });
 
     return dataResponseSuccess<any>(
@@ -268,9 +245,9 @@ export class DerivacionService {
     }
 
     // Usar transacción para cancelar derivación y restaurar responsable anterior
-    const resultado = await this.prismaService.$transaction(async (prisma) => {
+    const resultado = await this.prismaService.$transaction(async (tx) => {
       // Marcar derivación como cancelada
-      const derivacionCancelada = await prisma.derivacionServicio.update({
+      const derivacionCancelada = await tx.derivacionServicio.update({
         where: { id: inputDto.derivacionId },
         data: {
           estaActiva: false,
@@ -281,7 +258,7 @@ export class DerivacionService {
       });
 
       // Desactivar responsable actual (usuario destino)
-      await prisma.responsableServicio.updateMany({
+      await tx.responsableServicio.updateMany({
         where: {
           servicioId: derivacion.servicioId,
           usuarioId: derivacion.usuarioDestinoId,
@@ -294,7 +271,7 @@ export class DerivacionService {
       });
 
       // Reactivar responsable anterior (usuario origen)
-      const responsableAnterior = await prisma.responsableServicio.findFirst({
+      const responsableAnterior = await tx.responsableServicio.findFirst({
         where: {
           servicioId: derivacion.servicioId,
           usuarioId: derivacion.usuarioOrigenId,
@@ -305,7 +282,7 @@ export class DerivacionService {
       });
 
       if (responsableAnterior) {
-        await prisma.responsableServicio.update({
+        await tx.responsableServicio.update({
           where: { id: responsableAnterior.id },
           data: {
             activo: true,
@@ -315,7 +292,7 @@ export class DerivacionService {
       }
 
       // Crear notificación
-      await prisma.notificacion.create({
+      await tx.notificacion.create({
         data: {
           usuarioId: derivacion.usuarioDestinoId,
           titulo: 'Derivación cancelada',
@@ -535,6 +512,7 @@ export class DerivacionService {
     const { skip, take, orderBy, pagination } = paginationParamsFormat(filters, true);
     const whereInput: Prisma.DerivacionServicioWhereInput = {
       usuarioDestinoId: session.usuarioId,
+      derivacionPadreId: null,
       estaActiva: true,
     };
 
@@ -595,57 +573,26 @@ export class DerivacionService {
    */
   async findMisDerivacionesEnviadas(session: IToken) {
     const derivaciones = await this.prismaService.derivacionServicio.findMany({
-      where: {
-        usuarioOrigenId: session.usuarioId,
-      },
-      orderBy: {
-        fechaDerivacion: 'desc',
-      },
+      where: { usuarioOrigenId: session.usuarioId },
+      orderBy: { fechaDerivacion: 'desc' },
       include: {
         servicio: {
           select: {
             id: true,
             codigoTicket: true,
-            tipoTramite: {
-              select: {
-                nombre: true,
-                colorHex: true,
-                icon: true,
-              },
-            },
+            tipoTramite: { select: { nombre: true, colorHex: true, icon: true } },
             cliente: {
               select: {
                 id: true,
                 tipoCliente: true,
-                personaNatural: {
-                  select: {
-                    nombres: true,
-                    apellidos: true,
-                  },
-                },
-                personaJuridica: {
-                  select: {
-                    razonSocial: true,
-                  },
-                },
+                personaNatural: { select: { nombres: true, apellidos: true } },
+                personaJuridica: { select: { razonSocial: true } },
               },
             },
-            estadoActual: {
-              select: {
-                nombre: true,
-                colorHex: true,
-              },
-            },
+            estadoActual: { select: { nombre: true, colorHex: true } },
           },
         },
-        usuarioDestino: {
-          select: {
-            id: true,
-            nombre: true,
-            apellidos: true,
-            email: true,
-          },
-        },
+        usuarioDestino: { select: { id: true, nombre: true, apellidos: true, email: true } },
       },
     });
 
@@ -816,9 +763,9 @@ export class DerivacionService {
     }
 
     // Usar transacción para rechazar derivación y restaurar responsable anterior
-    const resultado = await this.prismaService.$transaction(async (prisma) => {
+    const resultado = await this.prismaService.$transaction(async (tx) => {
       // Marcar derivación como rechazada (inactiva)
-      const derivacionRechazada = await prisma.derivacionServicio.update({
+      const derivacionRechazada = await tx.derivacionServicio.update({
         where: { id: inputDto.derivacionId },
         data: {
           estaActiva: false,
@@ -829,7 +776,7 @@ export class DerivacionService {
       });
 
       // Desactivar responsable actual (usuario destino/receptor)
-      await prisma.responsableServicio.updateMany({
+      await tx.responsableServicio.updateMany({
         where: {
           servicioId: derivacion.servicioId,
           usuarioId: derivacion.usuarioDestinoId,
@@ -842,7 +789,7 @@ export class DerivacionService {
       });
 
       // Reactivar responsable anterior (usuario origen/emisor)
-      const responsableAnterior = await prisma.responsableServicio.findFirst({
+      const responsableAnterior = await tx.responsableServicio.findFirst({
         where: {
           servicioId: derivacion.servicioId,
           usuarioId: derivacion.usuarioOrigenId,
@@ -853,7 +800,7 @@ export class DerivacionService {
       });
 
       if (responsableAnterior) {
-        await prisma.responsableServicio.update({
+        await tx.responsableServicio.update({
           where: { id: responsableAnterior.id },
           data: {
             activo: true,
@@ -863,7 +810,7 @@ export class DerivacionService {
       }
 
       // Notificar al usuario origen del rechazo
-      await prisma.notificacion.create({
+      await tx.notificacion.create({
         data: {
           usuarioId: derivacion.usuarioOrigenId,
           titulo: 'Derivación rechazada',

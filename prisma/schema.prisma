@@ -653,27 +653,30 @@ model ResponsableServicio {
 }
 
 model DerivacionServicio {
-  id                   String    @id @default(cuid()) @db.VarChar(26)
-  servicioId           String    @db.VarChar(26)
-  usuarioOrigenId      String?   @db.VarChar(26)
-  usuarioDestinoId     String    @db.VarChar(26)
-  fechaDerivacion      DateTime  @default(now()) @db.Timestamptz()
-  motivo               String?   @db.Text
-  prioridad            String    @default("normal") @db.VarChar(20) // "baja", "normal", "alta", "urgente"
-  comentario           String?   @db.Text
-  aceptada             Boolean   @default(false)
+  id                   String               @id @default(cuid()) @db.VarChar(26)
+  servicioId           String               @db.VarChar(26)
+  usuarioOrigenId      String?              @db.VarChar(26)
+  usuarioDestinoId     String               @db.VarChar(26)
+  derivacionPadreId    String?              @db.VarChar(26)
+  fechaDerivacion      DateTime             @default(now()) @db.Timestamptz()
+  motivo               String?              @db.Text
+  prioridad            String               @default("normal") @db.VarChar(20) // "baja", "normal", "alta", "urgente"
+  comentario           String?              @db.Text
+  aceptada             Boolean              @default(false)
   fechaAceptacion      DateTime?
   // Campos para control de derivación
-  estaActiva           Boolean   @default(true) // Para soft delete/cancelación
-  visualizada          Boolean   @default(false) // Si el usuario destino ya vio la derivación
+  estaActiva           Boolean              @default(true) // Para soft delete/cancelación
+  visualizada          Boolean              @default(false) // Si el usuario destino ya vio la derivación
   fechaVisualizacion   DateTime? // Cuándo fue visualizada
-  motivoCancelacion    String?   @db.Text // Razón de cancelación si aplica
+  motivoCancelacion    String?              @db.Text // Razón de cancelación si aplica
   fechaCancelacion     DateTime? // Cuándo fue cancelada
-  usuarioCancelacionId String?   @db.VarChar(26) // Quién canceló
-
-  servicio       Servicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
-  usuarioOrigen  Usuario? @relation("DerivacionesOrigen", fields: [usuarioOrigenId], references: [id])
-  usuarioDestino Usuario  @relation("DerivacionesDestino", fields: [usuarioDestinoId], references: [id])
+  usuarioCancelacionId String?              @db.VarChar(26) // Quién canceló
+  // campos de relacion
+  servicio             Servicio             @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+  usuarioOrigen        Usuario?             @relation("DerivacionesOrigen", fields: [usuarioOrigenId], references: [id])
+  usuarioDestino       Usuario              @relation("DerivacionesDestino", fields: [usuarioDestinoId], references: [id])
+  derivacionPadre      DerivacionServicio?  @relation("DerivacionesHijas", fields: [derivacionPadreId], references: [id])
+  derivacionesHijas    DerivacionServicio[] @relation("DerivacionesHijas")
 
   @@index([servicioId])
   @@index([usuarioDestinoId])

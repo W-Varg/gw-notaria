@@ -44,9 +44,9 @@ export class ServicioService {
     const mesFormateado = mes.toString().padStart(2, '0'); // 01-12
 
     // Obtener o crear el contador para esta sucursal/año/mes en una transacción
-    const contador = await this.prismaService.$transaction(async (prisma) => {
+    const contador = await this.prismaService.$transaction(async (tx) => {
       // Intentar obtener el contador existente
-      let contadorExistente = await prisma.contadorTicketSucursal.findUnique({
+      let contadorExistente = await tx.contadorTicketSucursal.findUnique({
         where: {
           sucursalId_anio_mes: { sucursalId: input.id, anio, mes },
         },
@@ -54,7 +54,7 @@ export class ServicioService {
 
       // Si no existe, crearlo
       if (!contadorExistente) {
-        contadorExistente = await prisma.contadorTicketSucursal.create({
+        contadorExistente = await tx.contadorTicketSucursal.create({
           data: {
             sucursalId: input.id,
             anio,
@@ -65,7 +65,7 @@ export class ServicioService {
       }
 
       // Incrementar el contador
-      const contadorActualizado = await prisma.contadorTicketSucursal.update({
+      const contadorActualizado = await tx.contadorTicketSucursal.update({
         where: { id: contadorExistente.id },
         data: { ultimoNumero: { increment: 1 } },
       });
@@ -153,9 +153,9 @@ export class ServicioService {
     const usuarioId = session.usuarioId;
 
     // Crear servicio con todas las relaciones en una transacción
-    const result = await this.prismaService.$transaction(async (prisma) => {
+    const result = await this.prismaService.$transaction(async (tx) => {
       // 1. Crear el servicio
-      const servicio = await prisma.servicio.create({
+      const servicio = await tx.servicio.create({
         data: {
           codigoTicket,
           clienteId: inputDto.clienteId,
@@ -175,7 +175,7 @@ export class ServicioService {
       });
 
       // 2. Crear la primera derivación (sin origen, el usuario actual es quien crea y recibe)
-      await prisma.derivacionServicio.create({
+      await tx.derivacionServicio.create({
         data: {
           servicioId: servicio.id,
           usuarioOrigenId: null, // Sin origen porque es la creación inicial
@@ -193,7 +193,7 @@ export class ServicioService {
 
       // 3. Crear el primer registro en el historial de estados
       if (estadoInicialId) {
-        await prisma.historialEstadosServicio.create({
+        await tx.historialEstadosServicio.create({
           data: {
             servicioId: servicio.id,
             estadoId: estadoInicialId,
@@ -205,7 +205,7 @@ export class ServicioService {
       }
 
       // 4. Registrar al usuario como primer responsable del servicio
-      await prisma.responsableServicio.create({
+      await tx.responsableServicio.create({
         data: {
           servicioId: servicio.id,
           usuarioId: usuarioId,
@@ -239,7 +239,7 @@ export class ServicioService {
         if (comercializadoraInput.fechaEnvio !== undefined)
           metaData.fechaEnvio = comercializadoraInput.fechaEnvio;
 
-        await prisma.comercializadora.create({
+        await tx.comercializadora.create({
           data: {
             tipoComercializadora: comercializadoraInput.tipoComercializadora, // 1=techo o 2=monumental
             sucursalId: inputDto.sucursalId,
@@ -251,7 +251,7 @@ export class ServicioService {
       }
 
       // 6. Retornar el servicio completo con todas las relaciones
-      return await prisma.servicio.findUnique({
+      return await tx.servicio.findUnique({
         where: { id: servicio.id },
         // include: {
         //   cliente: { include: { personaNatural: true, personaJuridica: true } },
@@ -630,9 +630,9 @@ export class ServicioService {
     });
 
     // Registrar pago y actualizar saldo en una transacción
-    const result = await this.prismaService.$transaction(async (prisma) => {
+    const result = await this.prismaService.$transaction(async (tx) => {
       // Registrar pago
-      await prisma.pagosIngresos.create({
+      await tx.pagosIngresos.create({
         data: {
           monto: dto.monto,
           tipoPago: dto.tipoPago,
@@ -645,7 +645,7 @@ export class ServicioService {
       });
 
       // Actualizar saldo
-      const updated = await prisma.servicio.update({
+      const updated = await tx.servicio.update({
         where: { id },
         data: { saldoPendiente: nuevoSaldo },
         include: {
@@ -658,12 +658,12 @@ export class ServicioService {
 
       // Si el saldo llegó a 0 y hay un estado disponible, cambiar estado
       if (nuevoSaldo === 0 && estadoPagado) {
-        await prisma.servicio.update({
+        await tx.servicio.update({
           where: { id },
           data: { estadoActualId: estadoPagado.id },
         });
 
-        await prisma.historialEstadosServicio.create({
+        await tx.historialEstadosServicio.create({
           data: {
             servicioId: id,
             estadoId: estadoPagado.id,
