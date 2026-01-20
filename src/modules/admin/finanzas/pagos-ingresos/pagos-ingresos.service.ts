@@ -211,8 +211,71 @@ export class PagosIngresosService {
   }
 
   getRecibo() {
+    // TODO: viculra con ventas de servicios
+    const infoSucursal = [
+      ['URBANIZACIÓN: ', 'va1'],
+      ['CALLE: ', 'va2'],
+      ['NRO: ', 'va3'],
+      ['TELEFONO: ', 'va4'],
+    ];
+
+    const data = {
+      nombreNotaria: 'Notaria 69',
+      infoSucursal: infoSucursal.map((v) => v.join('')).join(', '),
+
+      telefono: `Teléfono: ${12321312}`,
+      numeroRecibo: `N° Recibo: ${2323}`,
+      fecha: `Fecha: ${'15/11/2025'}`,
+      nitOCi: `NIT/CI: ${'5677567567'}`,
+      nombreCliente: `Nombre: ${'NombreClien'}`,
+      detalle: [],
+      centavos: 33,
+
+      subtotal: `Subtotal:  ${100}`,
+      descuento: `Descuento:  ${0}`,
+      total: `Total:  ${100}`,
+      totalLiteral: `Son: ${'00'}/100 Bolivinos`,
+
+      items: [
+        {
+          descripcion: 'Producto A - Cable USB 1 metro',
+          cantidad: 2,
+          precio: 15.5,
+          um: 'PZA',
+        },
+        {
+          descripcion: 'Producto B - Adaptador HDMI',
+          cantidad: 1,
+          precio: 25.0,
+          um: 'PZA',
+        },
+      ],
+    };
+
+    const anchoPagina = 226;
+
+    const detalleBody = data.items.flatMap((item) => [
+      // fila descripción (ocupa toda la fila)
+      [{ colSpan: 4, text: item.descripcion }, {}, {}, {}],
+      // fila con valores
+      [
+        { text: item.cantidad.toString(), alignment: 'center' },
+        { text: item.precio.toFixed(2), alignment: 'right' },
+        { text: item.um, alignment: 'right' },
+        { text: (item.cantidad * item.precio).toFixed(2), alignment: 'right' },
+      ],
+    ]);
+
+    const body = [
+      // TITULOS
+      ['CANT.', 'P.UNIT.', 'U.M.', 'SUBTOTAL'],
+      [{ colSpan: 4, stack: [this.separador(anchoPagina)] }, {}, {}, {}],
+      ...detalleBody,
+      // totalRow,
+    ];
+
     const documento: Parameters<typeof this._pdfService.generarPdf>[0] = {
-      pageSize: { width: 226, height: 'auto' },
+      pageSize: { width: anchoPagina, height: 'auto' },
       pageMargins: [10, 10, 10, 10],
       defaultStyle: {
         fontSize: 10,
@@ -220,48 +283,120 @@ export class PagosIngresosService {
       },
       content: [
         {
-          text: 'data.tienda',
+          text: data.nombreNotaria,
           bold: true,
           fontSize: 12,
           alignment: 'center',
         },
         {
-          text: 'data.direccion',
+          text: 'Casa Matriz',
           alignment: 'center',
         },
         {
-          text: `Tel: ${'data.telefono'}`,
+          text: 'No, Punto de Venta 0', // TODO: de donde sacar
           alignment: 'center',
-          margin: [0, 0, 0, 10],
-        },
-        // {
-        //   table: {
-        //     widths: ['*', 'auto', 'auto'],
-        //     body: [
-        //       ['Descripción', 'Cant.', 'Precio'],
-        //       ...data.items.map((item) => [
-        //         item.descripcion,
-        //         item.cantidad.toString(),
-        //         item.precio.toFixed(2),
-        //       ]),
-        //       [{ text: 'TOTAL', colSpan: 2, alignment: 'right' }, {}, data.total.toFixed(2)],
-        //     ],
-        //   },
-        //   layout: 'noBorders',
-        //   margin: [0, 0, 0, 10],
-        // },
-        {
-          text: `Fecha: ${'data.fecha'}`,
-          alignment: 'left',
-          fontSize: 8,
         },
         {
-          text: '¡Gracias por su compra!',
+          text: data.infoSucursal,
+          alignment: 'center',
+        },
+        {
+          text: data.telefono,
+          alignment: 'center',
+        },
+        {
+          text: 'Santa Cruz - Bolivia',
+          alignment: 'center',
+        },
+        {
+          text: 'RECIBO',
+          bold: true,
+          fontSize: 12,
           alignment: 'center',
           margin: [0, 10, 0, 0],
         },
+
+        this.separador(anchoPagina),
+
+        {
+          text: data.numeroRecibo,
+          alignment: 'center',
+        },
+
+        this.separador(anchoPagina),
+
+        {
+          columns: [
+            {
+              width: '*',
+              text: data.fecha,
+              alignment: 'left',
+            },
+            {
+              width: '*',
+              text: data.nitOCi,
+              alignment: 'right',
+            },
+          ],
+          margin: [0, 5, 0, 5],
+        },
+        {
+          text: data.nombreCliente,
+        },
+
+        this.separador(anchoPagina),
+
+        {
+          table: {
+            widths: ['*', 'auto', 'auto', 'auto'],
+            body: body,
+          },
+          layout: 'noBorders',
+        },
+
+        this.separador(anchoPagina),
+
+        {
+          text: data.subtotal,
+          alignment: 'right',
+        },
+        {
+          text: data.descuento,
+          alignment: 'right',
+        },
+        {
+          text: data.total,
+          alignment: 'right',
+        },
+
+        {
+          text: data.totalLiteral,
+        },
+
+        {
+          text: '¡GRACIAS, VUELVA PRONTO!',
+          alignment: 'center',
+        },
       ],
     };
+
     return this._pdfService.generarPdf(documento);
+  }
+
+  private separador(anchoPagina: number) {
+    return {
+      canvas: [
+        {
+          type: 'line',
+          x1: 0,
+          y1: 0,
+          x2: anchoPagina - 20,
+          y2: 0,
+          lineWidth: 1,
+          dash: { length: 5, space: 3 },
+        },
+      ],
+      margin: [0, 5, 0, 5],
+    };
   }
 }
