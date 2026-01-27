@@ -1,10 +1,11 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors } from '@nestjs/common';
+import { StreamableFile } from '@nestjs/common';
 import { ComercializadoraService } from './comercializadora.service';
 import {
   CreateComercializadoraDto,
   UpdateComercializadoraDto,
 } from './dto/comercializadora.input.dto';
-import { ApiTags, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiProduces } from '@nestjs/swagger';
 import { AuthUser, IToken } from '../../../../common/decorators/token.decorator';
 import { ListFindAllQueryDto } from '../../../../common/dtos/filters.dto';
 import { BearerAuthPermision } from '../../../../common/decorators/authorization.decorator';
@@ -40,6 +41,27 @@ export class ComercializadoraController {
   })
   create(@Body() inputDto: CreateComercializadoraDto, @AuthUser() session: IToken) {
     return this.comercializadoraService.create(inputDto, session);
+  }
+
+  @Get('export-csv')
+  @BearerAuthPermision([PermisoEnum.COMERCIALIZADORAS_VER])
+  @ApiDescription('Exportar comercializadoras a CSV', [PermisoEnum.COMERCIALIZADORAS_VER])
+  @ApiProduces('text/csv')
+  @ApiResponse({
+    status: 200,
+    schema: {
+      type: 'string',
+      format: 'binary',
+    },
+    description: 'Archivo CSV generado exitosamente',
+  })
+  async exportCsv() {
+    const csvData = await this.comercializadoraService.exportCsv();
+
+    return new StreamableFile(Buffer.from(csvData, 'utf-8'), {
+      disposition: `attachment; filename="comercializadoras.csv"`,
+      type: 'text/csv',
+    });
   }
 
   @Get()
