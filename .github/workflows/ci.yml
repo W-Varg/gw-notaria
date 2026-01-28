@@ -1,8 +1,8 @@
 # ============================================================================
-# GitHub Actions CI/CD Pipeline
+# GitHub Actions CI Pipeline for NestJS Backend
 # ============================================================================
-# Este workflow ejecuta quality gates, tests y build para backend y frontend
-# Se ejecuta en paralelo para máxima eficiencia
+# Este workflow ejecuta quality gates, tests y build para el backend NestJS
+# Se ejecuta en push a dev/main y PRs
 # ============================================================================
 
 name: CI
@@ -11,11 +11,8 @@ name: CI
 # TRIGGERS: Cuándo se ejecuta el workflow
 # ============================================================================
 on:
-  # Se ejecuta en cada push a las ramas principales
   push:
     branches: [ main, dev ]
-  
-  # Se ejecuta en cada pull request hacia las ramas principales
   pull_request:
     branches: [ main, dev ]
 
@@ -23,308 +20,83 @@ on:
 # JOBS: Tareas que se ejecutan en paralelo
 # ============================================================================
 jobs:
-
   # ==========================================================================
-  # JOB 1: BACKEND LINT (Laravel Pint)
+  # JOB 1: LINT (ESLint)
   # ==========================================================================
-  # Verifica que el código PHP cumple con estándares PSR-12
-  # Usa Laravel Pint para formateo de código
-  # ==========================================================================
-  backend-lint:
-    name: 🔍 Backend Lint (Pint)
-    runs-on: ubuntu-latest
+  lint:
+    name: 🔍 Lint (ESLint)
+    runs-on: self-hosted
     
     steps:
-      # Checkout del código del repositorio
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      # Configurar PHP 8.2 con extensiones necesarias
-      - name: 🐘 Setup PHP 8.2
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, dom, filter, gd, json, mbstring, pdo
-          coverage: none
-
-      # Cache de dependencias de Composer para acelerar builds
-      # La key usa el hash de composer.lock para invalidar cache cuando cambian dependencias
-      - name: 💾 Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
-
-      # Instalar dependencias de Composer
-      - name: 📦 Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
-
-      # Ejecutar Laravel Pint en modo check (no modifica archivos)
-      # Si falla, el pipeline se detiene
-      - name: ✨ Run Laravel Pint
-        run: composer format:check
-
-  # ==========================================================================
-  # JOB 2: BACKEND STATIC ANALYSIS (PHPStan)
-  # ==========================================================================
-  # Análisis estático de código PHP para detectar errores potenciales
-  # Usa PHPStan nivel 1 (básico)
-  # ==========================================================================
-  backend-static-analysis:
-    name: 🔬 Backend Static Analysis (PHPStan)
-    runs-on: ubuntu-latest
-    
-    steps:
-      # Checkout del código
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      # Configurar PHP 8.2
-      - name: 🐘 Setup PHP 8.2
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, dom, filter, gd, json, mbstring, pdo
-          coverage: none
-
-      # Cache de Composer (reutiliza cache del job anterior si está disponible)
-      - name: 💾 Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
-
-      # Instalar dependencias
-      - name: 📦 Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
-
-      # Ejecutar PHPStan con límite de memoria de 2GB
-      # Analiza app/, routes/ y tests/
-      - name: 🔍 Run PHPStan
-        run: composer analyse
-
-  # ==========================================================================
-  # JOB 3: BACKEND TESTS (PHPUnit + PostgreSQL)
-  # ==========================================================================
-  # Ejecuta tests unitarios y de integración con base de datos PostgreSQL real
-  # Usa PostgreSQL 16 como servicio
-  # ==========================================================================
-  backend-tests:
-    name: 🧪 Backend Tests (PHPUnit + PostgreSQL)
-    runs-on: ubuntu-latest
-    
-    # Configurar servicio de PostgreSQL
-    # Se ejecuta en un contenedor separado accesible via localhost:5432
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: testing
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        # Health check para asegurar que PostgreSQL está listo antes de ejecutar tests
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    
-    steps:
-      # Checkout del código
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      # Configurar PHP 8.2 con extensiones para PostgreSQL
-      - name: 🐘 Setup PHP 8.2
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, pgsql, dom, filter, gd, json
-          coverage: none
-
-      # Cache de Composer
-      - name: 💾 Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
-
-      # Instalar dependencias
-      - name: 📦 Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
-
-      # Copiar archivo de entorno para testing
-      - name: 📝 Copy .env.testing
-        run: cp .env.testing .env
-
-      # Generar key de aplicación Laravel
-      - name: 🔑 Generate application key
-        run: php artisan key:generate
-
-      # Ejecutar migraciones en base de datos de testing
-      - name: 🗄️ Run migrations
-        run: php artisan migrate --force
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_DATABASE: testing
-          DB_USERNAME: postgres
-          DB_PASSWORD: postgres
-
-      # Ejecutar tests con PHPUnit
-      # Los tests usan la base de datos PostgreSQL configurada
-      - name: 🧪 Run PHPUnit tests
-        run: php artisan test
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_DATABASE: testing
-          DB_USERNAME: postgres
-          DB_PASSWORD: postgres
-
-  # ==========================================================================
-  # JOB 4: FRONTEND LINT (ESLint)
-  # ==========================================================================
-  # Verifica que el código JavaScript/Vue cumple con estándares ESLint
-  # Usa configuración de Vue 3 recommended
-  # ==========================================================================
-  frontend-lint:
-    name: 🔍 Frontend Lint (ESLint)
-    runs-on: ubuntu-latest
-    
-    steps:
-      # Checkout del código
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      # Configurar Node.js 20.x (LTS)
-      - name: 🟢 Setup Node.js 20.x
+      - name: 🟢 Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      # Cache de node_modules basado en package-lock.json
-      # Acelera significativamente la instalación de dependencias
-      - name: 💾 Cache NPM dependencies
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
-
-      # Instalar dependencias de NPM
-      - name: 📦 Install NPM dependencies
+      - name: 📦 Install dependencies
         run: npm ci
 
-      # Ejecutar ESLint
-      # Verifica todo el código JavaScript/Vue
       - name: ✨ Run ESLint
         run: npm run lint
 
   # ==========================================================================
-  # JOB 5: FRONTEND TESTS (Vitest)
+  # JOB 2: TESTS (Jest)
   # ==========================================================================
-  # Ejecuta tests unitarios de componentes Vue y funciones de utilidad
-  # Usa Vitest con jsdom para simular DOM
-  # ==========================================================================
-  frontend-tests:
-    name: 🧪 Frontend Tests (Vitest)
-    runs-on: ubuntu-latest
+  test:
+    name: 🧪 Tests (Jest)
+    runs-on: self-hosted
     
     steps:
-      # Checkout del código
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      # Configurar Node.js 20.x
-      - name: 🟢 Setup Node.js 20.x
+      - name: 🟢 Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      # Cache de node_modules
-      - name: 💾 Cache NPM dependencies
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
-
-      # Instalar dependencias
-      - name: 📦 Install NPM dependencies
+      - name: 📦 Install dependencies
         run: npm ci
 
-      # Ejecutar tests con Vitest
-      # Ejecuta todos los tests en modo run (no watch)
-      - name: 🧪 Run Vitest tests
+      - name: 🧪 Run tests
         run: npm run test
 
   # ==========================================================================
-  # JOB 6: FRONTEND BUILD (Vite)
+  # JOB 3: BUILD
   # ==========================================================================
-  # Verifica que el build de producción es exitoso
-  # Genera assets optimizados con Vite
-  # ==========================================================================
-  frontend-build:
-    name: 🏗️ Frontend Build (Vite)
-    runs-on: ubuntu-latest
+  build:
+    name: 🏗️ Build
+    runs-on: self-hosted
     
     steps:
-      # Checkout del código
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      # Configurar Node.js 20.x
-      - name: 🟢 Setup Node.js 20.x
+      - name: 🟢 Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      # Cache de node_modules
-      - name: 💾 Cache NPM dependencies
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
-
-      # Instalar dependencias
-      - name: 📦 Install NPM dependencies
+      - name: 📦 Install dependencies
         run: npm ci
 
-      # Ejecutar build de producción con Vite
-      # Genera assets optimizados en public/build/
-      - name: 🏗️ Build frontend
+      - name: 🏗️ Build backend
         run: npm run build
 
-      # (Opcional) Subir artifacts del build
-      # Útil para deployments o debugging
-      - name: 📤 Upload build artifacts
+      - name: 📤 Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-build
-          path: public/build/
+          name: backend-build
+          path: |
+            dist/
+            node_modules/
+            package.json
+            package-lock.json
+            prisma/
           retention-days: 7
-
-# ============================================================================
-# NOTAS IMPORTANTES
-# ============================================================================
-# 1. Todos los jobs se ejecutan en PARALELO para máxima eficiencia
-# 2. El pipeline FALLA si cualquier job falla (fail fast)
-# 3. El caching reduce el tiempo de build en ~70%
-# 4. PostgreSQL se ejecuta como servicio solo en el job de tests backend
-# 5. Los secrets deben configurarse en GitHub Settings > Secrets si es necesario
-# ============================================================================
