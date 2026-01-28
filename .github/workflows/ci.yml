@@ -1,0 +1,122 @@
+# ============================================================================
+# GitHub Actions CI Pipeline for NestJS Backend
+# ============================================================================
+# Este workflow ejecuta quality gates, tests y build para el backend NestJS
+# Se ejecuta en push a dev/main y PRs
+# ============================================================================
+
+name: CI
+
+# ============================================================================
+# TRIGGERS: Cuándo se ejecuta el workflow
+# ============================================================================
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+# ============================================================================
+# JOBS: Tareas que se ejecutan en paralelo
+# ============================================================================
+jobs:
+  # ==========================================================================
+  # JOB 1: LINT (ESLint)
+  # ==========================================================================
+  lint:
+    name: 🔍 Lint (ESLint)
+    runs-on: self-hosted
+    environment: ci
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 🔧 Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+
+      - name: ✨ Run ESLint
+        run: yarn lint
+
+  # ==========================================================================
+  # JOB 2: TESTS (Jest)
+  # ==========================================================================
+  test:
+    name: 🧪 Tests (Jest)
+    runs-on: self-hosted
+    environment: ci
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 🔧 Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+
+      - name: 🧪 Run tests
+        run: yarn test
+
+  # ==========================================================================
+  # JOB 3: BUILD
+  # ==========================================================================
+  build:
+    name: 🏗️ Build
+    runs-on: self-hosted
+    environment: ci
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 🔧 Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+
+      - name: 🏗️ Build backend
+        run: yarn build
+
+      - name: 📦 Compress build artifact
+        run: |
+          tar -czf backend-build.tar.gz \
+            dist/ \
+            node_modules/ \
+            package.json \
+            yarn.lock \
+            prisma/ \
+            src/generated/
+
+      - name: 📤 Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: backend-build.tar.gz
+          retention-days: 7
