@@ -21,13 +21,13 @@ on:
 # ============================================================================
 jobs:
   # ==========================================================================
-  # JOB 0: SETUP (Shared dependencies and Prisma client)
+  # JOB 1: LINT (ESLint)
   # ==========================================================================
-  setup:
-    name: 🔧 Setup Dependencies & Prisma
+  lint:
+    name: 🔍 Lint (ESLint)
     runs-on: self-hosted
-    outputs:
-      cache-hit: ${{ steps.cache-node-modules.outputs.cache-hit }}
+    environment: ci
+    
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -46,49 +46,6 @@ jobs:
         env:
           DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
 
-      - name: 💾 Cache node_modules and generated files
-        uses: actions/cache@v4
-        id: cache-node-modules
-        with:
-          path: |
-            node_modules
-            src/generated
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('yarn.lock', 'prisma/schema.prisma') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
-
-      - name: 📤 Upload setup artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: setup-artifact
-          path: |
-            node_modules/
-            src/generated/
-          retention-days: 1
-
-  # ==========================================================================
-  # JOB 1: LINT (ESLint)
-  # ==========================================================================
-  lint:
-    name: 🔍 Lint (ESLint)
-    runs-on: self-hosted
-    needs: setup
-    
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: 📥 Download setup artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: setup-artifact
-          path: .
-
       - name: ✨ Run ESLint
         run: yarn lint
 
@@ -98,7 +55,7 @@ jobs:
   test:
     name: 🧪 Tests (Jest)
     runs-on: self-hosted
-    needs: setup
+    environment: ci
     
     steps:
       - name: 📥 Checkout code
@@ -108,12 +65,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'yarn'
 
-      - name: 📥 Download setup artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: setup-artifact
-          path: .
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 🔧 Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
 
       - name: 🧪 Run tests
         run: yarn test
@@ -124,7 +84,7 @@ jobs:
   build:
     name: 🏗️ Build
     runs-on: self-hosted
-    needs: setup
+    environment: ci
     
     steps:
       - name: 📥 Checkout code
@@ -134,25 +94,32 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'yarn'
 
-      - name: 📥 Download setup artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: setup-artifact
-          path: .
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 🔧 Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
 
       - name: 🏗️ Build backend
         run: yarn build
+
+      - name: 📦 Compress build artifact
+        run: |
+          tar -czf backend-build.tar.gz \
+            dist/ \
+            node_modules/ \
+            package.json \
+            yarn.lock \
+            prisma/ \
+            src/generated/
 
       - name: 📤 Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: backend-build
-          path: |
-            dist/
-            node_modules/
-            package.json
-            yarn.lock
-            prisma/
-            src/generated/
+          path: backend-build.tar.gz
           retention-days: 7

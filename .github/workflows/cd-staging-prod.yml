@@ -26,6 +26,9 @@ jobs:
           name: backend-build
           path: ./artifact
 
+      - name: Extract backend artifact
+        run: tar -xzf ./artifact/backend-build.tar.gz -C ./artifact
+
       - name: Create RELEASE_ID
         run: |
           RELEASE_ID=$(date +"%Y%m%d_%H%M%S")-$(echo ${GITHUB_SHA} | cut -c1-7)
@@ -226,6 +229,9 @@ jobs:
         with:
           name: backend-build
           path: ./artifact
+
+      - name: Extract backend artifact
+        run: tar -xzf ./artifact/backend-build.tar.gz -C ./artifact
 
       - name: Create RELEASE_ID
         run: |
