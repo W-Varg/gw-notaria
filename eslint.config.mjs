@@ -52,6 +52,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-function-type': 'off',
       '@typescript-eslint/no-unsafe-enum-comparison': 'off',
       '@typescript-eslint/ban-types': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
       'no-useless-catch': 'off',
     },
   },
