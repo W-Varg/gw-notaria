@@ -24,6 +24,9 @@ async function bootstrap() {
 
   app.enableVersioning({ type: VersioningType.URI });
 
+  // Establecer prefijo global para todas las rutas
+  app.setGlobalPrefix('api');
+
   // load configuration from .env, packageJson
   const configService = app.get(ConfigService);
   const packageJson = configService.get<IPackageJson>('packageJson');

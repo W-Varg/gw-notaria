@@ -14,6 +14,11 @@ export class AppController {
     return this.appService.getPing();
   }
 
+  @Get('health')
+  getHealth() {
+    return this.appService.getHealth();
+  }
+
   // // Manejar solicitud de favicon
   // @Get('favicon.ico')
   // // @HttpCode(HttpStatus.NO_CONTENT)
