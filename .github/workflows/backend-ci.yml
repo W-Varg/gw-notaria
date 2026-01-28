@@ -98,7 +98,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
       - name: Run e2e tests
-        run: yarn test:e2e
+        run: yarn test:e2e --silent
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           GOOGLE_CLIENT_ID: dummy
