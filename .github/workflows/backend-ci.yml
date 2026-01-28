@@ -92,11 +92,6 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
-      - name: Run database seed
-        run: yarn prisma:seed
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-
       - name: Run unit tests
         run: yarn test
         env:
