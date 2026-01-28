@@ -1,0 +1,93 @@
+stages:
+  - validate
+  - build
+  - deploy_staging
+  - deploy_production
+  - rollback
+
+variables:
+  RELEASE_DIR: /var/www/backend-ntr/releases
+  SHARED_DIR: /var/www/backend-ntr/shared
+
+validate:
+  stage: validate
+  script:
+    - yarn install --frozen-lockfile
+    - yarn lint
+    - yarn test
+  only:
+    - main
+    - merge_requests
+
+build:
+  stage: build
+  script:
+    - yarn install --frozen-lockfile
+    - yarn build
+    - RELEASE_ID=$(date +"%Y%m%d_%H%M%S")-$(echo ${CI_COMMIT_SHA} | cut -c1-7)
+    - echo $RELEASE_ID > RELEASE_ID
+    - mkdir -p release
+    - tar -czf release/release-${RELEASE_ID}.tar.gz dist package.json yarn.lock prisma RELEASE_ID
+  artifacts:
+    paths:
+      - release/
+    expire_in: 1 hour
+  only:
+    - main
+
+deploy_staging:
+  stage: deploy_staging
+  script:
+    - RELEASE_ID=$(cat release/RELEASE_ID)
+    - tar -xzf release/release-${RELEASE_ID}.tar.gz -C release-dir
+    - mkdir -p ${RELEASE_DIR}/${RELEASE_ID}
+    - rsync -avz --delete release-dir/ deploy@localhost:${RELEASE_DIR}/${RELEASE_ID}/
+    - ssh deploy@localhost "cd ${RELEASE_DIR}/${RELEASE_ID} && yarn install --production --frozen-lockfile && cp ${SHARED_DIR}/.env ./.env && npx prisma migrate deploy && ln -sfn ${RELEASE_DIR}/${RELEASE_ID} /var/www/backend-ntr/current"
+    - curl -f http://localhost:3001/api/health
+  environment:
+    name: staging
+    url: http://localhost:3001
+  only:
+    - main
+  dependencies:
+    - build
+
+deploy_production:
+  stage: deploy_production
+  script:
+    - RELEASE_ID=$(cat release/RELEASE_ID)
+    - tar -xzf release/release-${RELEASE_ID}.tar.gz -C release-dir
+    - mkdir -p ${RELEASE_DIR}/${RELEASE_ID}
+    - rsync -avz --delete release-dir/ deploy@localhost:${RELEASE_DIR}/${RELEASE_ID}/
+    - ssh deploy@localhost "cd ${RELEASE_DIR}/${RELEASE_ID} && yarn install --production --frozen-lockfile && cp ${SHARED_DIR}/.env ./.env && npx prisma migrate deploy && ln -sfn ${RELEASE_DIR}/${RELEASE_ID} /var/www/backend-ntr/current"
+    - curl -f http://localhost:3002/api/health
+  environment:
+    name: production
+    url: http://localhost:3002
+  only:
+    - tags
+  dependencies:
+    - build
+  when: manual
+
+rollback_staging:
+  stage: rollback
+  script:
+    - ssh deploy@localhost "PREV=\$(ls -1dt ${RELEASE_DIR}/*/ | sed -n '2p' | tr -d '/') && [ -n \"\$PREV\" ] && ln -sfn \$PREV /var/www/backend-ntr/current"
+  environment:
+    name: staging
+    url: http://localhost:3001
+  only:
+    - main
+  when: on_failure
+
+rollback_production:
+  stage: rollback
+  script:
+    - ssh deploy@localhost "PREV=\$(ls -1dt ${RELEASE_DIR}/*/ | sed -n '2p' | tr -d '/') && [ -n \"\$PREV\" ] && ln -sfn \$PREV /var/www/backend-ntr/current"
+  environment:
+    name: production
+    url: http://localhost:3002
+  only:
+    - tags
+  when: on_failure
