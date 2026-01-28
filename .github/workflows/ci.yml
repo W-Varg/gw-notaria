@@ -40,6 +40,9 @@ jobs:
       - name: 📦 Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: 🔧 Generate Prisma client
+        run: npx prisma generate
+
       - name: ✨ Run ESLint
         run: yarn lint
 
@@ -62,6 +65,9 @@ jobs:
 
       - name: 📦 Install dependencies
         run: yarn install --frozen-lockfile
+
+      - name: 🔧 Generate Prisma client
+        run: npx prisma generate
 
       - name: 🧪 Run tests
         run: yarn test
@@ -86,6 +92,9 @@ jobs:
       - name: 📦 Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: 🔧 Generate Prisma client
+        run: npx prisma generate
+
       - name: 🏗️ Build backend
         run: yarn build
 
@@ -99,4 +108,5 @@ jobs:
             package.json
             yarn.lock
             prisma/
+            src/generated/
           retention-days: 7
