@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { Injectable } from '@nestjs/common';
 import { rejects } from 'node:assert';
 import { join } from 'node:path';

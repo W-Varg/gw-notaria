@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import { PipeTransform, Injectable, ArgumentMetadata } from '@nestjs/common';
 import { paramTypeValidator } from '../../helpers/validator.functions';
 import { ApiBadRequestError } from '../filters/global-exception.filter';
