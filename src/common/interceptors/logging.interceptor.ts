@@ -1,10 +1,4 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  Logger,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -38,7 +32,7 @@ export class LoggingInterceptor implements NestInterceptor {
     const environment = this.configService.get('ENV_ENTORNO') || 'development';
 
     const userId = user?.id || 'anonymous';
-    
+
     // Only log if not health check to avoid spamming, or if requirement demands it.
     // Requirement says: "Logs backend deben incluir: versión, ambiente, user_id en operaciones de compra/venta"
     // We'll log everything for now but could filter.
@@ -48,7 +42,7 @@ export class LoggingInterceptor implements NestInterceptor {
       tap(() => {
         const response = context.switchToHttp().getResponse();
         const statusCode = response.statusCode;
-        
+
         this.logger.log({
           message: `Request completed`,
           method,
