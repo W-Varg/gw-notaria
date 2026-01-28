@@ -1,0 +1,50 @@
+dev@quipus:~/Documents/restringida/ucb/notaria$ mkdir actions-runner && cd actions-runner
+dev@quipus:~/Documents/restringida/ucb/notaria/actions-runner$ curl -o actions-runner-linux-x64-2.331.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.331.0/actions-runner-linux-x64-2.331.0.tar.gz
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100  212M  100  212M    0     0  10.3M      0  0:00:20  0:00:20 --:--:-- 11.1M
+dev@quipus:~/Documents/restringida/ucb/notaria/actions-runner$ echo "5fcc01bd546ba5c3f1291c2803658ebd3cedb3836489eda3be357d41bfcf28a7  actions-runner-linux-x64-2.331.0.tar.gz" | shasum -a 256 -c
+actions-runner-linux-x64-2.331.0.tar.gz: OK
+dev@quipus:~/Documents/restringida/ucb/notaria/actions-runner$ tar xzf ./actions-runner-linux-x64-2.331.0.tar.gz
+dev@quipus:~/Documents/restringida/ucb/notaria/actions-runner$ ./config.sh --url https://github.com/W-Varg/gw-notaria --token AFUNYH7QTSBBIKZXG3CLXADJPIXW2
+
+--------------------------------------------------------------------------------
+|        ____ _ _   _   _       _          _        _   _                      |
+|       / ___(_) |_| | | |_   _| |__      / \   ___| |_(_) ___  _ __  ___      |
+|      | |  _| | __| |_| | | | | '_ \    / _ \ / __| __| |/ _ \| '_ \/ __|     |
+|      | |_| | | |_|  _  | |_| | |_) |  / ___ \ (__| |_| | (_) | | | \__ \     |
+|       \____|_|\__|_| |_|\__,_|_.__/  /_/   \_\___|\__|_|\___/|_| |_|___/     |
+|                                                                              |
+|                       Self-hosted runner registration                        |
+|                                                                              |
+--------------------------------------------------------------------------------
+
+# Authentication
+
+
+√ Connected to GitHub
+
+# Runner Registration
+
+Enter the name of the runner group to add this runner to: [press Enter for Default]      
+
+Enter the name of runner: [press Enter for quipus]           
+
+This runner will have the following labels: 'self-hosted', 'Linux', 'X64' 
+Enter any additional labels (ex. label-1,label-2): [press Enter to skip] 
+
+√ Runner successfully added
+
+# Runner settings
+
+Enter name of work folder: [press Enter for _work] 
+
+√ Settings Saved.
+
+dev@quipus:~/Documents/restringida/ucb/notaria/actions-runner$ ./run.sh
+
+√ Connected to GitHub
+
+Current runner version: '2.331.0'
+2026-01-28 14:49:02Z: Listening for Jobs

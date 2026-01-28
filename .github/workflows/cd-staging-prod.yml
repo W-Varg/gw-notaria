@@ -2,16 +2,33 @@ name: CD - Staging and Production
 
 on:
   push:
-    branches: ["main"]
-    tags: ["v*"]
+    branches: ['main']
+    tags: ['v*']
   workflow_dispatch:
 
 env:
-  RELEASE_DIR: /var/www/backend_notaria/releases
+  RELEASE_DIR: /var/www/backend-ntr/releases
+  SHARED_DIR: /var/www/backend-ntr/shared
 
 jobs:
+  validate:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Lint
+        run: yarn lint
+      - name: Test
+        run: yarn test
+
   build:
-    runs-on: ubuntu-latest
+    needs: [validate]
+    runs-on: self-hosted
     outputs:
       release_id: ${{ steps.set-release.outputs.release_id }}
     steps:
@@ -33,7 +50,8 @@ jobs:
         run: |
           RELEASE=${{ steps.set-release.outputs.release_id }}
           mkdir -p ./release
-          tar -czf ./release/release-${RELEASE}.tar.gz dist package.json yarn.lock prisma
+          # Exclude node_modules to keep artifact small
+          tar -czf ./release/release-${RELEASE}.tar.gz dist package.json yarn.lock prisma RELEASE_ID
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
@@ -42,7 +60,7 @@ jobs:
 
   deploy_staging:
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [build]
     environment: staging
     steps:
@@ -55,18 +73,36 @@ jobs:
       - name: Deploy to staging via SSH
         env:
           RELEASE: ${{ needs.build.outputs.release_id }}
+          SSH_PORT: ${{ secrets.STAGING_PORT || 2222 }}
+          SSH_HOST: ${{ secrets.STAGING_HOST || 'localhost' }}
+          SSH_USER: ${{ secrets.STAGING_USER || 'deploy' }}
         run: |
           tar -xzf ./release/release-${RELEASE}.tar.gz -C ./release-dir || true
-          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} "mkdir -p ${RELEASE_DIR}/${RELEASE}"
-          rsync -avz --delete ./release-dir/ ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }}:${RELEASE_DIR}/${RELEASE}/
-          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} "cd ${RELEASE_DIR}/${RELEASE} && yarn install --production --frozen-lockfile || true && npx prisma migrate deploy || true && ln -sfn ${RELEASE_DIR}/${RELEASE} /var/www/backend_notaria/current"
+
+          # Ensure release directory exists
+          ssh -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "mkdir -p ${RELEASE_DIR}/${RELEASE}"
+
+          # RSYNC artifact
+          rsync -avz -e "ssh -p $SSH_PORT -o StrictHostKeyChecking=no" --delete ./release-dir/ $SSH_USER@$SSH_HOST:${RELEASE_DIR}/${RELEASE}/
+
+          # Remote setup
+          ssh -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
+            cd ${RELEASE_DIR}/${RELEASE} && 
+            yarn install --production --frozen-lockfile && 
+            # We assume shared/.env exists and we source it or link it
+            if [ -f ${SHARED_DIR}/.env ]; then cp ${SHARED_DIR}/.env ./.env; fi &&
+            npx prisma migrate deploy && 
+            ln -sfn ${RELEASE_DIR}/${RELEASE} /var/www/backend-ntr/current &&
+            echo 'Deployed ${RELEASE}'
+          "
       - name: Health check staging
         run: |
-          curl -f "${{ secrets.STAGING_APP_URL }}/api/health"
+          sleep 5
+          curl -f "${{ secrets.STAGING_APP_URL || 'http://localhost:3001' }}/api/health"
 
   deploy_production:
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [deploy_staging]
     environment: production
     steps:
@@ -79,23 +115,67 @@ jobs:
       - name: Deploy to production via SSH
         env:
           RELEASE: ${{ needs.build.outputs.release_id }}
+          SSH_PORT: ${{ secrets.PROD_PORT || 2223 }}
+          SSH_HOST: ${{ secrets.PROD_HOST || 'localhost' }}
+          SSH_USER: ${{ secrets.PROD_USER || 'deploy' }}
         run: |
           tar -xzf ./release/release-${RELEASE}.tar.gz -C ./release-dir || true
-          ssh -o StrictHostKeyChecking=no ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "mkdir -p ${RELEASE_DIR}/${RELEASE}"
-          rsync -avz --delete ./release-dir/ ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:${RELEASE_DIR}/${RELEASE}/
-          ssh -o StrictHostKeyChecking=no ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "cd ${RELEASE_DIR}/${RELEASE} && yarn install --production --frozen-lockfile || true && npx prisma migrate deploy || true && ln -sfn ${RELEASE_DIR}/${RELEASE} /var/www/backend_notaria/current"
+
+          ssh -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "mkdir -p ${RELEASE_DIR}/${RELEASE}"
+
+          rsync -avz -e "ssh -p $SSH_PORT -o StrictHostKeyChecking=no" --delete ./release-dir/ $SSH_USER@$SSH_HOST:${RELEASE_DIR}/${RELEASE}/
+
+          ssh -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
+            cd ${RELEASE_DIR}/${RELEASE} && 
+            yarn install --production --frozen-lockfile && 
+            if [ -f ${SHARED_DIR}/.env ]; then cp ${SHARED_DIR}/.env ./.env; fi &&
+            npx prisma migrate deploy && 
+            ln -sfn ${RELEASE_DIR}/${RELEASE} /var/www/backend-ntr/current &&
+            echo 'Deployed ${RELEASE}'
+          "
       - name: Health check production
         run: |
-          curl -f "${{ secrets.PROD_APP_URL }}/api/health"
+          sleep 5
+          curl -f "${{ secrets.PROD_APP_URL || 'http://localhost:3002' }}/api/health"
 
-  rollback_on_failure:
-    if: failure()
-    runs-on: ubuntu-latest
-    needs: [deploy_staging, deploy_production]
+  rollback_staging:
+    if: failure() && needs.deploy_staging.result == 'failure'
+    runs-on: self-hosted
+    needs: [deploy_staging]
     steps:
-      - name: Rollback staging (best-effort)
+      - name: Rollback staging
+        env:
+          SSH_PORT: ${{ secrets.STAGING_PORT || 2222 }}
+          SSH_HOST: ${{ secrets.STAGING_HOST || 'localhost' }}
+          SSH_USER: ${{ secrets.STAGING_USER || 'deploy' }}
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} "PREV=$(ls -1dt ${RELEASE_DIR}/*/ | sed -n '2p' | tr -d '/') && [ -n \"$PREV\" ] && ln -sfn $PREV /var/www/backend_notaria/current || true"
-      - name: Rollback production (best-effort)
+          ssh -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
+            PREV=\$(ls -1dt ${RELEASE_DIR}/*/ | sed -n '2p' | tr -d '/')
+            if [ -n \"\$PREV\" ]; then
+              ln -sfn \$PREV /var/www/backend-ntr/current
+              echo \"Rolled back to \$PREV\"
+            else
+              echo \"No previous release found\"
+            fi
+          "
+
+  rollback_production:
+    if: failure() && needs.deploy_production.result == 'failure'
+    runs-on: self-hosted
+    needs: [deploy_production]
+    steps:
+      - name: Rollback production
+        env:
+          SSH_PORT: ${{ secrets.PROD_PORT || 2223 }}
+          SSH_HOST: ${{ secrets.PROD_HOST || 'localhost' }}
+          SSH_USER: ${{ secrets.PROD_USER || 'deploy' }}
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "PREV=$(ls -1dt ${RELEASE_DIR}/*/ | sed -n '2p' | tr -d '/') && [ -n \"$PREV\" ] && ln -sfn $PREV /var/www/backend_notaria/current || true"
+          ssh -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
+            PREV=\$(ls -1dt ${RELEASE_DIR}/*/ | sed -n '2p' | tr -d '/')
+            if [ -n \"\$PREV\" ]; then
+              ln -sfn \$PREV /var/www/backend-ntr/current
+              echo \"Rolled back to \$PREV\"
+            else
+              echo \"No previous release found\"
+            fi
+          "
