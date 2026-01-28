@@ -29,7 +29,7 @@
     "release:major": "release-it major",
     "prisma:seed": "ts-node prisma/seed/seed.ts",
     "prepare": "husky",
-    "postinstall": "prisma generate",
+    "postinstall": "",
     "vercel-build": "prisma generate && npm run build"
   },
   "dependencies": {
