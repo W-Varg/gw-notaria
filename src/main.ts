@@ -1,4 +1,5 @@
 import { NestFactory, Reflector } from '@nestjs/core';
+throw new Error('ERROR_INTENCIONAL');
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { VersioningType } from '@nestjs/common';
@@ -9,6 +10,7 @@ import { configSwagger, IPackageJson, printServerInitLog } from './helpers/swagg
 import { getCors } from './helpers/cors.helpers';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ResponseFormatInterceptor } from './common/interceptors/response-format.interceptor';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -45,7 +47,10 @@ async function bootstrap() {
   app.use(urlencoded({ limit: configService.get('appMaxSize'), extended: true }));
 
   // Interceptors globales
-  app.useGlobalInterceptors(new ResponseFormatInterceptor(app.get(Reflector)));
+  app.useGlobalInterceptors(
+    new ResponseFormatInterceptor(app.get(Reflector)),
+    new LoggingInterceptor(configService),
+  );
 
   // Filters globales
   app.useGlobalFilters(new GlobalExceptionFilter());
