@@ -67,7 +67,7 @@ Basado en `tarea_2.md`, adaptado al proyecto `backend-ntr` con NestJS, Prisma OR
 - [x] Crear rama feature/fallo-staging.
 - [x] Introducir error (e.g., en src/main.ts: `throw new Error('ERROR_INTENCIONAL');`).
 - [x] Commit y push: Pipeline debe fallar en staging.
-- [ ] Revertir: `git checkout main; git revert HEAD --no-edit; git push`.
+- [x] Revertir: Error ya quitado manualmente.
 - [ ] Verificar rollback: Symlink apunta a versión anterior.
 
 ## 8. Evidencias a Entregar
