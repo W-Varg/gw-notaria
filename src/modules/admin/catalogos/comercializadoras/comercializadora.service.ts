@@ -313,4 +313,60 @@ export class ComercializadoraService {
 
     return dataResponseSuccess<ComercializadoraEntity>({ data: result });
   }
+
+  async exportCsv() {
+    const comercializadoras = await this.prismaService.comercializadora.findMany({
+      include: {
+        cliente: {
+          include: {
+            personaNatural: true,
+            personaJuridica: true,
+          },
+        },
+        sucursal: true,
+      },
+    });
+
+    // Crear headers del CSV
+    const headers = [
+      'ID',
+      'Tipo Comercializadora',
+      'Cliente',
+      'Proyecto',
+      'Módulo',
+      'Bloque',
+      'Urbanización',
+      'UV',
+      'Manzana',
+      'Lote',
+      'Sucursal',
+      'Fecha Creación',
+    ];
+
+    // Crear filas de datos
+    const rows = comercializadoras.map((com) => [
+      com.id.toString(),
+      com.tipoComercializadora === 1 ? 'Techo' : 'Monumental',
+      com.cliente?.personaNatural
+        ? `${com.cliente.personaNatural.nombres} ${com.cliente.personaNatural.apellidos}`
+        : com.cliente?.personaJuridica?.razonSocial || 'N/A',
+      (com.metaData as any)?.proyecto?.toString() || '',
+      (com.metaData as any)?.modulo?.toString() || '',
+      (com.metaData as any)?.bloque?.toString() || '',
+      (com.metaData as any)?.urbanizacion || '',
+      (com.metaData as any)?.uv?.toString() || '',
+      (com.metaData as any)?.manzana?.toString() || '',
+      (com.metaData as any)?.lote?.toString() || '',
+      com.sucursal?.nombre || '',
+      dayjs(com.fechaCreacion).format('YYYY-MM-DD HH:mm:ss'),
+    ]);
+
+    // Combinar headers y rows
+    const csvData = [headers, ...rows];
+
+    // Convertir a string CSV
+    const csvString = csvData.map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n');
+
+    return csvString;
+  }
 }

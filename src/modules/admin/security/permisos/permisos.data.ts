@@ -398,6 +398,31 @@ export const permisos: Prisma.PermisoUncheckedCreateInput[] = [
   },
 
   {
+    nombre: PermisoEnum.COMERCIALIZADORAS_VER,
+    descripcion: 'Permite ver comercializadoras',
+    modulo: 'comercializadoras',
+    accion: 'ver',
+  },
+  {
+    nombre: PermisoEnum.COMERCIALIZADORAS_CREAR,
+    descripcion: 'Permite crear comercializadoras',
+    modulo: 'comercializadoras',
+    accion: 'crear',
+  },
+  {
+    nombre: PermisoEnum.COMERCIALIZADORAS_EDITAR,
+    descripcion: 'Permite editar comercializadoras',
+    modulo: 'comercializadoras',
+    accion: 'editar',
+  },
+  {
+    nombre: PermisoEnum.COMERCIALIZADORAS_ELIMINAR,
+    descripcion: 'Permite eliminar comercializadoras',
+    modulo: 'comercializadoras',
+    accion: 'eliminar',
+  },
+
+  {
     nombre: PermisoEnum.HISTORIAL_ESTADOS_SERVICIO_VER,
     descripcion: 'Permite ver historial de estados de servicio',
     modulo: 'historial_estados_servicio',
