@@ -41,6 +41,7 @@ jobs:
             package.json \
             yarn.lock \
             prisma/ \
+            prisma.config.ts \
             src/generated/
 
       - name: 📤 Upload build artifact
