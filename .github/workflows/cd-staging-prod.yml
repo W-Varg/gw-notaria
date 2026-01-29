@@ -110,20 +110,20 @@ jobs:
           fi
           echo "Running migrations and switching symlink..."
           deploy_sh="deploy-$RELEASE.sh"
-          cat > "$deploy_sh" << 'EOF'
+          cat > "$deploy_sh" << EOF
           set -euo pipefail
-          cd "/var/www/backend-ntr/releases/'$RELEASE'"
-          tar -xzf "'$archive'"
-          rm -f "'$archive'"
+          cd "/var/www/backend-ntr/releases/$RELEASE"
+          tar -xzf "$archive"
+          rm -f "$archive"
           ln -sfn /var/www/backend-ntr/shared/.env .env
           
           export NODE_ENV=staging
-          export RELEASE_ID='$RELEASE'
+          export RELEASE_ID=$RELEASE
           
           echo "Node version:"
           node -v
-          major=$(node -p "parseInt(process.versions.node.split('.')[0],10)")
-          if [ "$major" -lt 18 ]; then echo "Node >=18 required for Prisma" >&2; exit 1; fi
+          major=\$(node -p "parseInt(process.versions.node.split('.')[0],10)")
+          if [ "\$major" -lt 18 ]; then echo "Node >=18 required for Prisma" >&2; exit 1; fi
           if [ -f "./node_modules/prisma/build/index.js" ]; then
             node ./node_modules/prisma/build/index.js migrate deploy
           else
@@ -131,7 +131,7 @@ jobs:
             exit 1
           fi
           
-          ln -sfn "/var/www/backend-ntr/releases/'$RELEASE'" /var/www/backend-ntr/current
+          ln -sfn "/var/www/backend-ntr/releases/$RELEASE" /var/www/backend-ntr/current
           
           # Start or restart the app with pm2 (best-effort for local staging container)
           cd /var/www/backend-ntr/current
@@ -257,20 +257,20 @@ jobs:
           fi
           echo "Running migrations and switching symlink..."
           deploy_sh="deploy-$RELEASE.sh"
-          cat > "$deploy_sh" << 'EOF'
+          cat > "$deploy_sh" << EOF
           set -euo pipefail
-          cd "/var/www/backend-ntr/releases/'$RELEASE'"
-          tar -xzf "'$archive'"
-          rm -f "'$archive'"
+          cd "/var/www/backend-ntr/releases/$RELEASE"
+          tar -xzf "$archive"
+          rm -f "$archive"
           ln -sfn /var/www/backend-ntr/shared/.env .env
           
           export NODE_ENV=production
-          export RELEASE_ID='$RELEASE'
+          export RELEASE_ID=$RELEASE
           
           echo "Node version:"
           node -v
-          major=$(node -p "parseInt(process.versions.node.split('.')[0],10)")
-          if [ "$major" -lt 18 ]; then echo "Node >=18 required for Prisma" >&2; exit 1; fi
+          major=\$(node -p "parseInt(process.versions.node.split('.')[0],10)")
+          if [ "\$major" -lt 18 ]; then echo "Node >=18 required for Prisma" >&2; exit 1; fi
           if [ -f "./node_modules/prisma/build/index.js" ]; then
             node ./node_modules/prisma/build/index.js migrate deploy
           else
@@ -278,7 +278,7 @@ jobs:
             exit 1
           fi
           
-          ln -sfn "/var/www/backend-ntr/releases/'$RELEASE'" /var/www/backend-ntr/current
+          ln -sfn "/var/www/backend-ntr/releases/$RELEASE" /var/www/backend-ntr/current
           
           # Start or restart the app with pm2
           cd /var/www/backend-ntr/current
