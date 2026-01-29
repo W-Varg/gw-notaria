@@ -130,7 +130,7 @@ jobs:
             exit 1
           fi
           if [ -f "./node_modules/prisma/build/index.js" ]; then
-            node ./node_modules/prisma/build/index.js migrate deploy
+            npx prisma migrate deploy --config prisma.config.ts
           else
             echo "Prisma package not found in node_modules (node_modules/prisma/build/index.js missing)" >&2
             exit 1
@@ -282,7 +282,7 @@ jobs:
             exit 1
           fi
           if [ -f "./node_modules/prisma/build/index.js" ]; then
-            node ./node_modules/prisma/build/index.js migrate deploy
+            npx prisma migrate deploy --config prisma.config.ts
           else
             echo "Prisma package not found in node_modules (node_modules/prisma/build/index.js missing)" >&2
             exit 1
