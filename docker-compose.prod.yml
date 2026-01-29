@@ -25,6 +25,7 @@ services:
       chmod 700 /home/deploy/.ssh &&
       chmod 600 /home/deploy/.ssh/authorized_keys &&
       chown -R deploy:deploy /home/deploy /var/www/backend-ntr &&
+      echo '172.22.0.2 prod-db' >> /etc/hosts &&
       mkdir -p /var/run/sshd &&
       /usr/sbin/sshd -D
       "

@@ -1,5 +1,5 @@
 import { NestFactory, Reflector } from '@nestjs/core';
-throw new Error('ERROR_INTENCIONAL');
+// throw new Error('ERROR_INTENCIONAL');
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { VersioningType } from '@nestjs/common';
