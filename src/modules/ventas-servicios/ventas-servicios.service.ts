@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CrearVentaInput } from './dto/crear-venta.input';
 import { PrismaService } from '../../global/database/prisma.service';
 import { Prisma } from '../../generated/prisma/client';
@@ -7,6 +7,8 @@ import { paginationParamsFormat } from '../../helpers/prisma.helper';
 
 @Injectable()
 export class VentasServiciosService {
+  private readonly logger = new Logger(VentasServiciosService.name);
+
   constructor(private readonly _prismaService: PrismaService) {}
 
   crearVenta(dto: CrearVentaInput, userCreateId: string) {
@@ -85,6 +87,8 @@ export class VentasServiciosService {
           },
         },
       });
+
+      this.logger.log(`Venta creada: Release=${process.env.RELEASE_ID}, Env=${process.env.NODE_ENV}, User=${userCreateId}, VentaId=${venta.id}`);
 
       return venta;
     });
