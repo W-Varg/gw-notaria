@@ -11,12 +11,9 @@ env:
   SHARED_DIR: /var/www/backend-ntr/shared
 
 jobs:
-  deploy_staging:
-    name: Deploy to Staging
-    if: github.ref == 'refs/heads/main'
+  build:
+    name: 🏗️ Build Artifact
     runs-on: self-hosted
-    environment:
-      name: staging
     steps:
       - uses: actions/checkout@v4
 
@@ -52,6 +49,16 @@ jobs:
           name: backend-build
           path: backend-build.tar.gz
           retention-days: 7
+
+  deploy_staging:
+    name: Deploy to Staging
+    if: github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    environment:
+      name: staging
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Download backend artifact
         uses: actions/download-artifact@v4
@@ -254,47 +261,9 @@ jobs:
     runs-on: self-hosted
     environment:
       name: production
+    needs: [build, deploy_staging]
     steps:
       - uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js 20
-        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: 📦 Install dependencies
-        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
-        run: yarn install --frozen-lockfile
-
-      - name: 🔧 Generate Prisma client
-        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
-        run: npx prisma generate
-        env:
-          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
-
-      - name: 🏗️ Build backend
-        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
-        run: yarn build
-
-      - name: 📦 Compress build artifact
-        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
-        run: |
-          tar -czf backend-build.tar.gz \
-            dist/ \
-            node_modules/ \
-            package.json \
-            yarn.lock \
-            prisma/ \
-            src/generated/
-
-      - name: 📤 Upload build artifact
-        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-build
-          path: backend-build.tar.gz
-          retention-days: 7
 
       - name: Download backend artifact
         uses: actions/download-artifact@v4
