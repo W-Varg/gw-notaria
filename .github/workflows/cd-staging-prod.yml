@@ -122,8 +122,13 @@ jobs:
           
           echo "Node version:"
           node -v
+          node_version=\$(node -p "process.version")
           major=\$(node -p "parseInt(process.versions.node.split('.')[0],10)")
-          if [ "\$major" -lt 20 ]; then echo "Node >=20 required for Prisma" >&2; exit 1; fi
+          minor=\$(node -p "parseInt(process.versions.node.split('.')[1],10)")
+          if [ "\$major" -lt 20 ] || ([ "\$major" -eq 20 ] && [ "\$minor" -lt 19 ]); then
+            echo "Node >=20.19.1 required for Prisma (found \$node_version)" >&2
+            exit 1
+          fi
           if [ -f "./node_modules/prisma/build/index.js" ]; then
             node ./node_modules/prisma/build/index.js migrate deploy
           else
@@ -269,8 +274,13 @@ jobs:
           
           echo "Node version:"
           node -v
+          node_version=\$(node -p "process.version")
           major=\$(node -p "parseInt(process.versions.node.split('.')[0],10)")
-          if [ "\$major" -lt 20 ]; then echo "Node >=20 required for Prisma" >&2; exit 1; fi
+          minor=\$(node -p "parseInt(process.versions.node.split('.')[1],10)")
+          if [ "\$major" -lt 20 ] || ([ "\$major" -eq 20 ] && [ "\$minor" -lt 19 ]); then
+            echo "Node >=20.19.1 required for Prisma (found \$node_version)" >&2
+            exit 1
+          fi
           if [ -f "./node_modules/prisma/build/index.js" ]; then
             node ./node_modules/prisma/build/index.js migrate deploy
           else
