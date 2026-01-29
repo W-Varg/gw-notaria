@@ -80,144 +80,96 @@ jobs:
           STAGING_USER: ${{ secrets.STAGING_USER }}
           STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
           STAGING_PORT: ${{ secrets.STAGING_PORT || 2222 }}
-        shell: pwsh
+        shell: bash
         run: |
-          $sshDir = "$env:USERPROFILE\.ssh"
-          if (-not (Test-Path $sshDir)) { New-Item -ItemType Directory -Path $sshDir -Force | Out-Null }
-          $remoteHost = ($env:STAGING_HOST ?? "").Trim()
-          if ($remoteHost.Contains("@")) { $remoteHost = $remoteHost.Split("@")[-1] }
-          if ($remoteHost.Contains(":")) { $remoteHost = $remoteHost.Split(":")[0] }
-          if ([string]::IsNullOrWhiteSpace($remoteHost)) { throw "STAGING_HOST is empty/invalid" }
-          $remoteUser = ($env:STAGING_USER ?? "").Trim()
-          if ($remoteUser.Contains("@")) { $remoteUser = $remoteUser.Split("@")[-1] }
-          if ([string]::IsNullOrWhiteSpace($remoteUser)) { throw "STAGING_USER is empty/invalid" }
-          $remote = "$remoteUser@$remoteHost"
-          $keyContent = $env:STAGING_SSH_KEY
-          $keyContent = $keyContent -replace "`r`n", "`n" -replace "`r", "`n"
-          $keyContent = $keyContent.TrimEnd("`n", "`r") + "`n"
-          $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-          $bytes = $utf8NoBom.GetBytes($keyContent)
-          [System.IO.File]::WriteAllBytes("$sshDir\deploy_key", $bytes)
-          icacls "$sshDir\deploy_key" /inheritance:r /grant "$env:USERNAME`:F" | Out-Null
-          $env:RELEASE = Get-Content ./artifact/RELEASE_ID -Raw
-          $env:RELEASE = $env:RELEASE.Trim()
-          Write-Host "Creating release directory..."
-          $sshArgs = @(
-            "-i", "$sshDir\deploy_key",
-            "-p", $env:STAGING_PORT,
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "BatchMode=yes",
-            "-o", "IdentitiesOnly=yes",
-            "-o", "PreferredAuthentications=publickey",
-            "-o", "ConnectTimeout=10",
-            "-o", "ServerAliveInterval=5",
-            "-o", "ServerAliveCountMax=3",
-            $remote,
-            "mkdir -p /var/www/backend-ntr/releases/$env:RELEASE"
-          )
-          & ssh @sshArgs
-          if ($LASTEXITCODE -ne 0) { throw "Failed to create release directory" }
-          Write-Host "Copying files..."
-          $archive = "artifact-$env:RELEASE.tgz"
-          $remoteArchivePath = "/var/www/backend-ntr/releases/$env:RELEASE/$archive"
-          if (Test-Path $archive) { Remove-Item -Force $archive }
-          & tar -czf $archive -C ./artifact .
-          if ($LASTEXITCODE -ne 0) { throw "Failed to create tar.gz archive" }
-          $scpArgs = @(
-            "-i", "$sshDir\deploy_key",
-            "-P", $env:STAGING_PORT,
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "BatchMode=yes",
-            "-o", "IdentitiesOnly=yes",
-            "-o", "PreferredAuthentications=publickey",
-            "-o", "ConnectTimeout=10",
-            $archive
-          )
-          $scpTarget = "${remote}:/var/www/backend-ntr/releases/$env:RELEASE/"
-          & scp @scpArgs $scpTarget
-          if ($LASTEXITCODE -ne 0) { throw "Failed to copy files" }
-          Write-Host "Running migrations and switching symlink..."
-          $deploySh = "deploy-$env:RELEASE.sh"
-          $remoteDeploySh = "/var/www/backend-ntr/releases/$env:RELEASE/$deploySh"
-          $deployContent = @(
-            'set -euo pipefail',
-            "cd `/var/www/backend-ntr/releases/$env:RELEASE`",
-            "tar -xzf `$archive`",
-            "rm -f `$archive`",
-            'ln -sfn /var/www/backend-ntr/shared/.env .env',
-            '',
-            'export NODE_ENV=staging',
-            "export RELEASE_ID=`$env:RELEASE`",
-            '',
-            'echo "Node version:"',
-            'node -v',
-            'major=$(node -p "parseInt(process.versions.node.split(\\".\\")[0],10)")',
-            'if [ "$major" -lt 18 ]; then echo "Node >=18 required for Prisma" >&2; exit 1; fi',
-            'if [ -f "./node_modules/prisma/build/index.js" ]; then',
-            '  node ./node_modules/prisma/build/index.js migrate deploy',
-            'else',
-            '  echo "Prisma package not found in node_modules (node_modules/prisma/build/index.js missing)" >&2',
-            '  exit 1',
-            'fi',
-            '',
-            "ln -sfn `/var/www/backend-ntr/releases/$env:RELEASE` /var/www/backend-ntr/current",
-            '',
-            '# Start or restart the app with pm2 (best-effort for local staging container)',
-            'cd /var/www/backend-ntr/current',
-            'if ! command -v pm2 >/dev/null 2>&1; then',
-            '  yarn global add pm2',
-            'fi',
-            'pm2 start dist/main.js --name backend-ntr-api --update-env --time || pm2 restart backend-ntr-api --update-env'
-          ) -join "`n"
-          $deployContent += "`n"
-          $deployContent = $deployContent -replace "`r`n", "`n" -replace "`r", "`n"
-          $utf8NoBom2 = New-Object System.Text.UTF8Encoding $false
-          [System.IO.File]::WriteAllBytes($deploySh, $utf8NoBom2.GetBytes($deployContent))
-          $scpScriptArgs = @(
-            "-i", "$sshDir\deploy_key",
-            "-P", $env:STAGING_PORT,
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "BatchMode=yes",
-            "-o", "IdentitiesOnly=yes",
-            "-o", "PreferredAuthentications=publickey",
-            "-o", "ConnectTimeout=10",
-            $deploySh
-          )
-          & scp @scpScriptArgs "${remote}:/var/www/backend-ntr/releases/$env:RELEASE/"
-          if ($LASTEXITCODE -ne 0) { throw "Failed to copy deploy script" }
-          $sshRunArgs = @(
-            "-i", "$sshDir\deploy_key",
-            "-p", $env:STAGING_PORT,
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "BatchMode=yes",
-            "-o", "IdentitiesOnly=yes",
-            "-o", "PreferredAuthentications=publickey",
-            "-o", "ConnectTimeout=10",
-            "-o", "ServerAliveInterval=5",
-            "-o", "ServerAliveCountMax=3",
-            $remote,
-            "bash $remoteDeploySh"
-          )
-          & ssh @sshRunArgs
-          if ($LASTEXITCODE -ne 0) { throw "Failed to deploy" }
-          Remove-Item -Force $deploySh -ErrorAction SilentlyContinue
-          Write-Host "Deployment completed successfully"
+          ssh_dir="$HOME/.ssh"
+          mkdir -p "$ssh_dir"
+          remote_host="${STAGING_HOST//[@:]*/}"
+          remote_user="${STAGING_USER//[@:]*/}"
+          if [ -z "$remote_host" ] || [ -z "$remote_user" ]; then
+            echo "STAGING_HOST or STAGING_USER is empty"
+            exit 1
+          fi
+          remote="$remote_user@$remote_host"
+          echo "$STAGING_SSH_KEY" > "$ssh_dir/deploy_key"
+          chmod 600 "$ssh_dir/deploy_key"
+          RELEASE=$(cat ./artifact/RELEASE_ID)
+          echo "Creating release directory..."
+          ssh -i "$ssh_dir/deploy_key" -p "${STAGING_PORT:-2222}" -o StrictHostKeyChecking=no -o BatchMode=yes -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "$remote" "mkdir -p /var/www/backend-ntr/releases/$RELEASE"
+          if [ $? -ne 0 ]; then
+            echo "Failed to create release directory"
+            exit 1
+          fi
+          echo "Copying files..."
+          archive="artifact-$RELEASE.tgz"
+          tar -czf "$archive" -C ./artifact .
+          scp -i "$ssh_dir/deploy_key" -P "${STAGING_PORT:-2222}" -o StrictHostKeyChecking=no -o BatchMode=yes -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o ConnectTimeout=10 "$archive" "$remote:/var/www/backend-ntr/releases/$RELEASE/"
+          if [ $? -ne 0 ]; then
+            echo "Failed to copy files"
+            exit 1
+          fi
+          echo "Running migrations and switching symlink..."
+          deploy_sh="deploy-$RELEASE.sh"
+          cat > "$deploy_sh" << 'EOF'
+          set -euo pipefail
+          cd "/var/www/backend-ntr/releases/'$RELEASE'"
+          tar -xzf "'$archive'"
+          rm -f "'$archive'"
+          ln -sfn /var/www/backend-ntr/shared/.env .env
+          
+          export NODE_ENV=staging
+          export RELEASE_ID='$RELEASE'
+          
+          echo "Node version:"
+          node -v
+          major=$(node -p "parseInt(process.versions.node.split('.')[0],10)")
+          if [ "$major" -lt 18 ]; then echo "Node >=18 required for Prisma" >&2; exit 1; fi
+          if [ -f "./node_modules/prisma/build/index.js" ]; then
+            node ./node_modules/prisma/build/index.js migrate deploy
+          else
+            echo "Prisma package not found in node_modules (node_modules/prisma/build/index.js missing)" >&2
+            exit 1
+          fi
+          
+          ln -sfn "/var/www/backend-ntr/releases/'$RELEASE'" /var/www/backend-ntr/current
+          
+          # Start or restart the app with pm2 (best-effort for local staging container)
+          cd /var/www/backend-ntr/current
+          if ! command -v pm2 >/dev/null 2>&1; then
+            yarn global add pm2
+          fi
+          pm2 start dist/main.js --name backend-ntr-api --update-env --time || pm2 restart backend-ntr-api --update-env
+          EOF
+          scp -i "$ssh_dir/deploy_key" -P "${STAGING_PORT:-2222}" -o StrictHostKeyChecking=no -o BatchMode=yes -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o ConnectTimeout=10 "$deploy_sh" "$remote:/var/www/backend-ntr/releases/$RELEASE/"
+          if [ $? -ne 0 ]; then
+            echo "Failed to copy deploy script"
+            exit 1
+          fi
+          ssh -i "$ssh_dir/deploy_key" -p "${STAGING_PORT:-2222}" -o StrictHostKeyChecking=no -o BatchMode=yes -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "$remote" "bash /var/www/backend-ntr/releases/$RELEASE/$deploy_sh"
+          if [ $? -ne 0 ]; then
+            echo "Failed to deploy"
+            exit 1
+          fi
+          rm -f "$deploy_sh"
+          echo "Deployment completed successfully"
 
       - name: Health check staging
         env:
           STAGING_APP_URL: ${{ secrets.STAGING_APP_URL }}
-        shell: pwsh
+        shell: bash
         run: |
-          Start-Sleep -Seconds 5
-          $base = ($env:STAGING_APP_URL ?? "").TrimEnd("/")
-          if ($base.EndsWith("/api")) {
-            $url = "$base/health"
-          } else {
-            $url = "$base/api/health"
-          }
-          Write-Host "Health check URL: $url"
-          $response = Invoke-WebRequest -Uri $url -UseBasicParsing
-          if ($response.StatusCode -ne 200) { exit 1 }
+          sleep 5
+          base_url="${STAGING_APP_URL%/}"
+          if [[ "$base_url" == */api ]]; then
+            url="$base_url/health"
+          else
+            url="$base_url/api/health"
+          fi
+          echo "Health check URL: $url"
+          if ! curl -f "$url"; then
+            echo "Health check failed"
+            exit 1
+          fi
 
   rollback_staging:
     name: Rollback Staging
@@ -233,27 +185,17 @@ jobs:
           STAGING_USER: ${{ secrets.STAGING_USER }}
           STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
           STAGING_PORT: ${{ secrets.STAGING_PORT || 2222 }}
-        shell: pwsh
+        shell: bash
         run: |
-          $sshDir = "$env:USERPROFILE\.ssh"
-          if (-not (Test-Path $sshDir)) { New-Item -ItemType Directory -Path $sshDir -Force | Out-Null }
-          $remoteHost = ($env:STAGING_HOST ?? "").Trim()
-          if ($remoteHost.Contains("@")) { $remoteHost = $remoteHost.Split("@")[-1] }
-          if ($remoteHost.Contains(":")) { $remoteHost = $remoteHost.Split(":")[0] }
-          if ([string]::IsNullOrWhiteSpace($remoteHost)) { throw "STAGING_HOST is empty/invalid" }
-          $remoteUser = ($env:STAGING_USER ?? "").Trim()
-          if ($remoteUser.Contains("@")) { $remoteUser = $remoteUser.Split("@")[-1] }
-          if ([string]::IsNullOrWhiteSpace($remoteUser)) { throw "STAGING_USER is empty/invalid" }
-          $remote = "$remoteUser@$remoteHost"
-          $keyContent = $env:STAGING_SSH_KEY
-          $keyContent = $keyContent -replace "`r`n", "`n" -replace "`r", "`n"
-          $keyContent = $keyContent.TrimEnd("`n", "`r") + "`n"
-          $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-          $bytes = $utf8NoBom.GetBytes($keyContent)
-          [System.IO.File]::WriteAllBytes("$sshDir\deploy_key", $bytes)
-          icacls "$sshDir\deploy_key" /inheritance:r /grant "$env:USERNAME`:F" | Out-Null
-          $rollbackCmd = "bash -lc 'set -e; PREV=$(ls -1dt /var/www/backend-ntr/releases/*/ 2>/dev/null | sed -n \"2p\" | tr -d \"/\"); if [ -n \"$PREV\" ]; then echo \"Rolling back to: $PREV\"; ln -sfn \"$PREV\" /var/www/backend-ntr/current; if command -v pm2 >/dev/null 2>&1; then pm2 restart backend-ntr-api --update-env || true; fi; else echo \"No previous release found for rollback\"; exit 1; fi'"
-          & ssh -i "$sshDir\deploy_key" -p $env:STAGING_PORT -o StrictHostKeyChecking=no -o BatchMode=yes -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 $remote $rollbackCmd
+          ssh_dir="$HOME/.ssh"
+          mkdir -p "$ssh_dir"
+          remote_host="${STAGING_HOST//[@:]*/}"
+          remote_user="${STAGING_USER//[@:]*/}"
+          remote="$remote_user@$remote_host"
+          echo "$STAGING_SSH_KEY" > "$ssh_dir/deploy_key"
+          chmod 600 "$ssh_dir/deploy_key"
+          rollback_cmd='set -e; PREV=$(ls -1dt /var/www/backend-ntr/releases/*/ 2>/dev/null | sed -n "2p" | tr -d "/"); if [ -n "$PREV" ]; then echo "Rolling back to: $PREV"; ln -sfn "$PREV" /var/www/backend-ntr/current; if command -v pm2 >/dev/null 2>&1; then pm2 restart backend-ntr-api --update-env || true; fi; else echo "No previous release found for rollback"; exit 1; fi'
+          ssh -i "$ssh_dir/deploy_key" -p "${STAGING_PORT:-2222}" -o StrictHostKeyChecking=no -o BatchMode=yes -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "$remote" "$rollback_cmd"
 
   deploy_production:
     name: Deploy to Production
@@ -285,144 +227,96 @@ jobs:
           PROD_USER: ${{ secrets.PROD_USER }}
           PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
           PROD_PORT: ${{ secrets.PROD_PORT || 2223 }}
-        shell: pwsh
+        shell: bash
         run: |
-          $sshDir = "$env:USERPROFILE\.ssh"
-          if (-not (Test-Path $sshDir)) { New-Item -ItemType Directory -Path $sshDir -Force | Out-Null }
-          $remoteHost = ($env:PROD_HOST ?? "").Trim()
-          if ($remoteHost.Contains("@")) { $remoteHost = $remoteHost.Split("@")[-1] }
-          if ($remoteHost.Contains(":")) { $remoteHost = $remoteHost.Split(":")[0] }
-          if ([string]::IsNullOrWhiteSpace($remoteHost)) { throw "PROD_HOST is empty/invalid" }
-          $remoteUser = ($env:PROD_USER ?? "").Trim()
-          if ($remoteUser.Contains("@")) { $remoteUser = $remoteUser.Split("@")[-1] }
-          if ([string]::IsNullOrWhiteSpace($remoteUser)) { throw "PROD_USER is empty/invalid" }
-          $remote = "$remoteUser@$remoteHost"
-          $keyContent = $env:PROD_SSH_KEY
-          $keyContent = $keyContent -replace "`r`n", "`n" -replace "`r", "`n"
-          $keyContent = $keyContent.TrimEnd("`n", "`r") + "`n"
-          $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-          $bytes = $utf8NoBom.GetBytes($keyContent)
-          [System.IO.File]::WriteAllBytes("$sshDir\deploy_key", $bytes)
-          icacls "$sshDir\deploy_key" /inheritance:r /grant "$env:USERNAME`:F" | Out-Null
-          $env:RELEASE = Get-Content ./artifact/RELEASE_ID -Raw
-          $env:RELEASE = $env:RELEASE.Trim()
-          Write-Host "Creating release directory..."
-          $sshArgs = @(
-            "-i", "$sshDir\deploy_key",
-            "-p", $env:PROD_PORT,
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "BatchMode=yes",
-            "-o", "IdentitiesOnly=yes",
-            "-o", "PreferredAuthentications=publickey",
-            "-o", "ConnectTimeout=10",
-            "-o", "ServerAliveInterval=5",
-            "-o", "ServerAliveCountMax=3",
-            $remote,
-            "mkdir -p /var/www/backend-ntr/releases/$env:RELEASE"
-          )
-          & ssh @sshArgs
-          if ($LASTEXITCODE -ne 0) { throw "Failed to create release directory" }
-          Write-Host "Copying files..."
-          $archive = "artifact-$env:RELEASE.tgz"
-          $remoteArchivePath = "/var/www/backend-ntr/releases/$env:RELEASE/$archive"
-          if (Test-Path $archive) { Remove-Item -Force $archive }
-          & tar -czf $archive -C ./artifact .
-          if ($LASTEXITCODE -ne 0) { throw "Failed to create tar.gz archive" }
-          $scpArgs = @(
-            "-i", "$sshDir\deploy_key",
-            "-P", $env:PROD_PORT,
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "BatchMode=yes",
-            "-o", "IdentitiesOnly=yes",
-            "-o", "PreferredAuthentications=publickey",
-            "-o", "ConnectTimeout=10",
-            $archive
-          )
-          $scpTarget = "${remote}:/var/www/backend-ntr/releases/$env:RELEASE/"
-          & scp @scpArgs $scpTarget
-          if ($LASTEXITCODE -ne 0) { throw "Failed to copy files" }
-          Write-Host "Running migrations and switching symlink..."
-          $deploySh = "deploy-$env:RELEASE.sh"
-          $remoteDeploySh = "/var/www/backend-ntr/releases/$env:RELEASE/$deploySh"
-          $deployContent = @(
-            'set -euo pipefail',
-            "cd `/var/www/backend-ntr/releases/$env:RELEASE`",
-            "tar -xzf `$archive`",
-            "rm -f `$archive`",
-            'ln -sfn /var/www/backend-ntr/shared/.env .env',
-            '',
-            'export NODE_ENV=production',
-            "export RELEASE_ID=`$env:RELEASE`",
-            '',
-            'echo "Node version:"',
-            'node -v',
-            'major=$(node -p "parseInt(process.versions.node.split(\\".\\")[0],10)")',
-            'if [ "$major" -lt 18 ]; then echo "Node >=18 required for Prisma" >&2; exit 1; fi',
-            'if [ -f "./node_modules/prisma/build/index.js" ]; then',
-            '  node ./node_modules/prisma/build/index.js migrate deploy',
-            'else',
-            '  echo "Prisma package not found in node_modules (node_modules/prisma/build/index.js missing)" >&2',
-            '  exit 1',
-            'fi',
-            '',
-            "ln -sfn `/var/www/backend-ntr/releases/$env:RELEASE` /var/www/backend-ntr/current",
-            '',
-            '# Start or restart the app with pm2',
-            'cd /var/www/backend-ntr/current',
-            'if ! command -v pm2 >/dev/null 2>&1; then',
-            '  yarn global add pm2',
-            'fi',
-            'pm2 start dist/main.js --name backend-ntr-api --update-env --time || pm2 restart backend-ntr-api --update-env'
-          ) -join "`n"
-          $deployContent += "`n"
-          $deployContent = $deployContent -replace "`r`n", "`n" -replace "`r", "`n"
-          $utf8NoBom2 = New-Object System.Text.UTF8Encoding $false
-          [System.IO.File]::WriteAllBytes($deploySh, $utf8NoBom2.GetBytes($deployContent))
-          $scpScriptArgs = @(
-            "-i", "$sshDir\deploy_key",
-            "-P", $env:PROD_PORT,
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "BatchMode=yes",
-            "-o", "IdentitiesOnly=yes",
-            "-o", "PreferredAuthentications=publickey",
-            "-o", "ConnectTimeout=10",
-            $deploySh
-          )
-          & scp @scpScriptArgs "${remote}:/var/www/backend-ntr/releases/$env:RELEASE/"
-          if ($LASTEXITCODE -ne 0) { throw "Failed to copy deploy script" }
-          $sshRunArgs = @(
-            "-i", "$sshDir\deploy_key",
-            "-p", $env:PROD_PORT,
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "BatchMode=yes",
-            "-o", "IdentitiesOnly=yes",
-            "-o", "PreferredAuthentications=publickey",
-            "-o", "ConnectTimeout=10",
-            "-o", "ServerAliveInterval=5",
-            "-o", "ServerAliveCountMax=3",
-            $remote,
-            "bash $remoteDeploySh"
-          )
-          & ssh @sshRunArgs
-          if ($LASTEXITCODE -ne 0) { throw "Failed to deploy" }
-          Remove-Item -Force $deploySh -ErrorAction SilentlyContinue
-          Write-Host "Deployment completed successfully"
+          ssh_dir="$HOME/.ssh"
+          mkdir -p "$ssh_dir"
+          remote_host="${PROD_HOST//[@:]*/}"
+          remote_user="${PROD_USER//[@:]*/}"
+          if [ -z "$remote_host" ] || [ -z "$remote_user" ]; then
+            echo "PROD_HOST or PROD_USER is empty"
+            exit 1
+          fi
+          remote="$remote_user@$remote_host"
+          echo "$PROD_SSH_KEY" > "$ssh_dir/deploy_key"
+          chmod 600 "$ssh_dir/deploy_key"
+          RELEASE=$(cat ./artifact/RELEASE_ID)
+          echo "Creating release directory..."
+          ssh -i "$ssh_dir/deploy_key" -p "${PROD_PORT:-2223}" -o StrictHostKeyChecking=no -o BatchMode=yes -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "$remote" "mkdir -p /var/www/backend-ntr/releases/$RELEASE"
+          if [ $? -ne 0 ]; then
+            echo "Failed to create release directory"
+            exit 1
+          fi
+          echo "Copying files..."
+          archive="artifact-$RELEASE.tgz"
+          tar -czf "$archive" -C ./artifact .
+          scp -i "$ssh_dir/deploy_key" -P "${PROD_PORT:-2223}" -o StrictHostKeyChecking=no -o BatchMode=yes -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o ConnectTimeout=10 "$archive" "$remote:/var/www/backend-ntr/releases/$RELEASE/"
+          if [ $? -ne 0 ]; then
+            echo "Failed to copy files"
+            exit 1
+          fi
+          echo "Running migrations and switching symlink..."
+          deploy_sh="deploy-$RELEASE.sh"
+          cat > "$deploy_sh" << 'EOF'
+          set -euo pipefail
+          cd "/var/www/backend-ntr/releases/'$RELEASE'"
+          tar -xzf "'$archive'"
+          rm -f "'$archive'"
+          ln -sfn /var/www/backend-ntr/shared/.env .env
+          
+          export NODE_ENV=production
+          export RELEASE_ID='$RELEASE'
+          
+          echo "Node version:"
+          node -v
+          major=$(node -p "parseInt(process.versions.node.split('.')[0],10)")
+          if [ "$major" -lt 18 ]; then echo "Node >=18 required for Prisma" >&2; exit 1; fi
+          if [ -f "./node_modules/prisma/build/index.js" ]; then
+            node ./node_modules/prisma/build/index.js migrate deploy
+          else
+            echo "Prisma package not found in node_modules (node_modules/prisma/build/index.js missing)" >&2
+            exit 1
+          fi
+          
+          ln -sfn "/var/www/backend-ntr/releases/'$RELEASE'" /var/www/backend-ntr/current
+          
+          # Start or restart the app with pm2
+          cd /var/www/backend-ntr/current
+          if ! command -v pm2 >/dev/null 2>&1; then
+            yarn global add pm2
+          fi
+          pm2 start dist/main.js --name backend-ntr-api --update-env --time || pm2 restart backend-ntr-api --update-env
+          EOF
+          scp -i "$ssh_dir/deploy_key" -P "${PROD_PORT:-2223}" -o StrictHostKeyChecking=no -o BatchMode=yes -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o ConnectTimeout=10 "$deploy_sh" "$remote:/var/www/backend-ntr/releases/$RELEASE/"
+          if [ $? -ne 0 ]; then
+            echo "Failed to copy deploy script"
+            exit 1
+          fi
+          ssh -i "$ssh_dir/deploy_key" -p "${PROD_PORT:-2223}" -o StrictHostKeyChecking=no -o BatchMode=yes -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "$remote" "bash /var/www/backend-ntr/releases/$RELEASE/$deploy_sh"
+          if [ $? -ne 0 ]; then
+            echo "Failed to deploy"
+            exit 1
+          fi
+          rm -f "$deploy_sh"
+          echo "Deployment completed successfully"
 
       - name: Health check production
         env:
           PROD_APP_URL: ${{ secrets.PROD_APP_URL }}
-        shell: pwsh
+        shell: bash
         run: |
-          Start-Sleep -Seconds 5
-          $base = ($env:PROD_APP_URL ?? "").TrimEnd("/")
-          if ($base.EndsWith("/api")) {
-            $url = "$base/health"
-          } else {
-            $url = "$base/api/health"
-          }
-          Write-Host "Health check URL: $url"
-          $response = Invoke-WebRequest -Uri $url -UseBasicParsing
-          if ($response.StatusCode -ne 200) { exit 1 }
+          sleep 5
+          base_url="${PROD_APP_URL%/}"
+          if [[ "$base_url" == */api ]]; then
+            url="$base_url/health"
+          else
+            url="$base_url/api/health"
+          fi
+          echo "Health check URL: $url"
+          if ! curl -f "$url"; then
+            echo "Health check failed"
+            exit 1
+          fi
 
   rollback_production:
     name: Rollback Production
@@ -438,24 +332,14 @@ jobs:
           PROD_USER: ${{ secrets.PROD_USER }}
           PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
           PROD_PORT: ${{ secrets.PROD_PORT || 2223 }}
-        shell: pwsh
+        shell: bash
         run: |
-          $sshDir = "$env:USERPROFILE\.ssh"
-          if (-not (Test-Path $sshDir)) { New-Item -ItemType Directory -Path $sshDir -Force | Out-Null }
-          $remoteHost = ($env:PROD_HOST ?? "").Trim()
-          if ($remoteHost.Contains("@")) { $remoteHost = $remoteHost.Split("@")[-1] }
-          if ($remoteHost.Contains(":")) { $remoteHost = $remoteHost.Split(":")[0] }
-          if ([string]::IsNullOrWhiteSpace($remoteHost)) { throw "PROD_HOST is empty/invalid" }
-          $remoteUser = ($env:PROD_USER ?? "").Trim()
-          if ($remoteUser.Contains("@")) { $remoteUser = $remoteUser.Split("@")[-1] }
-          if ([string]::IsNullOrWhiteSpace($remoteUser)) { throw "PROD_USER is empty/invalid" }
-          $remote = "$remoteUser@$remoteHost"
-          $keyContent = $env:PROD_SSH_KEY
-          $keyContent = $keyContent -replace "`r`n", "`n" -replace "`r", "`n"
-          $keyContent = $keyContent.TrimEnd("`n", "`r") + "`n"
-          $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-          $bytes = $utf8NoBom.GetBytes($keyContent)
-          [System.IO.File]::WriteAllBytes("$sshDir\deploy_key", $bytes)
-          icacls "$sshDir\deploy_key" /inheritance:r /grant "$env:USERNAME`:F" | Out-Null
-          $rollbackCmd = "bash -lc 'set -e; PREV=$(ls -1dt /var/www/backend-ntr/releases/*/ 2>/dev/null | sed -n \"2p\" | tr -d \"/\"); if [ -n \"$PREV\" ]; then echo \"Rolling back to: $PREV\"; ln -sfn \"$PREV\" /var/www/backend-ntr/current; if command -v pm2 >/dev/null 2>&1; then pm2 restart backend-ntr-api --update-env || true; fi; else echo \"No previous release found for rollback\"; exit 1; fi'"
-          & ssh -i "$sshDir\deploy_key" -p $env:PROD_PORT -o StrictHostKeyChecking=no -o BatchMode=yes -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 $remote $rollbackCmd
+          ssh_dir="$HOME/.ssh"
+          mkdir -p "$ssh_dir"
+          remote_host="${PROD_HOST//[@:]*/}"
+          remote_user="${PROD_USER//[@:]*/}"
+          remote="$remote_user@$remote_host"
+          echo "$PROD_SSH_KEY" > "$ssh_dir/deploy_key"
+          chmod 600 "$ssh_dir/deploy_key"
+          rollback_cmd='set -e; PREV=$(ls -1dt /var/www/backend-ntr/releases/*/ 2>/dev/null | sed -n "2p" | tr -d "/"); if [ -n "$PREV" ]; then echo "Rolling back to: $PREV"; ln -sfn "$PREV" /var/www/backend-ntr/current; if command -v pm2 >/dev/null 2>&1; then pm2 restart backend-ntr-api --update-env || true; fi; else echo "No previous release found for rollback"; exit 1; fi'
+          ssh -i "$ssh_dir/deploy_key" -p "${PROD_PORT:-2223}" -o StrictHostKeyChecking=no -o BatchMode=yes -o IdentitiesOnly=yes -o PreferredAuthentications=publickey -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "$remote" "$rollback_cmd"
